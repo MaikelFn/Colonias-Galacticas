@@ -1,5 +1,6 @@
 const config = require('../Configuración/Configuracion');
 const GestorTemporizadores = require('../Gestores/GestorTemporizadores');
+const GestorProduccion = require('../Gestores/GestorProduccion');
 
 const EstadoPartida = {
     ESPERANDO: 'esperando',
@@ -22,6 +23,7 @@ class Partida {
         this.fechaInicio = null;
         this.fechaFin = null;
         this.gestorTemporizadores = new GestorTemporizadores();
+        this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this);
         this.cuentaRegresivaActiva = false;
     }
 
@@ -65,20 +67,11 @@ class Partida {
     }
 
     iniciarProduccion() {
-        const cicloProduccion = config.get('juego.cicloProduccionSeg');
-        this.gestorTemporizadores.iniciarIntervaloProduccion(cicloProduccion, () => {
-            this.producirRecursos();
-        });
+        this.gestorProduccion.iniciarProduccion();
     }
 
     producirRecursos() {
-        if (this.estado !== EstadoPartida.INICIADA) return;
-        for (const sistema of this.galaxia.sistemas) {
-            if (sistema.propietario && sistema.estado === 'controlado') {
-                const produccion = sistema.obtenerProduccionTotal();
-                sistema.propietario.agregarRecursos(produccion);
-            }
-        }
+        this.gestorProduccion.producirRecursos();
     }
 
     finalizarPorTiempo() {
@@ -139,7 +132,8 @@ class Partida {
     }
 
     detenerTemporizadores() {
-        this.gestorTemporizadores.detenerTodos();
+        this.gestorProduccion.detenerProduccion();
+        this.gestorTemporizadores.detenerTemporizadorEspera();
     }
 
     agregarJugador(jugador) {
