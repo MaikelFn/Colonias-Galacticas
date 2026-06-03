@@ -1,4 +1,4 @@
-const Recursos = require('./Recursos');
+const Recursos = require('../Entidades/Recursos');
 
 class Construccion {
     constructor(nombre, costo, descripcion = '') {

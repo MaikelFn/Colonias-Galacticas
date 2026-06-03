@@ -10,9 +10,27 @@
       "id": "S2",
       "nombre": "Nova",
       "tipo": "minero"
+    },
+    {
+      "id": "S3",
+      "nombre": "Sol",
+      "tipo": "energetico"
+    },
+    {
+      "id": "S4",
+      "nombre": "Luna",
+      "tipo": "cientifico"
+    },
+    {
+      "id": "S5",
+      "nombre": "Marte",
+      "tipo": "energetico"
     }
   ],
   "rutas": [
-    ["S1", "S2"]
+    ["S1", "S2"],
+    ["S2", "S3"],
+    ["S3", "S4"],
+    ["S4", "S5"]
   ]
 }

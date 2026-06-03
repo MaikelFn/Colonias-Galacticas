@@ -1,6 +1,6 @@
 const Construccion = require('./Construccion');
-const Recursos = require('./Recursos');
-const config = require('./Configuracion');
+const Recursos = require('../Entidades/Recursos');
+const config = require('../Configuración/Configuracion');
 
 class Astillero extends Construccion {
     constructor() {
