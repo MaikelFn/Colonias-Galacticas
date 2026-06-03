@@ -1,0 +1,36 @@
+{
+    "servidor": {
+        "puerto": 3000
+    },
+    "juego": {
+        "cicloProduccionSeg": 20,
+        "tiempoEsperaPartidaSeg": 60,
+        "porcentajeSistemasVictoria": 60,
+        "recursosIniciales": {
+            "bajo": { "minerales": 100, "energia": 50, "cristales": 20 },
+            "normal": { "minerales": 300, "energia": 150, "cristales": 50 },
+            "alto": { "minerales": 500, "energia": 250, "cristales": 100 }
+        }
+    },
+    "produccionPlanetas": {
+        "minero": { "minerales": 100, "energia": 30, "cristales": 10 },
+        "energetico": { "minerales": 50, "energia": 50, "cristales": 10 },
+        "cientifico": { "minerales": 40, "energia": 40, "cristales": 30 },
+        "balanceado": { "minerales": 35, "energia": 35, "cristales": 35 }
+    },
+    "costosConstrucciones": {
+        "Mina": { "minerales": 100, "energia": 0, "cristales": 0 },
+        "CentralInvestigacion": { "minerales": 80, "energia": 50, "cristales": 200 },
+        "Astillero": { "minerales": 150, "energia": 100, "cristales": 10 },
+        "Fortaleza": { "minerales": 200, "energia": 100, "cristales": 30 }
+    },
+    "produccionConstrucciones": {
+        "Mina": { "minerales": 50, "energia": 0, "cristales": 0 },
+        "CentralInvestigacion": { "minerales": 50, "energia": 25, "cristales": 10 }
+    },
+    "poderCombate": {
+        "Astillero": { "ataque": 1, "defensa": 1 },
+        "Fortaleza": { "defensa": 2 },
+        "Mina": { "neutralizablePor": 1 }  
+    }
+}
