@@ -85,7 +85,7 @@ class SistemaPlanetario {
             descripcion: this.descripcion,
             propietario: this.propietario ? this.propietario.nickname : null,
             flotasEstacionadas: this.flotasEstacionadas,
-            instalaciones: this.instalaciones.map(i => i.toJSON()),
+            instalaciones: this.instalaciones.map(instalacion => instalacion.toJSON()),
             estado: this.estado,
             produccion: this.obtenerProduccionTotal().toJSON()
         };

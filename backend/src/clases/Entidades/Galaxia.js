@@ -34,7 +34,7 @@ class Galaxia {
     }
 
     obtenerSistemaPorId(id) {
-        return this.sistemas.find(s => s.id === id);
+        return this.sistemas.find(sistema => sistema.id === id);
     }
 
     obtenerVecinos(sistema) {
@@ -49,18 +49,18 @@ class Galaxia {
     }
 
     obtenerRutaEntre(origen, destino) {
-        return this.rutas.find(r => r.conecta(origen, destino));
+        return this.rutas.find(ruta => ruta.conecta(origen, destino));
     }
 
     sistemasControladosPor(jugador) {
-        return this.sistemas.filter(s => s.propietario === jugador && s.estado === 'controlado');
+        return this.sistemas.filter(sistema => sistema.propietario === jugador && sistema.estado === 'controlado');
     }
 
     toJSON() {
         return {
             nombre: this.nombre,
-            sistemas: this.sistemas.map(s => s.toJSON()),
-            rutas: this.rutas.map(r => r.toJSON())
+            sistemas: this.sistemas.map(sistema => sistema.toJSON()),
+            rutas: this.rutas.map(ruta => ruta.toJSON())
         };
     }
 }
