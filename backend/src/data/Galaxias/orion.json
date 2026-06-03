@@ -1,0 +1,18 @@
+{
+  "nombre": "Nebulosa Orion",
+  "sistemas": [
+    {
+      "id": "S1",
+      "nombre": "Terra",
+      "tipo": "balanceado"
+    },
+    {
+      "id": "S2",
+      "nombre": "Nova",
+      "tipo": "minero"
+    }
+  ],
+  "rutas": [
+    ["S1", "S2"]
+  ]
+}
