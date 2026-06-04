@@ -25,10 +25,5 @@
     },
     "produccionConstrucciones": {
         "CentralInvestigacion": { "minerales": 50, "energia": 25, "cristales": 10 }
-    },
-    "poderCombate": {
-        "Astillero": { "ataque": 1, "defensa": 1 },
-        "Fortaleza": { "defensa": 2 },
-        "Mina": { "neutralizablePor": 1 }  
     }
 }

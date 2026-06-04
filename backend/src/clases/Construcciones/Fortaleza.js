@@ -10,8 +10,7 @@ class Fortaleza extends Construccion {
     }
 
     getPoderDefensa() {
-        const poder = config.get('poderCombate.Fortaleza');
-        return poder.defensa;
+        return 2;
     }
 }
 

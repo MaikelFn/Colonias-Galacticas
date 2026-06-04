@@ -22,8 +22,7 @@ class Astillero extends Construccion {
     }
 
     getPoderDefensa() {
-        const poder = config.get('poderCombate.Astillero');
-        return poder.defensa;
+        return 1;
     }
 
     estaEnSistema(sistema) {

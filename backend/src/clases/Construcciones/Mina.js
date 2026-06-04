@@ -6,11 +6,7 @@ class Mina extends Construccion {
     constructor() {
         const costosData = config.get('costosConstrucciones.Mina');
         const costos = new Recursos(costosData.minerales, costosData.energia, costosData.cristales);
-        super('Mina', costos, 'Estructura defensiva. Un stillero puede neutralizar 3 minas');
-    }
-
-    getPoderDefensa() {
-        return 0;
+        super('Mina', costos, 'Estructura defensiva. Cada 3 minas suman 1 punto de defensa');
     }
 }
 
