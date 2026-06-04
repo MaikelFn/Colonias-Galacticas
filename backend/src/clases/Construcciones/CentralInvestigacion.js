@@ -6,7 +6,7 @@ class CentralInvestigacion extends Construccion {
     constructor() {
         const costosData = config.get('costosConstrucciones.CentralInvestigacion');
         const costos = new Recursos(costosData.minerales, costosData.energia, costosData.cristales);
-        super('CentralInvestigacion', costos, 'Permite investigación y producción adicional');
+        super('CentralInvestigacion', costos, 'Produce recursos automáticamente cada ciclo');
     }
 
     producir(sistema, jugador) {

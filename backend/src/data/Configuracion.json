@@ -5,7 +5,6 @@
     "juego": {
         "cicloProduccionSeg": 20,
         "tiempoEsperaPartidaSeg": 60,
-        "porcentajeSistemasVictoria": 60,
         "recursosIniciales": {
             "bajo": { "minerales": 100, "energia": 50, "cristales": 20 },
             "normal": { "minerales": 300, "energia": 150, "cristales": 50 },
@@ -25,7 +24,6 @@
         "Fortaleza": { "minerales": 200, "energia": 100, "cristales": 30 }
     },
     "produccionConstrucciones": {
-        "Mina": { "minerales": 50, "energia": 0, "cristales": 0 },
         "CentralInvestigacion": { "minerales": 50, "energia": 25, "cristales": 10 }
     },
     "poderCombate": {

@@ -22,12 +22,13 @@ class SistemaPlanetario {
     obtenerProduccionTotal() {
         const base = this.obtenerProduccionBase();
         let total = new Recursos(base.minerales, base.energia, base.cristales);
-        for (const inst of this.instalaciones) {
-            if (typeof inst.producir === 'function') {
-                const prod = inst.producir(this, this.propietario);
-                total = total.agregar(prod);
-            }
+        
+        const centrales = this.instalaciones.filter(inst => inst.nombre === 'CentralInvestigacion');
+        for (const central of centrales) {
+            const prod = central.producir(this, this.propietario);
+            total = total.agregar(prod);
         }
+        
         return total;
     }
 
