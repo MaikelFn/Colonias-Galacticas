@@ -1,27 +1,22 @@
+import { useState, useEffect } from 'react'
+import { useSocket } from '../../hooks/useSocket'
+
 export default function RankingModal({ onClose }) {
-  const rankings = [
-    {
-      comandante: 'Commander_Zephyr',
-      sistemas: '24 / 32',
-      recursos: '7,850 u',
-      galaxia: 'Sector Centauri',
-      partida: '#PART-2501',
-    },
-    {
-      comandante: 'Nova_Dominion',
-      sistemas: '28 / 32',
-      recursos: '12,450 u',
-      galaxia: 'Vía Láctea Prime',
-      partida: '#PART-2487',
-    },
-    {
-      comandante: 'Eclipse_Seven',
-      sistemas: '20 / 32',
-      recursos: '5,920 u',
-      galaxia: 'Triángulo Austral',
-      partida: '#PART-2412',
-    },
-  ]
+  const { emit, on } = useSocket()
+  const [rankings, setRankings] = useState([])
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    emit('obtener_ranking')
+    setCargando(true)
+
+    const unsubscribe = on('ranking_disponible', (data) => {
+      setRankings(data)
+      setCargando(false)
+    })
+
+    return unsubscribe
+  }, [emit, on])
 
   return (
     <div className="gc-modal-overlay">
@@ -32,30 +27,32 @@ export default function RankingModal({ onClose }) {
         </header>
 
         <div className="gc-modal-body">
-          <div className="gc-table-wrapper">
-            <table className="gc-table">
-              <thead>
-                <tr>
-                  <th>Comandante Ganador</th>
-                  <th>Sistemas</th>
-                  <th>Recursos Totales</th>
-                  <th>Galaxia</th>
-                  <th>ID Partida</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankings.map((ranking, index) => (
-                  <tr key={index}>
-                    <td className="text-highlight">{ranking.comandante}</td>
-                    <td>{ranking.sistemas}</td>
-                    <td>{ranking.recursos}</td>
-                    <td>{ranking.galaxia}</td>
-                    <td>{ranking.partida}</td>
+          {cargando ? (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#0ff' }}>Cargando ranking...</p>
+          ) : rankings.length === 0 ? (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#0ff' }}>No hay datos de ranking disponibles</p>
+          ) : (
+            <div className="gc-table-wrapper">
+              <table className="gc-table">
+                <thead>
+                  <tr>
+                    <th>Posición</th>
+                    <th>Comandante Ganador</th>
+                    <th>Puntos</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {rankings.map((ranking) => (
+                    <tr key={ranking.posicion}>
+                      <td style={{ fontWeight: 'bold', color: '#0ff' }}>#{ranking.posicion}</td>
+                      <td className="text-highlight">{ranking.jugador}</td>
+                      <td>{ranking.puntos.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <button className="gc-btn gc-btn-ghost" onClick={onClose}>Cerrar Historial</button>

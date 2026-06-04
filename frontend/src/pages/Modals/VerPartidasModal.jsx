@@ -1,27 +1,43 @@
-export default function VerPartidasModal({ onClose }) {
-  const partidas = [
-    {
-      id: '#PART-5421',
-      galaxia: 'Sector Centauri',
-      jugadores: '2 / 4',
-      estado: 'Abierta',
-      isOpen: true,
-    },
-    {
-      id: '#PART-7834',
-      galaxia: 'Vía Láctea Prime',
-      jugadores: '3 / 4',
-      estado: 'Abierta',
-      isOpen: true,
-    },
-    {
-      id: '#PART-3102',
-      galaxia: 'Sector Centauri',
-      jugadores: '4 / 4',
-      estado: 'Llena',
-      isOpen: false,
-    },
-  ]
+import { useState, useEffect } from 'react'
+import { useSocket } from '../../hooks/useSocket'
+
+export default function VerPartidasModal({ onClose, comandante }) {
+  const { emit, on } = useSocket()
+  const [partidas, setPartidas] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [uniendose, setUniendose] = useState(null)
+
+  useEffect(() => {
+    // Solicitar partidas disponibles
+    emit('obtener_partidas')
+    setCargando(true)
+
+    // Escuchar respuesta
+    const unsubscribe = on('partidas_disponibles', (data) => {
+      setPartidas(data)
+      setCargando(false)
+    })
+
+    return unsubscribe
+  }, [emit, on])
+
+  const handleUnirse = (partida) => {
+    if (!comandante) {
+      alert('Error: Comandante no identificado')
+      return
+    }
+
+    setUniendose(partida.id)
+    emit('unirse_partida', {
+      idPartida: partida.id,
+      nombreJugador: comandante
+    })
+
+    setTimeout(() => {
+      setUniendose(null)
+      onClose()
+    }, 500)
+  }
 
   return (
     <div className="gc-modal-overlay">
@@ -32,40 +48,54 @@ export default function VerPartidasModal({ onClose }) {
         </header>
 
         <div className="gc-modal-body">
-          <div className="gc-table-wrapper">
-            <table className="gc-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Galaxia</th>
-                  <th>Jugadores</th>
-                  <th>Estado</th>
-                  <th>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {partidas.map(partida => (
-                  <tr key={partida.id}>
-                    <td>{partida.id}</td>
-                    <td>{partida.galaxia}</td>
-                    <td>{partida.jugadores}</td>
-                    <td className={partida.isOpen ? 'status-open' : 'status-closed'}>
-                      {partida.estado}
-                    </td>
-                    <td>
-                      <button 
-                        className={`gc-btn ${partida.isOpen ? 'gc-btn-primary' : 'gc-btn-ghost'} gc-btn-small`}
-                        disabled={!partida.isOpen}
-                        onClick={() => partida.isOpen && alert('[RF-06] Entrando a sala de espera. Status: Aceptado.')}
-                      >
-                        {partida.isOpen ? 'Unirse' : 'Llena'}
-                      </button>
-                    </td>
+          {cargando ? (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#0ff' }}>Cargando partidas...</p>
+          ) : partidas.length === 0 ? (
+            <p style={{ textAlign: 'center', padding: '20px', color: '#0ff' }}>No hay partidas disponibles en este momento</p>
+          ) : (
+            <div className="gc-table-wrapper">
+              <table className="gc-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Galaxia</th>
+                    <th>Jugadores</th>
+                    <th>Duración</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {partidas.map(partida => {
+                    const jugadoresActuales = partida.jugadores.length
+                    const maxJugadores = partida.maxJugadores
+                    const puedeUnirse = jugadoresActuales < maxJugadores
+                    
+                    return (
+                      <tr key={partida.id}>
+                        <td>{partida.nombre}</td>
+                        <td>{partida.galaxia}</td>
+                        <td>{jugadoresActuales} / {maxJugadores}</td>
+                        <td>{partida.duracion} min</td>
+                        <td className={puedeUnirse ? 'status-open' : 'status-closed'}>
+                          {puedeUnirse ? 'Abierta' : 'Llena'}
+                        </td>
+                        <td>
+                          <button 
+                            className={`gc-btn ${puedeUnirse ? 'gc-btn-primary' : 'gc-btn-ghost'} gc-btn-small`}
+                            disabled={!puedeUnirse || uniendose === partida.id}
+                            onClick={() => handleUnirse(partida)}
+                          >
+                            {uniendose === partida.id ? 'Uniéndose...' : (puedeUnirse ? 'Unirse' : 'Llena')}
+                          </button>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <button className="gc-btn gc-btn-ghost" onClick={onClose}>Volver al Menú</button>

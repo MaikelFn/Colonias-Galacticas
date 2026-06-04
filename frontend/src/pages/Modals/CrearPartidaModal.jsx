@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { useSocket } from '../../hooks/useSocket'
+
 export default function CrearPartidaModal({
   onClose,
   nombrePartida,
@@ -10,7 +13,37 @@ export default function CrearPartidaModal({
   setDuracion,
   recursos,
   setRecursos,
+  comandante
 }) {
+  const { emit } = useSocket()
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState(null)
+
+  const handleCrearPartida = () => {
+    if (!nombrePartida.trim()) {
+      setError('Ingresa un nombre para la partida')
+      return
+    }
+
+    setEnviando(true)
+    setError(null)
+
+    emit('crear_partida', {
+      nombre: nombrePartida,
+      galaxia,
+      maxJugadores,
+      duracion,
+      recursos,
+      comandante
+    })
+
+    // Cerrar después de crear
+    setTimeout(() => {
+      setEnviando(false)
+      onClose()
+    }, 500)
+  }
+
   return (
     <div className="gc-modal-overlay">
       <section className="gc-card gc-modal-content">
@@ -28,13 +61,14 @@ export default function CrearPartidaModal({
               placeholder="Ej: Flota Alfa..." 
               value={nombrePartida}
               onChange={e => setNombrePartida(e.target.value)}
+              disabled={enviando}
             />
           </div>
 
           <div className="gc-modal-grid-2">
             <div className="gc-field-group">
               <label className="gc-label">Galaxia</label>
-              <select className="gc-input gc-select" value={galaxia} onChange={e => setGalaxia(e.target.value)}>
+              <select className="gc-input gc-select" value={galaxia} onChange={e => setGalaxia(e.target.value)} disabled={enviando}>
                 <option value="Sector Centauri">Sector Centauri</option>
                 <option value="Vía Láctea Prime">Vía Láctea Prime</option>
                 <option value="Triángulo Austral">Triángulo Austral</option>
@@ -50,6 +84,7 @@ export default function CrearPartidaModal({
                 max="8" 
                 value={maxJugadores}
                 onChange={e => setMaxJugadores(parseInt(e.target.value) || 4)}
+                disabled={enviando}
               />
             </div>
           </div>
@@ -63,24 +98,27 @@ export default function CrearPartidaModal({
                 step="5" 
                 value={duracion}
                 onChange={e => setDuracion(parseInt(e.target.value) || 20)}
+                disabled={enviando}
               />
             </div>
 
             <div className="gc-field-group">
               <label className="gc-label">Recursos Iniciales</label>
-              <select className="gc-input gc-select" value={recursos} onChange={e => setRecursos(e.target.value)}>
+              <select className="gc-input gc-select" value={recursos} onChange={e => setRecursos(e.target.value)} disabled={enviando}>
                 <option value="Bajo">Bajo (200M, 100E, 40C)</option>
                 <option value="Normal">Normal (500M, 250E, 100C)</option>
                 <option value="Alto">Alto (1000M, 500E, 200C)</option>
               </select>
             </div>
           </div>
+
+          {error && <p className="gc-error" style={{ color: '#ff6b6b', marginTop: '10px' }}>{error}</p>}
         </div>
 
         <div className="gc-actions-row2">
-          <button className="gc-btn gc-btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="gc-btn gc-btn-primary" onClick={() => alert('[RF-02/RF-03] Solicitud WebSocket enviada para registrar partida nueva.')}>
-            Inicializar
+          <button className="gc-btn gc-btn-ghost" onClick={onClose} disabled={enviando}>Cancelar</button>
+          <button className="gc-btn gc-btn-primary" onClick={handleCrearPartida} disabled={enviando || !nombrePartida.trim()}>
+            {enviando ? 'Inicializando...' : 'Inicializar'}
           </button>
         </div>
       </section>

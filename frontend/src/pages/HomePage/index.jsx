@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './index.css'
+import { useSocket } from '../../hooks/useSocket'
 import CrearPartidaModal from '../Modals/CrearPartidaModal'
 import VerPartidasModal from '../Modals/VerPartidasModal'
 import RankingModal from '../Modals/RankingModal'
@@ -32,6 +33,8 @@ function Star({ x, y, size, delay, duration, brightness }) {
 }
 
 function HomePage() {
+  const { emit, on, isConnected } = useSocket()
+  
   const [usuario, setUsuario] = useState('')
   const [mounted, setMounted] = useState(false)
   const [hoveredBtn, setHoveredBtn] = useState(null)
@@ -48,6 +51,13 @@ function HomePage() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Registrar jugador cuando ingresa nombre
+  useEffect(() => {
+    if (usuario && isConnected) {
+      emit('registrar_jugador', { nombre: usuario })
+    }
+  }, [usuario, isConnected, emit])
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -182,11 +192,12 @@ function HomePage() {
           setDuracion={setDuracion}
           recursos={recursos}
           setRecursos={setRecursos}
+          comandante={usuario}
         />
       )}
 
       {activeModal === 'ver' && (
-        <VerPartidasModal onClose={() => setActiveModal(null)} />
+        <VerPartidasModal onClose={() => setActiveModal(null)} comandante={usuario} />
       )}
 
       {activeModal === 'ranking' && (
