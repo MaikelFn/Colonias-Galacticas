@@ -1,90 +1,196 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './index.css'
+import CrearPartidaModal from '../Modals/CrearPartidaModal'
+import VerPartidasModal from '../Modals/VerPartidasModal'
+import RankingModal from '../Modals/RankingModal'
+
+const STARS = Array.from({ length: 150 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: Math.random() * 2.5 + 0.5,
+  delay: Math.random() * 5,
+  duration: Math.random() * 3 + 2.5,
+  brightness: Math.random() * 0.7 + 0.3,
+}))
+
+function Star({ x, y, size, delay, duration, brightness }) {
+  return (
+    <div
+      className="star"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        width: `${size}px`,
+        height: `${size}px`,
+        animationDelay: `${delay}s`,
+        animationDuration: `${duration}s`,
+        opacity: brightness,
+      }}
+    />
+  )
+}
 
 function HomePage() {
   const [usuario, setUsuario] = useState('')
-  const [mostrarModal, setMostrarModal] = useState(false)
-  const [accion, setAccion] = useState('')
-  const [idSala, setIdSala] = useState('')
+  const [mounted, setMounted] = useState(false)
+  const [hoveredBtn, setHoveredBtn] = useState(null)
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
 
-  const handleCrearPartida = () => {
-    if (!usuario.trim()) return
-    setAccion('crear')
-    setMostrarModal(true)
+  const [activeModal, setActiveModal] = useState(null)
+
+  const [nombrePartida, setNombrePartida] = useState('')
+  const [galaxia, setGalaxia] = useState('Sector Centauri')
+  const [maxJugadores, setMaxJugadores] = useState(4)
+  const [duracion, setDuracion] = useState(45)
+  const [recursos, setRecursos] = useState('Normal')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setMousePos({ x, y })
   }
 
-  const handleUnirsePartida = () => {
-    if (!usuario.trim()) return
-    setAccion('unirse')
-    setMostrarModal(true)
-  }
+  const usuarioValido = usuario.trim().length > 0
 
   const handleSalir = () => {
     setUsuario('')
+    setActiveModal(null)
   }
 
-  const handleConectar = () => {
-    console.log(`${accion} partida - Usuario: ${usuario}, Sala: ${idSala}`)
-    setMostrarModal(false)
-    setIdSala('')
-  }
-
-  const handleCancelar = () => {
-    setMostrarModal(false)
-    setIdSala('')
-  }
+  const createButtonHandler = (btnName, callback) => ({
+    onMouseEnter: () => setHoveredBtn(btnName),
+    onMouseLeave: () => setHoveredBtn(null),
+    onMouseMove: handleMouseMove,
+    onClick: callback,
+    style: {
+      '--mouse-x': `${mousePos.x}%`,
+      '--mouse-y': `${mousePos.y}%`,
+    }
+  })
 
   return (
-    <div className="app">
-      <h1>Galactic Colonies</h1>
-      
-      <div className="input-container">
-        <input
-          type="text"
-          placeholder="Ingresa tu usuario"
-          value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
-        />
+    <div className={`gc-root ${mounted ? 'gc-mounted' : ''}`}>
+      <div className="gc-starfield" aria-hidden="true">
+        {STARS.map(s => <Star key={s.id} {...s} />)}
       </div>
 
-      <div className="buttons-container">
-        <button 
-          onClick={handleCrearPartida}
-          disabled={!usuario.trim()}
-          className={!usuario.trim() ? 'disabled' : ''}
-        >
-          Crear Partida
-        </button>
-        
-        <button 
-          onClick={handleUnirsePartida}
-          disabled={!usuario.trim()}
-          className={!usuario.trim() ? 'disabled' : ''}
-        >
-          Unirse a Partida
-        </button>
-        
-        <button onClick={handleSalir}>
-          Salir
-        </button>
-      </div>
+      <div className="gc-nebula gc-nebula-1" aria-hidden="true" />
+      <div className="gc-nebula gc-nebula-2" aria-hidden="true" />
 
-      {mostrarModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <h2>{accion === 'crear' ? 'Crear Partida' : 'Unirse a Partida'}</h2>
-            <input
-              type="text"
-              placeholder="ID de sala"
-              value={idSala}
-              onChange={(e) => setIdSala(e.target.value)}
-            />
-            <div className="modal-buttons">
-              <button onClick={handleConectar}>Conectar</button>
-              <button onClick={handleCancelar} className="cancel">Cancelar</button>
+      <main className="gc-main">
+        <header className="gc-header">
+          <div className="gc-orbit-ring" aria-hidden="true">
+            <div className="gc-orbit-dot" />
+          </div>
+          <p className="gc-eyebrow">ESTRATEGIA GALÁCTICA MULTIJUGADOR</p>
+          <h1 className="gc-title">
+            <span className="gc-title-line1">GALACTIC</span>
+            <span className="gc-title-line2">COLONIES</span>
+          </h1>
+          <p className="gc-subtitle">Conquista sistemas. Forja alianzas. Domina la galaxia.</p>
+        </header>
+
+        <section className="gc-card">
+          <div className="gc-card-glow" aria-hidden="true" />
+
+          <div className="gc-field-group">
+            <label className="gc-label" htmlFor="gc-usuario">
+              <span className="gc-label-dot" aria-hidden="true" />
+              IDENTIFICADOR DE COMANDANTE (RF-01)
+            </label>
+            <div className="gc-input-wrap">
+              <input
+                id="gc-usuario"
+                className="gc-input"
+                type="text"
+                placeholder="Ingresa tu nombre..."
+                value={usuario}
+                onChange={e => setUsuario(e.target.value)}
+                maxLength={24}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {usuarioValido && (
+                <span className="gc-input-check" aria-label="Usuario válido">OK</span>
+              )}
+            </div>
+            {!usuarioValido && (
+              <p className="gc-hint">Ingrese un nombre para continuar</p>
+            )}
+          </div>
+
+          <div className="gc-actions">
+            <button
+              className={`gc-btn gc-btn-primary ${hoveredBtn === 'crear' ? 'hovered' : ''}`}
+              disabled={!usuarioValido}
+              {...createButtonHandler('crear', () => setActiveModal('crear'))}
+            >
+              CREAR PARTIDA
+            </button>
+
+            <button
+              className={`gc-btn gc-btn-secondary ${hoveredBtn === 'ver' ? 'hovered' : ''}`}
+              disabled={!usuarioValido}
+              {...createButtonHandler('ver', () => setActiveModal('ver'))}
+            >
+              VER PARTIDAS
+            </button>
+
+            <div className="gc-actions-row2">
+              <button
+                className={`gc-btn gc-btn-ghost ${hoveredBtn === 'ranking' ? 'hovered' : ''}`}
+                {...createButtonHandler('ranking', () => setActiveModal('ranking'))}
+              >
+                RANKING
+              </button>
+
+              <button
+                className={`gc-btn gc-btn-danger ${hoveredBtn === 'salir' ? 'hovered' : ''}`}
+                {...createButtonHandler('salir', handleSalir)}
+              >
+                SALIR
+              </button>
             </div>
           </div>
-        </div>
+        </section>
+
+        <footer className="gc-footer">
+          <span className="gc-footer-dot" aria-hidden="true" />
+          <span>SECTOR CENTAURI - 32 SISTEMAS</span>
+          <span className="gc-footer-sep" aria-hidden="true">·</span>
+          <span>NEXO GALÁCTICO ACTIVO</span>
+          <span className="gc-footer-dot" aria-hidden="true" />
+        </footer>
+      </main>
+
+      {activeModal === 'crear' && (
+        <CrearPartidaModal
+          onClose={() => setActiveModal(null)}
+          nombrePartida={nombrePartida}
+          setNombrePartida={setNombrePartida}
+          galaxia={galaxia}
+          setGalaxia={setGalaxia}
+          maxJugadores={maxJugadores}
+          setMaxJugadores={setMaxJugadores}
+          duracion={duracion}
+          setDuracion={setDuracion}
+          recursos={recursos}
+          setRecursos={setRecursos}
+        />
+      )}
+
+      {activeModal === 'ver' && (
+        <VerPartidasModal onClose={() => setActiveModal(null)} />
+      )}
+
+      {activeModal === 'ranking' && (
+        <RankingModal onClose={() => setActiveModal(null)} />
       )}
     </div>
   )
