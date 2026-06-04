@@ -13,6 +13,10 @@ class CentralInvestigacion extends Construccion {
         const produccionData = config.get('produccionConstrucciones.CentralInvestigacion');
         return new Recursos(produccionData.minerales, produccionData.energia, produccionData.cristales);
     }
+
+    getPoderDefensa() {
+        return 0;
+    }
 }
 
 module.exports = CentralInvestigacion;

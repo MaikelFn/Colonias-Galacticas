@@ -3,21 +3,41 @@ const Recursos = require('../Entidades/Recursos');
 const config = require('../Configuración/Configuracion');
 
 class Astillero extends Construccion {
-    constructor() {
+    constructor(id, propietario, sistemaOrigen) {
         const costosData = config.get('costosConstrucciones.Astillero');
         const costos = new Recursos(costosData.minerales, costosData.energia, costosData.cristales);
-        super('Astillero', costos, 'Genera flotas para ataque y defensa');
-        this.flotasGeneradas = 1;
+        super('Astillero', costos, 'Unidad de combate móvil');
+        this.id = id;
+        this.propietario = propietario;
+        this.sistemaActual = sistemaOrigen;
     }
 
-    getPoderAtaque() {
-        const poder = config.get('poderCombate.Astillero');
-        return poder.ataque;
+    mover(sistemaDestino) {
+        this.sistemaActual = sistemaDestino;
+        return true;
+    }
+
+    getPoderCombate() {
+        return 1;
     }
 
     getPoderDefensa() {
         const poder = config.get('poderCombate.Astillero');
         return poder.defensa;
+    }
+
+    estaEnSistema(sistema) {
+        return this.sistemaActual === sistema;
+    }
+
+    toJSON() {
+        return {
+            id: this.id,
+            nombre: this.nombre,
+            propietario: this.propietario ? this.propietario.nickname : null,
+            sistemaActual: this.sistemaActual ? this.sistemaActual.nombre : null,
+            costo: this.costo.toJSON()
+        };
     }
 }
 

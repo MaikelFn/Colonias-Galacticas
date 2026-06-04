@@ -37,8 +37,12 @@ class Jugador {
         return total;
     }
 
-    getFlotasTotales() {
-        return this.contarInstalaciones('Astillero');
+    getAstillerosTotales() {
+        let total = 0;
+        for (const sistema of this.getSistemasControlados()) {
+            total += sistema.obtenerCantidadAstilleros();
+        }
+        return total;
     }
 
     obtenerEstadisticas() {
@@ -47,7 +51,7 @@ class Jugador {
             nombre: this.nickname,
             sistemasConquistados: this.contarSistemasConquistados(sistemas),
             recursos: this.recursos.toJSON(),
-            flotasEnPie: this.getFlotasTotales(),
+            astillerosEnPie: this.getAstillerosTotales(),
             minasEnPie: this.contarInstalaciones('Mina'),
             centrosEnPie: this.contarInstalaciones('CentralInvestigacion'),
             fortalezasEnPie: this.contarInstalaciones('Fortaleza')
