@@ -32,14 +32,14 @@ function Star({ x, y, size, delay, duration, brightness }) {
   )
 }
 
-function HomePage() {
+// onEntrarLobby(partida, nombreJugador) — callback para navegar a sala de espera
+function HomePage({ onEntrarLobby }) {
   const { emit, on, isConnected } = useSocket()
-  
+
   const [usuario, setUsuario] = useState('')
   const [mounted, setMounted] = useState(false)
   const [hoveredBtn, setHoveredBtn] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
-
   const [activeModal, setActiveModal] = useState(null)
 
   const [nombrePartida, setNombrePartida] = useState('')
@@ -48,9 +48,7 @@ function HomePage() {
   const [duracion, setDuracion] = useState(45)
   const [recursos, setRecursos] = useState('Normal')
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  useEffect(() => { setMounted(true) }, [])
 
   // Registrar jugador cuando ingresa nombre
   useEffect(() => {
@@ -58,6 +56,15 @@ function HomePage() {
       emit('registrar_jugador', { nombre: usuario })
     }
   }, [usuario, isConnected, emit])
+
+  // Escuchar partida creada → ir a lobby
+  useEffect(() => {
+    const unsub = on('partida_creada', (partida) => {
+      setActiveModal(null)
+      onEntrarLobby(partida, usuario)
+    })
+    return unsub
+  }, [on, usuario, onEntrarLobby])
 
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
@@ -68,9 +75,12 @@ function HomePage() {
 
   const usuarioValido = usuario.trim().length > 0
 
-  const handleSalir = () => {
-    setUsuario('')
+  const handleSalir = () => setUsuario('')
+
+  // Cuando el jugador selecciona una partida en VerPartidasModal → ir a lobby
+  const handleUnirsePartida = (partida) => {
     setActiveModal(null)
+    onEntrarLobby(partida, usuario)
   }
 
   const createButtonHandler = (btnName, callback) => ({
@@ -197,7 +207,11 @@ function HomePage() {
       )}
 
       {activeModal === 'ver' && (
-        <VerPartidasModal onClose={() => setActiveModal(null)} comandante={usuario} />
+        <VerPartidasModal
+          onClose={() => setActiveModal(null)}
+          comandante={usuario}
+          onUnirse={handleUnirsePartida}
+        />
       )}
 
       {activeModal === 'ranking' && (

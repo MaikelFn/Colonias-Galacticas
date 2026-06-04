@@ -1,24 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useSocket } from '../../hooks/useSocket'
 
-export default function VerPartidasModal({ onClose, comandante }) {
+export default function VerPartidasModal({ onClose, comandante, onUnirse }) {
   const { emit, on } = useSocket()
   const [partidas, setPartidas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [uniendose, setUniendose] = useState(null)
 
   useEffect(() => {
-    // Solicitar partidas disponibles
     emit('obtener_partidas')
     setCargando(true)
 
-    // Escuchar respuesta
-    const unsubscribe = on('partidas_disponibles', (data) => {
+    const unsub1 = on('partidas_disponibles', (data) => {
       setPartidas(data)
       setCargando(false)
     })
 
-    return unsubscribe
+    // Actualización en tiempo real cuando cambian las partidas
+    const unsub2 = on('actualizar_partidas', (data) => {
+      const disponibles = data.filter(p => p.jugadores.length < p.maxJugadores && p.estado === 'esperando')
+      setPartidas(disponibles)
+    })
+
+    return () => { unsub1(); unsub2() }
   }, [emit, on])
 
   const handleUnirse = (partida) => {
@@ -33,9 +37,19 @@ export default function VerPartidasModal({ onClose, comandante }) {
       nombreJugador: comandante
     })
 
+    // Navegar a la partida
     setTimeout(() => {
       setUniendose(null)
-      onClose()
+      if (onUnirse) {
+        // Pasamos la partida con el jugador ya agregado localmente
+        const partidaActualizada = {
+          ...partida,
+          jugadores: [...partida.jugadores, { nombre: comandante }]
+        }
+        onUnirse(partidaActualizada)
+      } else {
+        onClose()
+      }
     }, 500)
   }
 
