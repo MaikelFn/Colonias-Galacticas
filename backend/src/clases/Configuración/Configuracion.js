@@ -3,7 +3,7 @@ const path = require('path');
 
 class Configuracion {
     constructor() {
-        const data = fs.readFileSync(path.join(__dirname, '..', 'data', 'Configuracion.json'), 'utf8');
+        const data = fs.readFileSync(path.join(__dirname, '..', '..', 'data', 'Configuracion.json'), 'utf8');
         this.valores = JSON.parse(data);
     }
 
