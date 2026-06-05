@@ -1,7 +1,7 @@
 const config = require('../Configuración/Configuracion');
 
 class GestorProduccion {
-    constructor(gestorTemporizadores, galaxia, estadoRef, io = null) {
+    constructor(gestorTemporizadores, galaxia, estadoRef, io) {
         this.gestorTemporizadores = gestorTemporizadores;
         this.galaxia = galaxia;
         this.estadoRef = estadoRef;

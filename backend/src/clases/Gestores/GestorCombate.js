@@ -1,7 +1,4 @@
 class GestorCombate {
-    constructor() {
-    }
-
     calcularFuerzaAtacante(astillerosAtacantes) {
         return astillerosAtacantes.length;
     }
@@ -112,8 +109,7 @@ class GestorCombate {
             const indiceFortaleza = sistema.instalaciones.findIndex(inst => inst.nombre === 'Fortaleza');
             if (indiceFortaleza === -1) break;
             sistema.instalaciones.splice(indiceFortaleza, 1);
-            perdidasRestantes--;
-            perdidasRestantes--;
+            perdidasRestantes -= 2;
         }
         while (perdidasRestantes > 0 && sistema.astillerosEstacionados.length > 0) {
             sistema.astillerosEstacionados.pop();

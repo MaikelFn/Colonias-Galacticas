@@ -12,7 +12,7 @@ class GestorMovimiento {
         return this.encontrarCamino(origen, destino).length > 0;
     }
 
-    encontrarCamino(origen, destino, jugador = null) {
+    encontrarCamino(origen, destino, jugador) {
         if (origen === destino) return [origen];
 
         const visitados = new Set();
@@ -129,25 +129,7 @@ class GestorMovimiento {
         return { exitoso: true };
     }
 
-    verificarCombate(sistema, astilleros, callbackEvento) {
-        if (sistema.propietario && sistema.propietario !== astilleros[0].propietario) {
-            if (this.gestorCombate.puedeAtacar(sistema, astilleros[0].propietario)) {
-                const resultado = this.gestorCombate.resolverCombate(
-                    sistema,
-                    astilleros,
-                    astilleros[0].propietario,
-                    callbackEvento
-                );
-                
-                if (resultado.conquista && callbackEvento) {
-                    callbackEvento('sistemaConquistado', {
-                        sistema: sistema,
-                        nuevoPropietario: astilleros[0].propietario.nickname
-                    });
-                }
-            }
-        }
-    }
+    
 }
 
 module.exports = GestorMovimiento;

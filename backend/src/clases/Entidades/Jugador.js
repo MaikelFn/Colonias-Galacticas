@@ -2,7 +2,7 @@ const Recursos = require('./Recursos');
 const config = require('../Configuración/Configuracion');
 
 class Jugador {
-    constructor(nickname, socketId = null) {
+    constructor(nickname, socketId ) {
         this.nickname = nickname;
         this.socketId = socketId;
         this.recursos = new Recursos(0, 0, 0);

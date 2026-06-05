@@ -2,11 +2,10 @@ const Recursos = require('./Recursos');
 const config = require('../Configuración/Configuracion');
 
 class SistemaPlanetario {
-    constructor(id, nombre, tipo, descripcion = '') {
+    constructor(id, nombre, tipo) {
         this.id = id;
         this.nombre = nombre;
         this.tipo = tipo;
-        this.descripcion = descripcion;
         this.propietario = null;
         this.astillerosEstacionados = [];
         this.instalaciones = [];
@@ -33,7 +32,7 @@ class SistemaPlanetario {
     }
 
     esControlable() {
-        return this.estado === 'no explorado' && this.astillerosEstacionados.length === 0;
+        return this.estado === 'no explorado';
     }
 
     setPropietario(jugador) {
@@ -69,21 +68,11 @@ class SistemaPlanetario {
     obtenerCantidadAstilleros() {
         return this.astillerosEstacionados.length;
     }
-
-    obtenerPoderDefensa() {
-        let defensa = this.astillerosEstacionados.length;
-        for (const inst of this.instalaciones) {
-            defensa += inst.getPoderDefensa ? inst.getPoderDefensa() : 0;
-        }
-        return defensa;
-    }
-
     toJSON() {
         return {
             id: this.id,
             nombre: this.nombre,
             tipo: this.tipo,
-            descripcion: this.descripcion,
             propietario: this.propietario ? this.propietario.nickname : null,
             astillerosEstacionados: this.astillerosEstacionados.length,
             astilleros: this.astillerosEstacionados.map(astillero => astillero.toJSON()),

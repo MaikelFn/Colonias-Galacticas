@@ -17,8 +17,8 @@ class Ruta {
 
     toJSON() {
         return {
-            origen: this.origen?.id || this.origen,
-            destino: this.destino?.id || this.destino
+            origen: this.origen.id,
+            destino: this.destino.id
         };
     }
 }

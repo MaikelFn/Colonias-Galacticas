@@ -9,7 +9,7 @@ const EstadoPartida = {
 };
 
 class Partida {
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo = null, io = null) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, io) {
         this.id = id;
         this.nombre = nombre;
         this.galaxia = galaxia;
@@ -168,12 +168,15 @@ class Partida {
     }
 
     obtenerRanking() {
-        return this.jugadores.map((jugador, indice) => ({
-            posicion: indice + 1,
-            puntaje: jugador.puntajeFinal,
-            nombre: jugador.nickname,
-            ...jugador.obtenerEstadisticas()
-        }));
+        return this.jugadores.map((jugador, indice) => {
+            const estadisticas = jugador.obtenerEstadisticas();
+            return {
+                posicion: indice + 1,
+                puntaje: jugador.puntajeFinal,
+                nombre: jugador.nickname,
+                ...estadisticas
+            };
+        });
     }
 }
 

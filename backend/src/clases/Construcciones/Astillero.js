@@ -33,8 +33,8 @@ class Astillero extends Construccion {
         return {
             id: this.id,
             nombre: this.nombre,
-            propietario: this.propietario ? this.propietario.nickname : null,
-            sistemaActual: this.sistemaActual ? this.sistemaActual.nombre : null,
+            propietario: this.propietario.nickname,
+            sistemaActual: this.sistemaActual.nombre,
             costo: this.costo.toJSON()
         };
     }
