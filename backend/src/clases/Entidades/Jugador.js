@@ -12,7 +12,8 @@ class Jugador {
 
     setRecursosIniciales(dificultad) {
         const recursosIniciales = config.get('juego.recursosIniciales');
-        const inicial = recursosIniciales[dificultad];
+        const dificultadKey = dificultad.toLowerCase();
+        const inicial = recursosIniciales[dificultadKey];
         this.recursos = new Recursos(inicial.minerales, inicial.energia, inicial.cristales);
     }
 

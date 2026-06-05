@@ -9,7 +9,7 @@ const EstadoPartida = {
 };
 
 class Partida {
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo = null) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo = null, io = null) {
         this.id = id;
         this.nombre = nombre;
         this.galaxia = galaxia;
@@ -23,7 +23,7 @@ class Partida {
         this.fechaInicio = null;
         this.fechaFin = null;
         this.gestorTemporizadores = new GestorTemporizadores();
-        this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this);
+        this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this, io);
         this.cuentaRegresivaActiva = false;
         this.onCierrePorTiempo = onCierrePorTiempo;
     }

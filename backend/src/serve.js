@@ -132,7 +132,8 @@ io.on("connection", (socket) => {
                     idPartida: partidaCerrada.id,
                     razon: "Tiempo de espera agotado. No se alcanzaron los jugadores mínimos."
                 });
-            }
+            },
+            io
         );
 
         console.log(`Tiempo de espera configurado en partida: ${partida.tiempoEsperaSeg} segundos`);
@@ -213,6 +214,59 @@ io.on("connection", (socket) => {
             recursos: partida.dificultadRecursos,
             jugadores: partida.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
         });
+    });
+
+    socket.on("iniciar_partida", (datos) => {
+        console.log(`Evento iniciar_partida recibido:`, datos);
+        const { idPartida } = datos;
+        const partida = partidas.get(idPartida);
+
+        if (!partida) {
+            console.log(`Error: La partida ${idPartida} no existe`);
+            socket.emit("error_inicio", { mensaje: "La partida no existe." });
+            return;
+        }
+
+        console.log(`Partida encontrada: ${partida.id}, estado: ${partida.estado}, jugadores: ${partida.jugadores.length}`);
+
+        if (partida.estado !== 'esperando') {
+            console.log(`Error: La partida no está en estado de espera, está: ${partida.estado}`);
+            socket.emit("error_inicio", { mensaje: "La partida ya no está en estado de espera." });
+            return;
+        }
+
+        if (partida.jugadores.length < 2) {
+            console.log(`Error: Solo hay ${partida.jugadores.length} jugadores, se necesitan 2`);
+            socket.emit("error_inicio", { mensaje: "Se necesitan al menos 2 jugadores para iniciar." });
+            return;
+        }
+
+        console.log(`Intentando iniciar partida...`);
+        const iniciada = partida.iniciar();
+        if (iniciada) {
+            console.log(`Partida iniciada exitosamente: ${idPartida}`);
+            console.log('=== JUGADORES Y SUS RECURSOS ===');
+            partida.jugadores.forEach(j => {
+                console.log(`Jugador: ${j.nickname} (${j.socketId})`);
+                console.log(`  Planeta Base: ${j.planetaBase ? j.planetaBase.nombre : 'N/A'}`);
+                console.log(`  Recursos: Minerales=${j.recursos.minerales}, Energía=${j.recursos.energia}, Cristales=${j.recursos.cristales}`);
+            });
+            console.log('================================');
+
+            io.to(idPartida).emit("partida_iniciada", {
+                idPartida: partida.id,
+                estado: partida.estado,
+                jugadores: partida.jugadores.map(j => ({
+                    id: j.socketId,
+                    nombre: j.nickname,
+                    planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
+                    recursos: j.recursos
+                }))
+            });
+        } else {
+            console.log(`Error: No se pudo iniciar la partida`);
+            socket.emit("error_inicio", { mensaje: "No se pudo iniciar la partida." });
+        }
     });
 
     socket.on("disconnect", () => {

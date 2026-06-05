@@ -18,7 +18,7 @@ class Galaxia {
 
     cargarSistemasDesdeJSON(sistemasData) {
         for (const sys of sistemasData) {
-            const sistema = new SistemaPlanetario(sys.id, sys.nombre, sys.tipo, sys.descripcion || '');
+            const sistema = new SistemaPlanetario(sys.id, sys.nombre, sys.tipo);
             this.sistemas.push(sistema);
         }
     }
