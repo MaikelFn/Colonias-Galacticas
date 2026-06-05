@@ -1,0 +1,44 @@
+{
+  "nombre": "Galaxia Andrómeda",
+  "sistemas": [
+    {
+      "id": "A1",
+      "nombre": "Alpha Centauri",
+      "tipo": "balanceado"
+    },
+    {
+      "id": "A2",
+      "nombre": "Betelgeuse",
+      "tipo": "minero"
+    },
+    {
+      "id": "A3",
+      "nombre": "Sirius",
+      "tipo": "energetico"
+    },
+    {
+      "id": "A4",
+      "nombre": "Vega",
+      "tipo": "cientifico"
+    },
+    {
+      "id": "A5",
+      "nombre": "Rigel",
+      "tipo": "minero"
+    },
+    {
+      "id": "A6",
+      "nombre": "Deneb",
+      "tipo": "energetico"
+    }
+  ],
+  "rutas": [
+    ["A1", "A2"],
+    ["A2", "A3"],
+    ["A3", "A4"],
+    ["A4", "A5"],
+    ["A5", "A6"],
+    ["A1", "A4"],
+    ["A2", "A5"]
+  ]
+}

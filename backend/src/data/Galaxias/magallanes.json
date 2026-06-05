@@ -1,0 +1,25 @@
+{
+  "nombre": "Nubes de Magallanes",
+  "sistemas": [
+    {
+      "id": "M1",
+      "nombre": "Tarantula",
+      "tipo": "energetico"
+    },
+    {
+      "id": "M2",
+      "nombre": "Dorado",
+      "tipo": "minero"
+    },
+    {
+      "id": "M3",
+      "nombre": "Hydra",
+      "tipo": "cientifico"
+    }
+  ],
+  "rutas": [
+    ["M1", "M2"],
+    ["M2", "M3"],
+    ["M1", "M3"]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "nombre": "Triángulo Austral",
+  "sistemas": [
+    {
+      "id": "T1",
+      "nombre": "Proxima",
+      "tipo": "balanceado"
+    },
+    {
+      "id": "T2",
+      "nombre": "Kepler",
+      "tipo": "cientifico"
+    },
+    {
+      "id": "T3",
+      "nombre": "Gliese",
+      "tipo": "minero"
+    },
+    {
+      "id": "T4",
+      "nombre": "Trappist",
+      "tipo": "energetico"
+    }
+  ],
+  "rutas": [
+    ["T1", "T2"],
+    ["T2", "T3"],
+    ["T3", "T4"],
+    ["T4", "T1"]
+  ]
+}

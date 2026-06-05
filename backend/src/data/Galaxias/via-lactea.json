@@ -1,0 +1,51 @@
+{
+  "nombre": "Vía Láctea Prime",
+  "sistemas": [
+    {
+      "id": "V1",
+      "nombre": "Sol",
+      "tipo": "balanceado"
+    },
+    {
+      "id": "V2",
+      "nombre": "Antares",
+      "tipo": "energetico"
+    },
+    {
+      "id": "V3",
+      "nombre": "Aldebaran",
+      "tipo": "minero"
+    },
+    {
+      "id": "V4",
+      "nombre": "Spica",
+      "tipo": "cientifico"
+    },
+    {
+      "id": "V5",
+      "nombre": "Pollux",
+      "tipo": "balanceado"
+    },
+    {
+      "id": "V6",
+      "nombre": "Arcturus",
+      "tipo": "energetico"
+    },
+    {
+      "id": "V7",
+      "nombre": "Capella",
+      "tipo": "minero"
+    }
+  ],
+  "rutas": [
+    ["V1", "V2"],
+    ["V2", "V3"],
+    ["V3", "V4"],
+    ["V4", "V5"],
+    ["V5", "V6"],
+    ["V6", "V7"],
+    ["V1", "V4"],
+    ["V2", "V5"],
+    ["V3", "V6"]
+  ]
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSocket } from '../../hooks/useSocket'
 
 export default function CrearPartidaModal({
@@ -15,9 +15,24 @@ export default function CrearPartidaModal({
   setRecursos,
   comandante
 }) {
-  const { emit } = useSocket()
+  const { emit, on } = useSocket()
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState(null)
+  const [galaxiasDisponibles, setGalaxiasDisponibles] = useState([])
+  const [cargandoGalaxias, setCargandoGalaxias] = useState(true)
+
+  useEffect(() => {
+    emit('obtener_galaxias')
+    const unsub = on('galaxias_disponibles', (data) => {
+      setGalaxiasDisponibles(data)
+      setCargandoGalaxias(false)
+      // Seleccionar la primera galaxia por defecto si no hay ninguna seleccionada
+      if (!galaxia && data.length > 0) {
+        setGalaxia(data[0].nombre)
+      }
+    })
+    return unsub
+  }, [emit, on, galaxia, setGalaxia])
 
   const handleCrearPartida = () => {
     if (!nombrePartida.trim()) {
@@ -68,11 +83,21 @@ export default function CrearPartidaModal({
           <div className="gc-modal-grid-2">
             <div className="gc-field-group">
               <label className="gc-label">Galaxia</label>
-              <select className="gc-input gc-select" value={galaxia} onChange={e => setGalaxia(e.target.value)} disabled={enviando}>
-                <option value="Sector Centauri">Sector Centauri</option>
-                <option value="Vía Láctea Prime">Vía Láctea Prime</option>
-                <option value="Triángulo Austral">Triángulo Austral</option>
-              </select>
+              {cargandoGalaxias ? (
+                <select className="gc-input gc-select" disabled>
+                  <option>Cargando galaxias...</option>
+                </select>
+              ) : (
+                <select className="gc-input gc-select" value={galaxia} onChange={e => setGalaxia(e.target.value)} disabled={enviando}>
+                  {galaxiasDisponibles.length > 0 ? (
+                    galaxiasDisponibles.map(g => (
+                      <option key={g.id} value={g.nombre}>{g.nombre}</option>
+                    ))
+                  ) : (
+                    <option value="">No hay galaxias disponibles</option>
+                  )}
+                </select>
+              )}
             </div>
 
             <div className="gc-field-group">
