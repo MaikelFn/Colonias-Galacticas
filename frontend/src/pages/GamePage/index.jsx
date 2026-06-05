@@ -1,102 +1,147 @@
-import { useState, useEffect, useRef } from 'react'
-import { useSocket } from '../../hooks/useSocket'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import socket from '../../services/socket'
 import './index.css'
 
-function PlanetasFrame({ partida }) {
-  if (!partida) return <div className="gp-empty">Cargando sistemas...</div>
-
-  const jugadores = partida.jugadores || []
-  const sistemasEjemplo = [
-    { id: 1, nombre: 'Orion Prime', tipo: 'Gaseoso', propietario: jugadores[0]?.nombre || null, recursos: 'Alto' },
-    { id: 2, nombre: 'Centauri IV', tipo: 'Rocoso', propietario: jugadores[1]?.nombre || null, recursos: 'Medio' },
-    { id: 3, nombre: 'Vega Station', tipo: 'Árido', propietario: null, recursos: 'Bajo' },
-    { id: 4, nombre: 'Proxima B', tipo: 'Oceánico', propietario: null, recursos: 'Alto' },
-    { id: 5, nombre: 'Tau Ceti III', tipo: 'Helado', propietario: null, recursos: 'Medio' },
-    { id: 6, nombre: 'Sirius Alpha', tipo: 'Volcánico', propietario: null, recursos: 'Bajo' },
-  ]
-
-  return (
-    <div className="gp-planetas-grid">
-      {sistemasEjemplo.map(s => (
-        <div key={s.id} className={`gp-planeta-card ${s.propietario ? 'gp-planeta-owned' : 'gp-planeta-free'}`}>
-          <div className="gp-planeta-icon">{tipoIcono(s.tipo)}</div>
-          <div className="gp-planeta-info">
-            <span className="gp-planeta-nombre">{s.nombre}</span>
-            <span className="gp-planeta-tipo">{s.tipo} · {s.recursos}</span>
-            <span className={`gp-planeta-owner ${s.propietario ? 'owned' : 'free'}`}>
-              {s.propietario ? `⚑ ${s.propietario}` : '[ Libre ]'}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function tipoIcono(tipo) {
-  const iconos = { 'Gaseoso': '🪐', 'Rocoso': '🌑', 'Árido': '🏜️', 'Oceánico': '🌊', 'Helado': '❄️', 'Volcánico': '🌋' }
-  return iconos[tipo] || '🌍'
-}
-
-function EstadosFrame({ partida, jugadoresConectados }) {
-  if (!partida) return <div className="gp-empty">Sin datos</div>
-
-  const jugadores = partida.jugadores || []
-  const recursosBase = { Bajo: { m: 200, e: 100, c: 40 }, Normal: { m: 500, e: 250, c: 100 }, Alto: { m: 1000, e: 500, c: 200 } }
-  const r = recursosBase[partida.recursos] || recursosBase.Normal
-
-  return (
-    <div className="gp-estados-body">
-      <div className="gp-estado-seccion">
-        <h4 className="gp-estado-titulo">⚙ PARTIDA</h4>
-        <div className="gp-estado-fila"><span>Nombre</span><span>{partida.nombre}</span></div>
-        <div className="gp-estado-fila"><span>Galaxia</span><span>{partida.galaxia}</span></div>
-        <div className="gp-estado-fila"><span>Duración</span><span>{partida.duracion} min</span></div>
-        <div className="gp-estado-fila"><span>Estado</span><span className="status-open">{partida.estado?.toUpperCase()}</span></div>
-      </div>
-
-      <div className="gp-estado-seccion">
-        <h4 className="gp-estado-titulo">👥 JUGADORES ({jugadores.length}/{partida.maxJugadores})</h4>
-        {jugadores.map((j, i) => (
-          <div key={i} className="gp-estado-fila">
-            <span>⚑ {j.nombre}</span>
-            <span className="status-open">En sala</span>
-          </div>
-        ))}
-        {jugadores.length < partida.maxJugadores && (
-          <div className="gp-estado-fila gp-esperando">
-            <span>Esperando {partida.maxJugadores - jugadores.length} jugador(es)...</span>
-          </div>
-        )}
-      </div>
-
-      <div className="gp-estado-seccion">
-        <h4 className="gp-estado-titulo">💎 RECURSOS INICIALES</h4>
-        <div className="gp-estado-fila"><span>🪨 Minerales</span><span>{r.m}</span></div>
-        <div className="gp-estado-fila"><span>⚡ Energía</span><span>{r.e}</span></div>
-        <div className="gp-estado-fila"><span>💎 Cristales</span><span>{r.c}</span></div>
-      </div>
-
-      <div className="gp-estado-seccion">
-        <h4 className="gp-estado-titulo">🌐 CONEXIONES</h4>
-        <div className="gp-estado-fila"><span>Online</span><span className="status-open">{jugadoresConectados} jugadores</span></div>
-      </div>
-    </div>
-  )
-}
-
-function ChatFrame({ nombreJugador, idPartida }) {
-  const { emit, on } = useSocket()
-  const [mensajes, setMensajes] = useState([])
-  const [texto, setTexto] = useState('')
-  const bottomRef = useRef(null)
+// ─── Temporizador ─────────────────────────────────────────────────────────────
+function Temporizador({ duracionMin, partidaIniciada }) {
+  const totalSeg = duracionMin * 60
+  const [segsRestantes, setSegsRestantes] = useState(null)
+  const intervalRef = useRef(null)
 
   useEffect(() => {
-    const unsub = on('chat_mensaje', (data) => {
+    if (!partidaIniciada) { setSegsRestantes(null); return }
+    setSegsRestantes(totalSeg)
+    intervalRef.current = setInterval(() => {
+      setSegsRestantes(prev => {
+        if (prev === null || prev <= 0) { clearInterval(intervalRef.current); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(intervalRef.current)
+  }, [partidaIniciada, totalSeg])
+
+  const formatTime = (secs) => {
+    if (secs === null) return '--:--'
+    const m = Math.floor(secs / 60).toString().padStart(2, '0')
+    const s = (secs % 60).toString().padStart(2, '0')
+    return `${m}:${s}`
+  }
+
+  const isRojo = segsRestantes !== null && segsRestantes <= 120
+
+  return (
+    <div className="gp-timer-block">
+      <span className={`gp-timer-display ${isRojo ? 'gp-timer-red' : ''}`}>
+        {formatTime(segsRestantes)}
+      </span>
+      <span className="gp-timer-label">{duracionMin} Minutos</span>
+    </div>
+  )
+}
+
+function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
+  return (
+    <div className="gp-modal-overlay">
+      <div className="gp-modal">
+        <div className="gp-modal-icon">⚠️</div>
+        <h2 className="gp-modal-titulo">¿Abandonar la partida?</h2>
+        <p className="gp-modal-texto">
+          Serás retirado del campo de batalla. Tu progreso se perderá y no podrás regresar.
+        </p>
+        <div className="gp-modal-botones">
+          <button className="gp-modal-btn gp-modal-cancelar" onClick={onCancelar}>
+            No, continuar
+          </button>
+          <button className="gp-modal-btn gp-modal-confirmar" onClick={onConfirmar}>
+            Sí, abandonar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function JugadoresPanel({ jugadores, miSocketId }) {
+  if (!jugadores || jugadores.length === 0) {
+    return <div className="gp-empty">Sin jugadores</div>
+  }
+  return (
+    <div className="gp-jugadores-lista">
+      {jugadores.map((j, i) => {
+        const esYo = j.id === miSocketId
+        const r = j.recursos || {}
+        const planetas = j.planetasConquistados ?? 0
+        return (
+          <div key={j.id || i} className={`gp-jugador-card ${esYo ? 'gp-jugador-yo' : ''}`}>
+            <div className="gp-jugador-header">
+              <span className="gp-jugador-avatar">{(j.nombre || '?').charAt(0).toUpperCase()}</span>
+              <span className="gp-jugador-nombre">
+                {j.nombre}
+                {esYo && <span className="gp-jugador-tag"> (tú)</span>}
+              </span>
+            </div>
+            <div className="gp-jugador-recursos">
+              <div className="gp-recurso-fila">
+                <span className="gp-recurso-icono">🪨</span>
+                <span className="gp-recurso-label">Minerales</span>
+                <span className="gp-recurso-valor">{r.minerales ?? 0}</span>
+              </div>
+              <div className="gp-recurso-fila">
+                <span className="gp-recurso-icono">⚡</span>
+                <span className="gp-recurso-label">Energía</span>
+                <span className="gp-recurso-valor">{r.energia ?? 0}</span>
+              </div>
+              <div className="gp-recurso-fila">
+                <span className="gp-recurso-icono">💎</span>
+                <span className="gp-recurso-label">Cristales</span>
+                <span className="gp-recurso-valor">{r.cristales ?? 0}</span>
+              </div>
+            </div>
+            <div className="gp-jugador-planetas">
+              <span className="gp-planetas-label">Planetas conquistados:</span>
+              <span className="gp-planetas-count">{planetas}</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ─── Área de mapa ─────────────────────────────────────────────────────────────
+function MapaArea() {
+  return (
+    <div className="gp-mapa-area">
+      {/* Zona reservada para el mapa navegable con nodos de planetas */}
+    </div>
+  )
+}
+
+
+function ChatFrame({ nombreJugador, idPartida, mensajesSistema }) {
+  const [mensajes, setMensajes] = useState([])
+  const bottomRef = useRef(null)
+  const [texto, setTexto] = useState('')
+  const idPartidaRef = useRef(idPartida)
+  useEffect(() => { idPartidaRef.current = idPartida }, [idPartida])
+
+  useEffect(() => {
+    function onChatMensaje(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
       setMensajes(prev => [...prev, data])
+    }
+    socket.on('chat_mensaje', onChatMensaje)
+    return () => socket.off('chat_mensaje', onChatMensaje)
+  }, [])
+
+  useEffect(() => {
+    if (!mensajesSistema || mensajesSistema.length === 0) return
+    const ultimo = mensajesSistema[mensajesSistema.length - 1]
+    setMensajes(prev => {
+      if (prev.some(m => m.ts === ultimo.ts)) return prev
+      return [...prev, ultimo]
     })
-    return unsub
-  }, [on])
+  }, [mensajesSistema])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -105,19 +150,12 @@ function ChatFrame({ nombreJugador, idPartida }) {
   const enviar = () => {
     const msg = texto.trim()
     if (!msg) return
-    emit('chat_mensaje', {
-      idPartida,
-      nombreJugador,
-      mensaje: msg
-    })
+    socket.emit('chat_mensaje', { idPartida: idPartidaRef.current, nombreJugador, mensaje: msg })
     setTexto('')
   }
 
   const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      enviar()
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() }
   }
 
   return (
@@ -126,13 +164,23 @@ function ChatFrame({ nombreJugador, idPartida }) {
         {mensajes.length === 0 && (
           <p className="gp-chat-vacio">El chat está vacío. ¡Di algo, comandante!</p>
         )}
-        {mensajes.map((m, i) => (
-          <div key={i} className={`gp-chat-msg ${m.nombreJugador === nombreJugador ? 'gp-chat-self' : ''}`}>
-            <span className="gp-chat-autor">{m.nombreJugador}</span>
-            <span className="gp-chat-separador">:</span>
-            <span className="gp-chat-texto">{m.mensaje}</span>
-          </div>
-        ))}
+        {mensajes.map((m, i) => {
+          const esSistema = m.nombreJugador === 'Sistema'
+          const esMio = !esSistema && m.nombreJugador === nombreJugador
+          return (
+            <div key={i} className={`gp-chat-msg ${esMio ? 'gp-chat-self' : ''} ${esSistema ? 'gp-chat-sistema' : ''}`}>
+              {esSistema ? (
+                <span className="gp-chat-texto">🔔 {m.mensaje}</span>
+              ) : (
+                <>
+                  <span className="gp-chat-autor">{m.nombreJugador}</span>
+                  <span className="gp-chat-separador">:</span>
+                  <span className="gp-chat-texto">{m.mensaje}</span>
+                </>
+              )}
+            </div>
+          )
+        })}
         <div ref={bottomRef} />
       </div>
       <div className="gp-chat-input-row">
@@ -153,77 +201,191 @@ function ChatFrame({ nombreJugador, idPartida }) {
 }
 
 export default function GamePage({ partida, nombreJugador, onSalir }) {
-  const { on } = useSocket()
-  const [partidaActual, setPartidaActual] = useState(partida)
-  const [jugadoresConectados, setJugadoresConectados] = useState(0)
+  const [partidaActual]               = useState(partida)
+  const [jugadores, setJugadores]     = useState(() => partida?.jugadores || [])
+  const [miSocketId, setMiSocketId]   = useState(null)
+  const [partidaIniciada, setPartidaIniciada] = useState(partida?.estado === 'iniciada')
+  const [mostrarModalSalida, setMostrarModalSalida] = useState(false)
+
+  const [mensajesSistema, setMensajesSistema] = useState([])
+
+  const idPartidaRef = useRef(partida?.id)
+  const nombreRef    = useRef(nombreJugador)
 
   useEffect(() => {
-    const unsub1 = on('jugador_unido', (data) => {
-      if (data.idPartida === partidaActual?.id) {
-        setPartidaActual(prev => ({
-          ...prev,
-          jugadores: [...(prev?.jugadores || []), data.jugador]
-        }))
+    const yo = jugadores.find(j => j.nombre === nombreJugador)
+    if (yo?.id) setMiSocketId(yo.id)
+  }, [jugadores, nombreJugador])
+
+  useEffect(() => {
+
+    function onJugadorUnido(data) {
+      if (data.idPartida !== idPartidaRef.current) return
+      setJugadores(prev => {
+        if (prev.find(j => j.id === data.jugador.id)) return prev
+        return [...prev, {
+          ...data.jugador,
+          recursos: data.jugador.recursos || { minerales: 0, energia: 0, cristales: 0 },
+          planetasConquistados: data.jugador.planetasConquistados ?? 0,
+        }]
+      })
+    }
+
+    function onJugadorSalio(data) {
+      if (data.idPartida !== idPartidaRef.current) return
+      setJugadores(prev => {
+        const saliente = prev.find(
+          j => j.id === data.jugadorId || j.nombre === data.nombreJugador
+        )
+        const nombre = saliente?.nombre || data.nombreJugador || 'Un jugador'
+        setMensajesSistema(ms => [...ms, {
+          nombreJugador: 'Sistema',
+          mensaje: `${nombre} ha abandonado la partida.`,
+          ts: Date.now(),
+        }])
+        return prev.filter(
+          j => j.id !== data.jugadorId && j.nombre !== data.nombreJugador
+        )
+      })
+    }
+
+    function onRecursosActualizados(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      const targetId = data.jugadorId ?? data.id
+      if (!targetId) return
+      setJugadores(prev =>
+        prev.map(j =>
+          j.id === targetId
+            ? { ...j, recursos: { ...j.recursos, ...data.recursos } }
+            : j
+        )
+      )
+    }
+
+    function onEstadoJugadores(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      const lista = Array.isArray(data) ? data : data.jugadores
+      if (!Array.isArray(lista)) return
+      setJugadores(lista.map(j => ({
+        ...j,
+        recursos: j.recursos || { minerales: 0, energia: 0, cristales: 0 },
+        planetasConquistados: j.planetasConquistados ?? 0,
+      })))
+    }
+
+    function onPartidaIniciada(data) {
+      const idRecibido = data?.idPartida ?? data?.id
+      if (idRecibido && idRecibido !== idPartidaRef.current) return
+      if (data?.jugadores) {
+        setJugadores(data.jugadores.map(j => ({
+          ...j,
+          recursos: j.recursos || { minerales: 0, energia: 0, cristales: 0 },
+          planetasConquistados: j.planetasConquistados ?? 0,
+        })))
       }
+      setPartidaIniciada(true)
+    }
+
+    function onPlanetaConquistado(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      const ganadorId  = data.conquistadorId ?? data.jugadorId ?? data.id
+      const perdedorId = data.anteriorDuenoId ?? data.anteriorJugadorId ?? null
+      setJugadores(prev =>
+        prev.map(j => {
+          if (j.id === ganadorId)
+            return { ...j, planetasConquistados: (j.planetasConquistados ?? 0) + 1 }
+          if (perdedorId && j.id === perdedorId)
+            return { ...j, planetasConquistados: Math.max(0, (j.planetasConquistados ?? 0) - 1) }
+          return j
+        })
+      )
+    }
+
+    socket.on('jugador_unido',         onJugadorUnido)
+    socket.on('jugador_salio',         onJugadorSalio)
+    socket.on('recursos_actualizados', onRecursosActualizados)
+    socket.on('estado_jugadores',      onEstadoJugadores)
+    socket.on('partida_iniciada',      onPartidaIniciada)
+    socket.on('planeta_conquistado',   onPlanetaConquistado)
+
+    return () => {
+      socket.off('jugador_unido',         onJugadorUnido)
+      socket.off('jugador_salio',         onJugadorSalio)
+      socket.off('recursos_actualizados', onRecursosActualizados)
+      socket.off('estado_jugadores',      onEstadoJugadores)
+      socket.off('partida_iniciada',      onPartidaIniciada)
+      socket.off('planeta_conquistado',   onPlanetaConquistado)
+    }
+  }, [])
+
+  const handleConfirmarSalida = useCallback(() => {
+    socket.emit('abandonar_partida', {
+      idPartida: idPartidaRef.current,
+      nombreJugador: nombreRef.current,
     })
-    const unsub2 = on('actualizar_jugadores', (jugadores) => {
-      setJugadoresConectados(jugadores.length)
-    })
-    return () => { unsub1(); unsub2() }
-  }, [on, partidaActual?.id])
+    setMostrarModalSalida(false)
+    onSalir()
+  }, [onSalir])
+
+  const duracionMin = partidaActual?.duracion ?? 20
 
   return (
     <div className="gp-root">
-      {/* Header */}
+      {mostrarModalSalida && (
+        <ModalConfirmarSalida
+          onConfirmar={handleConfirmarSalida}
+          onCancelar={() => setMostrarModalSalida(false)}
+        />
+      )}
+
       <header className="gp-header">
         <div className="gp-header-left">
           <span className="gp-logo">⬡ COLONIAS GALÁCTICAS</span>
           <span className="gp-partida-nombre">{partidaActual?.nombre}</span>
         </div>
+
+        <Temporizador duracionMin={duracionMin} partidaIniciada={partidaIniciada} />
+
         <div className="gp-header-right">
           <span className="gp-comandante">⚑ {nombreJugador}</span>
-          <button className="gp-salir-btn" onClick={onSalir}>← SALIR</button>
+          <button className="gp-salir-btn" onClick={() => setMostrarModalSalida(true)}>← SALIR</button>
         </div>
       </header>
 
-      {/* Main layout: 3 frames */}
       <div className="gp-layout">
 
-        {/* Frame izquierdo: Planetas */}
-        <section className="gp-frame gp-frame-planetas">
+        <section className="gp-frame gp-frame-jugadores">
           <div className="gp-frame-header">
-            <span className="gp-frame-icon">🪐</span>
-            <span>SISTEMAS PLANETARIOS</span>
+            <span className="gp-frame-icon">👥</span>
+            <span>JUGADORES</span>
           </div>
           <div className="gp-frame-body">
-            <PlanetasFrame partida={partidaActual} />
+            <JugadoresPanel jugadores={jugadores} miSocketId={miSocketId} />
           </div>
         </section>
 
-        {/* Frame derecho: Estados + Chat */}
-        <div className="gp-right-col">
+        <section className="gp-frame gp-frame-mapa">
+          <div className="gp-frame-header">
+            <span className="gp-frame-icon">🗺</span>
+            <span>MAPA GALÁCTICO</span>
+          </div>
+          <div className="gp-frame-body gp-frame-body-mapa">
+            <MapaArea />
+          </div>
+        </section>
 
-          {/* Frame estados */}
-          <section className="gp-frame gp-frame-estados">
-            <div className="gp-frame-header">
-              <span className="gp-frame-icon">📊</span>
-              <span>ESTADO DE PARTIDA</span>
-            </div>
-            <div className="gp-frame-body">
-              <EstadosFrame partida={partidaActual} jugadoresConectados={jugadoresConectados} />
-            </div>
-          </section>
+        <section className="gp-frame gp-frame-chat">
+          <div className="gp-frame-header">
+            <span className="gp-frame-icon">💬</span>
+            <span>COMUNICACIONES</span>
+          </div>
+          <ChatFrame
+            nombreJugador={nombreJugador}
+            idPartida={partidaActual?.id}
+            mensajesSistema={mensajesSistema}
+          />
+        </section>
 
-          {/* Frame chat */}
-          <section className="gp-frame gp-frame-chat">
-            <div className="gp-frame-header">
-              <span className="gp-frame-icon">💬</span>
-              <span>COMUNICACIONES</span>
-            </div>
-            <ChatFrame nombreJugador={nombreJugador} idPartida={partidaActual?.id} />
-          </section>
-
-        </div>
       </div>
     </div>
   )

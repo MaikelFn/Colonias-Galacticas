@@ -91,14 +91,17 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   const [texto, setTexto] = useState('')
   const [cuentaRegresiva, setCuentaRegresiva] = useState(null)
   const [partidaCerrada, setPartidaCerrada] = useState(null)
-  const [tiempoEspera, setTiempoEspera] = useState(null) // segundos restantes para cierre automático
+  const [tiempoEspera, setTiempoEspera] = useState(null) 
   const [lleno, setLleno] = useState(false)
   const [mounted, setMounted] = useState(false)
+  
+  const onIniciarJuegoRef = useRef(onIniciarJuego)
+  const partidaActualRef  = useRef(partidaActual)
 
   const chatBottomRef = useRef(null)
   const esCreador = partidaActual?.creador === undefined
     ? partidaActual?.jugadores?.[0]?.nombre === nombreJugador
-    : true // se detecta vía socket.id en backend; aquí usamos posición 0 como heurística
+    : true
 
   const jugadoresActuales = partidaActual?.jugadores || []
   const maxJugadores = partidaActual?.maxJugadores || 4
@@ -106,18 +109,15 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
 
   useEffect(() => { setMounted(true) }, [])
 
-  // Detectar si la sala está llena
   useEffect(() => {
     const estaLleno = jugadoresActuales.length >= maxJugadores
     setLleno(estaLleno)
   }, [jugadoresActuales.length, maxJugadores])
 
-  // Escuchar cuando un jugador se une
   useEffect(() => {
     const unsub = on('jugador_unido', (data) => {
       if (data.idPartida === partidaActual?.id) {
         setPartidaActual(prev => {
-          // Evitar duplicados
           const yaEsta = prev.jugadores.some(j => j.id === data.jugador.id)
           if (yaEsta) return prev
           return {
@@ -130,7 +130,6 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     return unsub
   }, [on, partidaActual?.id])
 
-  // Escuchar cuando un jugador sale
   useEffect(() => {
     const unsub = on('jugador_salio', (data) => {
       if (data.idPartida === partidaActual?.id) {
@@ -143,13 +142,11 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     return unsub
   }, [on, partidaActual?.id])
 
-  // Escuchar cuenta regresiva
   useEffect(() => {
     const unsub = on('cuenta_regresiva', (data) => {
       if (data.idPartida === partidaActual?.id) {
         setCuentaRegresiva(data.cuenta)
         if (data.cuenta === 0) {
-          // Pequeño delay para mostrar el 0 antes de cambiar de pantalla
           setTimeout(() => onIniciarJuego(partidaActual), 500)
         }
       }
@@ -157,20 +154,17 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     return unsub
   }, [on, partidaActual?.id, onIniciarJuego, partidaActual])
 
-  // Escuchar partida cerrada
   useEffect(() => {
     const unsub = on('partida_cerrada', (data) => {
       if (data.idPartida === partidaActual?.id) {
         console.log('Partida cerrada:', data.razon)
         setPartidaCerrada(data.razon || 'Tiempo de espera agotado.')
-        // Volver al menú después de 2 segundos
         setTimeout(() => onSalir(), 2000)
       }
     })
     return unsub
   }, [on, partidaActual?.id, onSalir])
 
-  // Escuchar temporizador de cierre automático
   useEffect(() => {
     const unsub = on('temporizador_espera', (data) => {
       if (data.idPartida === partidaActual?.id) {
@@ -180,19 +174,19 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     return unsub
   }, [on, partidaActual?.id])
 
-  // Escuchar mensajes de chat
   useEffect(() => {
     const unsub = on('chat_mensaje', (data) => {
-      setMensajes(prev => [...prev, data])
-    })
-    return unsub
-  }, [on])
+      if (data.idPartida === partidaActual?.id) {
+        setMensajes(prev => [...prev, data]);
+      }
+    });
+    return unsub;
+  }, [on, partidaActual?.id]);
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [mensajes])
 
-  // Atajo de teclado U para iniciar
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'u' || e.key === 'U') {
@@ -204,6 +198,38 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
   }, [lleno, cuentaRegresiva, partidaCerrada])
+
+  useEffect(() => {
+    const unsub = on('partida_iniciada', (data) => {
+      console.log('[LobbyPage] partida_iniciada recibida:', data)
+      const partida = partidaActualRef.current
+
+      const idRecibido = data.idPartida ?? data.id
+      if (idRecibido && idRecibido !== partida?.id) {
+        console.warn('ID no coincide:', idRecibido, partida?.id)
+        return
+      }
+
+      const partidaActualizada = {
+        ...partida,
+        estado: data.estado,
+        jugadores: (data.jugadores ?? []).map(j => ({
+          id: j.id,
+          nombre: j.nombre,
+          recursos: j.recursos,
+          planetasConquistados: 0,
+          planetaBase: j.planetaBase,
+        })),
+      }
+
+      onIniciarJuegoRef.current(partidaActualizada)
+    })
+    return unsub
+  }, [on])
+
+  useEffect(() => { onIniciarJuegoRef.current = onIniciarJuego }, [onIniciarJuego])
+
+  useEffect(() => { partidaActualRef.current  = partidaActual  }, [partidaActual])
 
   const handleIniciarPartida = useCallback(() => {
     emit('iniciar_partida', { idPartida: partidaActual?.id })
@@ -217,6 +243,11 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   const enviarMensaje = () => {
     const msg = texto.trim()
     if (!msg) return
+
+    const msgObj = { nombreJugador, mensaje: msg, ts: Date.now() }
+    
+    setMensajes(prev => [...prev, msgObj])
+
     emit('chat_mensaje', {
       idPartida: partidaActual?.id,
       nombreJugador,
@@ -240,14 +271,12 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
 
   return (
     <div className={`lb-root ${mounted ? 'lb-mounted' : ''}`}>
-      {/* Fondo */}
       <div className="lb-starfield" aria-hidden="true">
         {STARS.map(s => <Star key={s.id} {...s} />)}
       </div>
       <div className="lb-nebula lb-nebula-1" aria-hidden="true" />
       <div className="lb-nebula lb-nebula-2" aria-hidden="true" />
 
-      {/* Header */}
       <header className="lb-header">
         <div className="lb-header-left">
           <span className="lb-logo">⬡ COLONIAS GALÁCTICAS</span>
@@ -265,13 +294,10 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
         </div>
       </header>
 
-      {/* Main */}
       <div className="lb-main">
 
-        {/* Panel izquierdo: info + jugadores */}
         <div className="lb-panel-left">
 
-          {/* Info de partida */}
           <section className="lb-card lb-card-info">
             <h3 className="lb-card-title">
               <span className="lb-card-icon">⚙</span>
@@ -297,7 +323,6 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
             </div>
           </section>
 
-          {/* Jugadores */}
           <section className="lb-card lb-card-players">
             <h3 className="lb-card-title">
               <span className="lb-card-icon">👥</span>
@@ -307,7 +332,6 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
               </span>
             </h3>
 
-            {/* Barra de progreso */}
             <div className="lb-progress-bar">
               <div
                 className="lb-progress-fill"
@@ -337,7 +361,6 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
             </div>
           </section>
 
-          {/* Botón de inicio */}
           <div className="lb-start-section">
             {lleno ? (
               <button
@@ -360,7 +383,6 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
           </div>
         </div>
 
-        {/* Panel derecho: chat */}
         <div className="lb-panel-right">
           <section className="lb-card lb-card-chat">
             <h3 className="lb-card-title">
@@ -406,12 +428,10 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
         </div>
       </div>
 
-      {/* Overlay: cuenta regresiva */}
       {cuentaRegresiva !== null && (
         <CountdownOverlay cuenta={cuentaRegresiva} />
       )}
 
-      {/* Overlay: partida cerrada */}
       {partidaCerrada && (
         <ClosedOverlay razon={partidaCerrada} />
       )}

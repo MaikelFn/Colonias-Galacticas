@@ -4,7 +4,6 @@ import LobbyPage from './pages/LobbyPage/index'
 import GamePage from './pages/GamePage/index'
 import './App.css'
 
-// Pantallas posibles: 'home' | 'lobby' | 'game'
 function App() {
   const [pantalla, setPantalla] = useState('home')
   const [partida, setPartida] = useState(null)
@@ -23,6 +22,7 @@ function App() {
 
   const irAHome = () => {
     setPartida(null)
+    setNombreJugador('')
     setPantalla('home')
   }
 
