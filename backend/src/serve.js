@@ -9,6 +9,19 @@ const Galaxia = require('./clases/Entidades/Galaxia');
 const Jugador = require('./clases/Entidades/Jugador');
 const { Partida } = require('./clases/Entidades/Partida');
 
+function cargarConfiguracion() {
+    const rutaConfig = path.join(__dirname, 'data', 'Configuracion.json');
+    try {
+        const contenido = fs.readFileSync(rutaConfig, 'utf8');
+        return JSON.parse(contenido);
+    } catch (error) {
+        console.error('Error al cargar configuración:', error);
+        return null;
+    }
+}
+
+const configuracion = cargarConfiguracion();
+
 const app = express();
 
 app.use(cors());
@@ -85,6 +98,14 @@ io.on("connection", (socket) => {
         socket.emit("galaxias_disponibles", galaxiasDisponibles);
     });
 
+    socket.on("obtener_configuracion", () => {
+        if (configuracion && configuracion.juego && configuracion.juego.recursosIniciales) {
+            socket.emit("configuracion_recursos", configuracion.juego.recursosIniciales);
+        } else {
+            socket.emit("configuracion_recursos", {});
+        }
+    });
+
     socket.on("obtener_partidas", () => {
         const disponibles = Array.from(partidas.values()).filter(p =>
             p.estado === 'esperando' && p.jugadores.length < p.maxJugadores
@@ -131,6 +152,23 @@ io.on("connection", (socket) => {
                 io.to(idPartida).emit("partida_cerrada", {
                     idPartida: partidaCerrada.id,
                     razon: "Tiempo de espera agotado. No se alcanzaron los jugadores mínimos."
+                });
+            },
+            (partida) => {
+                // Callback para producción de recursos
+                const jugadoresInfo = partida.jugadores.map(j => ({
+                    id: j.socketId,
+                    nombre: j.nickname,
+                    recursos: j.recursos,
+                    sistemasConquistados: j.getSistemasControlados().length
+                }));
+
+                partida.jugadores.forEach(jugador => {
+                    if (jugador.socketId) {
+                        io.to(jugador.socketId).emit("actualizar_clientes", {
+                            jugadores: jugadoresInfo
+                        });
+                    }
                 });
             },
             io
@@ -260,7 +298,8 @@ io.on("connection", (socket) => {
                     id: j.socketId,
                     nombre: j.nickname,
                     planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
-                    recursos: j.recursos
+                    recursos: j.recursos,
+                    sistemasConquistados: j.getSistemasControlados().length
                 }))
             });
         } else {

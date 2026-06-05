@@ -9,7 +9,7 @@ const EstadoPartida = {
 };
 
 class Partida {
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, io) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, onProduccionRecursos, io) {
         this.id = id;
         this.nombre = nombre;
         this.galaxia = galaxia;
@@ -17,19 +17,20 @@ class Partida {
         this.duracionMaximaSeg = duracionMaximaSeg;
         this.dificultadRecursos = dificultadRecursos;
         this.tiempoEsperaSeg = tiempoEsperaSeg !== null ? tiempoEsperaSeg : config.get('juego.tiempoEsperaPartidaSeg');
+        this.minJugadores = config.get('juego.minimoJugadoresPartida');
         this.jugadores = [];
         this.estado = EstadoPartida.ESPERANDO;
         this.fechaCreacion = Date.now();
         this.fechaInicio = null;
         this.fechaFin = null;
         this.gestorTemporizadores = new GestorTemporizadores();
-        this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this, io);
+        this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this, onProduccionRecursos);
         this.cuentaRegresivaActiva = false;
         this.onCierrePorTiempo = onCierrePorTiempo;
     }
 
     puedeIniciar() {
-        return this.estado === EstadoPartida.ESPERANDO && this.jugadores.length >= 2;
+        return this.estado === EstadoPartida.ESPERANDO && this.jugadores.length >= this.minJugadores;
     }
 
     iniciarCuentaRegresiva() {
@@ -144,7 +145,7 @@ class Partida {
         jugador.partida = this;
         if (!this.gestorTemporizadores.temporizadorEspera && this.jugadores.length < this.maxJugadores) {
             this.gestorTemporizadores.iniciarTemporizadorEspera(this.tiempoEsperaSeg, () => {
-                if (this.estado === EstadoPartida.ESPERANDO && this.jugadores.length < 2) {
+                if (this.estado === EstadoPartida.ESPERANDO && this.jugadores.length < this.minJugadores) {
                     this.estado = EstadoPartida.FINALIZADA;
                     this.detenerTemporizadores();
                     if (this.onCierrePorTiempo) {

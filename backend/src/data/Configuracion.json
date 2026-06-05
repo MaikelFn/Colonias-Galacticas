@@ -4,8 +4,9 @@
     },
     "juego": {
         "cicloProduccionSeg": 20,
-        "tiempoEsperaPartidaSeg": 60,
+        "tiempoEsperaPartidaSeg": 120,
         "porcentajeSistemasParaGanar": 0.75,
+        "minimoJugadoresPartida": 2,
         "recursosIniciales": {
             "bajo": { "minerales": 100, "energia": 50, "cristales": 20 },
             "normal": { "minerales": 300, "energia": 150, "cristales": 50 },

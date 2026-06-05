@@ -20,6 +20,8 @@ export default function CrearPartidaModal({
   const [error, setError] = useState(null)
   const [galaxiasDisponibles, setGalaxiasDisponibles] = useState([])
   const [cargandoGalaxias, setCargandoGalaxias] = useState(true)
+  const [recursosConfig, setRecursosConfig] = useState({})
+  const [cargandoRecursos, setCargandoRecursos] = useState(true)
 
   useEffect(() => {
     emit('obtener_galaxias')
@@ -33,6 +35,20 @@ export default function CrearPartidaModal({
     })
     return unsub
   }, [emit, on, galaxia, setGalaxia])
+
+  useEffect(() => {
+    emit('obtener_configuracion')
+    const unsub = on('configuracion_recursos', (data) => {
+      setRecursosConfig(data)
+      setCargandoRecursos(false)
+      // Seleccionar la primera opción por defecto si no hay ninguna seleccionada
+      if (!recursos && Object.keys(data).length > 0) {
+        const primeraOpcion = Object.keys(data)[0]
+        setRecursos(primeraOpcion)
+      }
+    })
+    return unsub
+  }, [emit, on, recursos, setRecursos])
 
   const handleCrearPartida = () => {
     if (!nombrePartida.trim()) {
@@ -133,11 +149,23 @@ export default function CrearPartidaModal({
 
             <div className="gc-field-group">
               <label className="gc-label">Recursos Iniciales</label>
-              <select className="gc-input gc-select" value={recursos} onChange={e => setRecursos(e.target.value)} disabled={enviando}>
-                <option value="Bajo">Bajo (200M, 100E, 40C)</option>
-                <option value="Normal">Normal (500M, 250E, 100C)</option>
-                <option value="Alto">Alto (1000M, 500E, 200C)</option>
-              </select>
+              {cargandoRecursos ? (
+                <select className="gc-input gc-select" disabled>
+                  <option>Cargando configuración...</option>
+                </select>
+              ) : (
+                <select className="gc-input gc-select" value={recursos} onChange={e => setRecursos(e.target.value)} disabled={enviando}>
+                  {Object.keys(recursosConfig).length > 0 ? (
+                    Object.entries(recursosConfig).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {key.charAt(0).toUpperCase() + key.slice(1)} ({value.minerales}M, {value.energia}E, {value.cristales}C)
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No hay configuración disponible</option>
+                  )}
+                </select>
+              )}
             </div>
           </div>
 

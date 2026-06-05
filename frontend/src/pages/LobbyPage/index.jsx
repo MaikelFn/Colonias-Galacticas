@@ -77,7 +77,7 @@ function ClosedOverlay({ razon }) {
       <div className="lb-countdown-content">
         <div className="lb-closed-icon">✕</div>
         <p className="lb-countdown-label">PARTIDA CERRADA</p>
-        <p className="lb-countdown-sub">{razon || 'La partida fue cerrada por inactividad.'}</p>
+        <p className="lb-countdown-sub">{razon}</p>
       </div>
     </div>
   )
@@ -103,8 +103,8 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     ? partidaActual?.jugadores?.[0]?.nombre === nombreJugador
     : true
 
-  const jugadoresActuales = partidaActual?.jugadores || []
-  const maxJugadores = partidaActual?.maxJugadores || 4
+  const jugadoresActuales = partidaActual.jugadores
+  const maxJugadores = partidaActual.maxJugadores
   const slotsVacios = Array.from({ length: Math.max(0, maxJugadores - jugadoresActuales.length) })
 
   useEffect(() => { setMounted(true) }, [])
@@ -158,7 +158,7 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     const unsub = on('partida_cerrada', (data) => {
       if (data.idPartida === partidaActual?.id) {
         console.log('Partida cerrada:', data.razon)
-        setPartidaCerrada(data.razon || 'Tiempo de espera agotado.')
+        setPartidaCerrada(data.razon)
         setTimeout(() => onSalir(), 2000)
       }
     })
@@ -204,7 +204,7 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
       console.log('[LobbyPage] partida_iniciada recibida:', data)
       const partida = partidaActualRef.current
 
-      const idRecibido = data.idPartida ?? data.id
+      const idRecibido = data.idPartida
       if (idRecibido && idRecibido !== partida?.id) {
         console.warn('ID no coincide:', idRecibido, partida?.id)
         return
@@ -213,11 +213,11 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
       const partidaActualizada = {
         ...partida,
         estado: data.estado,
-        jugadores: (data.jugadores ?? []).map(j => ({
+        jugadores: data.jugadores.map(j => ({
           id: j.id,
           nombre: j.nombre,
           recursos: j.recursos,
-          planetasConquistados: 0,
+          sistemasConquistados: j.sistemasConquistados,
           planetaBase: j.planetaBase,
         })),
       }
@@ -314,7 +314,7 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
               </div>
               <div className="lb-info-row">
                 <span className="lb-info-key">Recursos</span>
-                <span className="lb-info-val">{recursosLabel[partidaActual?.recursos] || partidaActual?.recursos}</span>
+                <span className="lb-info-val">{recursosLabel[partidaActual.recursos]}</span>
               </div>
               <div className="lb-info-row">
                 <span className="lb-info-key">ID Partida</span>

@@ -1,11 +1,11 @@
 const config = require('../Configuración/Configuracion');
 
 class GestorProduccion {
-    constructor(gestorTemporizadores, galaxia, estadoRef, io) {
+    constructor(gestorTemporizadores, galaxia, estadoRef, onProduccionRecursos) {
         this.gestorTemporizadores = gestorTemporizadores;
         this.galaxia = galaxia;
         this.estadoRef = estadoRef;
-        this.io = io;
+        this.onProduccionRecursos = onProduccionRecursos;
     }
 
     iniciarProduccion() {
@@ -21,14 +21,12 @@ class GestorProduccion {
             if (sistema.propietario && sistema.estado === 'controlado') {
                 const produccion = sistema.obtenerProduccionTotal();
                 sistema.propietario.agregarRecursos(produccion);
-
-                if (this.io && sistema.propietario.socketId) {
-                    this.io.to(sistema.propietario.socketId).emit("recursos_actualizados", {
-                        jugadorId: sistema.propietario.socketId,
-                        recursos: sistema.propietario.recursos
-                    });
-                }
             }
+        }
+
+        // Llamar al callback para que serve.js maneje la emisión del evento
+        if (this.onProduccionRecursos) {
+            this.onProduccionRecursos(this.estadoRef);
         }
     }
 

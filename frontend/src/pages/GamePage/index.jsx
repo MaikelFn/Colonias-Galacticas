@@ -69,12 +69,12 @@ function JugadoresPanel({ jugadores, miSocketId }) {
     <div className="gp-jugadores-lista">
       {jugadores.map((j, i) => {
         const esYo = j.id === miSocketId
-        const r = j.recursos || {}
-        const planetas = j.planetasConquistados ?? 0
+        const r = j.recursos
+        const planetas = j.sistemasConquistados
         return (
           <div key={j.id || i} className={`gp-jugador-card ${esYo ? 'gp-jugador-yo' : ''}`}>
             <div className="gp-jugador-header">
-              <span className="gp-jugador-avatar">{(j.nombre || '?').charAt(0).toUpperCase()}</span>
+              <span className="gp-jugador-avatar">{j.nombre.charAt(0).toUpperCase()}</span>
               <span className="gp-jugador-nombre">
                 {j.nombre}
                 {esYo && <span className="gp-jugador-tag"> (tú)</span>}
@@ -84,17 +84,17 @@ function JugadoresPanel({ jugadores, miSocketId }) {
               <div className="gp-recurso-fila">
                 <span className="gp-recurso-icono">🪨</span>
                 <span className="gp-recurso-label">Minerales</span>
-                <span className="gp-recurso-valor">{r.minerales ?? 0}</span>
+                <span className="gp-recurso-valor">{r.minerales}</span>
               </div>
               <div className="gp-recurso-fila">
                 <span className="gp-recurso-icono">⚡</span>
                 <span className="gp-recurso-label">Energía</span>
-                <span className="gp-recurso-valor">{r.energia ?? 0}</span>
+                <span className="gp-recurso-valor">{r.energia}</span>
               </div>
               <div className="gp-recurso-fila">
                 <span className="gp-recurso-icono">💎</span>
                 <span className="gp-recurso-label">Cristales</span>
-                <span className="gp-recurso-valor">{r.cristales ?? 0}</span>
+                <span className="gp-recurso-valor">{r.cristales}</span>
               </div>
             </div>
             <div className="gp-jugador-planetas">
@@ -202,7 +202,7 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema }) {
 
 export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [partidaActual]               = useState(partida)
-  const [jugadores, setJugadores]     = useState(() => partida?.jugadores || [])
+  const [jugadores, setJugadores]     = useState(() => partida.jugadores)
   const [miSocketId, setMiSocketId]   = useState(null)
   const [partidaIniciada, setPartidaIniciada] = useState(partida?.estado === 'iniciada')
   const [mostrarModalSalida, setMostrarModalSalida] = useState(false)
@@ -225,8 +225,8 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
         if (prev.find(j => j.id === data.jugador.id)) return prev
         return [...prev, {
           ...data.jugador,
-          recursos: data.jugador.recursos || { minerales: 0, energia: 0, cristales: 0 },
-          planetasConquistados: data.jugador.planetasConquistados ?? 0,
+          recursos: data.jugador.recursos,
+          sistemasConquistados: data.jugador.sistemasConquistados,
         }]
       })
     }
@@ -237,7 +237,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
         const saliente = prev.find(
           j => j.id === data.jugadorId || j.nombre === data.nombreJugador
         )
-        const nombre = saliente?.nombre || data.nombreJugador || 'Un jugador'
+        const nombre = saliente.nombre
         setMensajesSistema(ms => [...ms, {
           nombreJugador: 'Sistema',
           mensaje: `${nombre} ha abandonado la partida.`,
@@ -249,17 +249,15 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       })
     }
 
-    function onRecursosActualizados(data) {
+    function onActualizarClientes(data) {
       if (data.idPartida && data.idPartida !== idPartidaRef.current) return
-      const targetId = data.jugadorId ?? data.id
-      if (!targetId) return
-      setJugadores(prev =>
-        prev.map(j =>
-          j.id === targetId
-            ? { ...j, recursos: { ...j.recursos, ...data.recursos } }
-            : j
-        )
-      )
+      if (data.jugadores) {
+        setJugadores(data.jugadores.map(j => ({
+          ...j,
+          recursos: j.recursos,
+          sistemasConquistados: j.sistemasConquistados,
+        })))
+      }
     }
 
     function onEstadoJugadores(data) {
@@ -268,19 +266,19 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       if (!Array.isArray(lista)) return
       setJugadores(lista.map(j => ({
         ...j,
-        recursos: j.recursos || { minerales: 0, energia: 0, cristales: 0 },
-        planetasConquistados: j.planetasConquistados ?? 0,
+        recursos: j.recursos,
+        sistemasConquistados: j.sistemasConquistados,
       })))
     }
 
     function onPartidaIniciada(data) {
-      const idRecibido = data?.idPartida ?? data?.id
+      const idRecibido = data.idPartida
       if (idRecibido && idRecibido !== idPartidaRef.current) return
-      if (data?.jugadores) {
+      if (data.jugadores) {
         setJugadores(data.jugadores.map(j => ({
           ...j,
-          recursos: j.recursos || { minerales: 0, energia: 0, cristales: 0 },
-          planetasConquistados: j.planetasConquistados ?? 0,
+          recursos: j.recursos,
+          sistemasConquistados: j.sistemasConquistados,
         })))
       }
       setPartidaIniciada(true)
@@ -288,14 +286,14 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
 
     function onPlanetaConquistado(data) {
       if (data.idPartida && data.idPartida !== idPartidaRef.current) return
-      const ganadorId  = data.conquistadorId ?? data.jugadorId ?? data.id
-      const perdedorId = data.anteriorDuenoId ?? data.anteriorJugadorId ?? null
+      const ganadorId = data.conquistadorId
+      const perdedorId = data.anteriorDuenoId
       setJugadores(prev =>
         prev.map(j => {
           if (j.id === ganadorId)
-            return { ...j, planetasConquistados: (j.planetasConquistados ?? 0) + 1 }
+            return { ...j, sistemasConquistados: j.sistemasConquistados + 1 }
           if (perdedorId && j.id === perdedorId)
-            return { ...j, planetasConquistados: Math.max(0, (j.planetasConquistados ?? 0) - 1) }
+            return { ...j, sistemasConquistados: Math.max(0, j.sistemasConquistados - 1) }
           return j
         })
       )
@@ -303,7 +301,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
 
     socket.on('jugador_unido',         onJugadorUnido)
     socket.on('jugador_salio',         onJugadorSalio)
-    socket.on('recursos_actualizados', onRecursosActualizados)
+    socket.on('actualizar_clientes',   onActualizarClientes)
     socket.on('estado_jugadores',      onEstadoJugadores)
     socket.on('partida_iniciada',      onPartidaIniciada)
     socket.on('planeta_conquistado',   onPlanetaConquistado)
@@ -311,7 +309,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     return () => {
       socket.off('jugador_unido',         onJugadorUnido)
       socket.off('jugador_salio',         onJugadorSalio)
-      socket.off('recursos_actualizados', onRecursosActualizados)
+      socket.off('actualizar_clientes',   onActualizarClientes)
       socket.off('estado_jugadores',      onEstadoJugadores)
       socket.off('partida_iniciada',      onPartidaIniciada)
       socket.off('planeta_conquistado',   onPlanetaConquistado)
@@ -327,7 +325,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     onSalir()
   }, [onSalir])
 
-  const duracionMin = partidaActual?.duracion ?? 20
+  const duracionMin = partidaActual.duracion
 
   return (
     <div className="gp-root">
