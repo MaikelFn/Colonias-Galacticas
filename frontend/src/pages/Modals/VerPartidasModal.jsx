@@ -16,14 +16,22 @@ export default function VerPartidasModal({ onClose, comandante, onUnirse }) {
       setCargando(false)
     })
 
-    // Actualización en tiempo real cuando cambian las partidas
-    const unsub2 = on('actualizar_partidas', (data) => {
-      const disponibles = data.filter(p => p.jugadores.length < p.maxJugadores && p.estado === 'esperando')
-      setPartidas(disponibles)
+    const unsub2 = on('partida_unida', (partida) => {
+      setUniendose(null)
+      if (onUnirse) {
+        onUnirse(partida)
+      } else {
+        onClose()
+      }
     })
 
-    return () => { unsub1(); unsub2() }
-  }, [emit, on])
+    const unsub3 = on('error_unirse', (error) => {
+      setUniendose(null)
+      alert(error.mensaje)
+    })
+
+    return () => { unsub1(); unsub2(); unsub3() }
+  }, [emit, on, onUnirse, onClose])
 
   const handleUnirse = (partida) => {
     if (!comandante) {
@@ -36,21 +44,6 @@ export default function VerPartidasModal({ onClose, comandante, onUnirse }) {
       idPartida: partida.id,
       nombreJugador: comandante
     })
-
-    // Navegar a la partida
-    setTimeout(() => {
-      setUniendose(null)
-      if (onUnirse) {
-        // Pasamos la partida con el jugador ya agregado localmente
-        const partidaActualizada = {
-          ...partida,
-          jugadores: [...partida.jugadores, { nombre: comandante }]
-        }
-        onUnirse(partidaActualizada)
-      } else {
-        onClose()
-      }
-    }, 500)
   }
 
   return (

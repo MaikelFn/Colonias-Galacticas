@@ -43,7 +43,7 @@ function HomePage({ onEntrarLobby }) {
   const [activeModal, setActiveModal] = useState(null)
 
   const [nombrePartida, setNombrePartida] = useState('')
-  const [galaxia, setGalaxia] = useState('Sector Centauri')
+  const [galaxia, setGalaxia] = useState('orion')
   const [maxJugadores, setMaxJugadores] = useState(4)
   const [duracion, setDuracion] = useState(45)
   const [recursos, setRecursos] = useState('Normal')

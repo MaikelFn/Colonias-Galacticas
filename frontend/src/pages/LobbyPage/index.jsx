@@ -161,9 +161,10 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   useEffect(() => {
     const unsub = on('partida_cerrada', (data) => {
       if (data.idPartida === partidaActual?.id) {
+        console.log('Partida cerrada:', data.razon)
         setPartidaCerrada(data.razon || 'Tiempo de espera agotado.')
-        // Volver al menú después de 3 segundos
-        setTimeout(() => onSalir(), 3000)
+        // Volver al menú después de 2 segundos
+        setTimeout(() => onSalir(), 2000)
       }
     })
     return unsub

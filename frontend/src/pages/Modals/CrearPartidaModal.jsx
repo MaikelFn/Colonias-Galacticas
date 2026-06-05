@@ -28,7 +28,7 @@ export default function CrearPartidaModal({
       setCargandoGalaxias(false)
       // Seleccionar la primera galaxia por defecto si no hay ninguna seleccionada
       if (!galaxia && data.length > 0) {
-        setGalaxia(data[0].nombre)
+        setGalaxia(data[0].id)
       }
     })
     return unsub
@@ -43,9 +43,13 @@ export default function CrearPartidaModal({
     setEnviando(true)
     setError(null)
 
+    const galaxiaSeleccionada = galaxiasDisponibles.find(g => g.id === galaxia)
+    const nombreGalaxia = galaxiaSeleccionada ? galaxiaSeleccionada.nombre : galaxia
+
     emit('crear_partida', {
       nombre: nombrePartida,
-      galaxia,
+      galaxiaId: galaxia,
+      galaxia: nombreGalaxia,
       maxJugadores,
       duracion,
       recursos,
@@ -91,7 +95,7 @@ export default function CrearPartidaModal({
                 <select className="gc-input gc-select" value={galaxia} onChange={e => setGalaxia(e.target.value)} disabled={enviando}>
                   {galaxiasDisponibles.length > 0 ? (
                     galaxiasDisponibles.map(g => (
-                      <option key={g.id} value={g.nombre}>{g.nombre}</option>
+                      <option key={g.id} value={g.id}>{g.nombre}</option>
                     ))
                   ) : (
                     <option value="">No hay galaxias disponibles</option>

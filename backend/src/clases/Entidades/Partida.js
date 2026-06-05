@@ -9,7 +9,7 @@ const EstadoPartida = {
 };
 
 class Partida {
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo = null) {
         this.id = id;
         this.nombre = nombre;
         this.galaxia = galaxia;
@@ -25,6 +25,7 @@ class Partida {
         this.gestorTemporizadores = new GestorTemporizadores();
         this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this);
         this.cuentaRegresivaActiva = false;
+        this.onCierrePorTiempo = onCierrePorTiempo;
     }
 
     puedeIniciar() {
@@ -146,6 +147,9 @@ class Partida {
                 if (this.estado === EstadoPartida.ESPERANDO && this.jugadores.length < 2) {
                     this.estado = EstadoPartida.FINALIZADA;
                     this.detenerTemporizadores();
+                    if (this.onCierrePorTiempo) {
+                        this.onCierrePorTiempo(this);
+                    }
                 }
             });
         }
