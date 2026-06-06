@@ -10,6 +10,7 @@ class SistemaPlanetario {
         this.astillerosEstacionados = [];
         this.instalaciones = [];
         this.estado = 'no explorado';
+        this.totalProducido = new Recursos(0, 0, 0);
     }
 
     obtenerProduccionBase() {
@@ -78,7 +79,8 @@ class SistemaPlanetario {
             astilleros: this.astillerosEstacionados.map(astillero => astillero.toJSON()),
             instalaciones: this.instalaciones.map(instalacion => instalacion.toJSON()),
             estado: this.estado,
-            produccion: this.obtenerProduccionTotal().toJSON()
+            produccion: this.obtenerProduccionTotal().toJSON(),
+            totalProducido: this.totalProducido.toJSON()
         };
     }
 }

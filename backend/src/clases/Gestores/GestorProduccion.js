@@ -21,6 +21,7 @@ class GestorProduccion {
             if (sistema.propietario && sistema.estado === 'controlado') {
                 const produccion = sistema.obtenerProduccionTotal();
                 sistema.propietario.agregarRecursos(produccion);
+                sistema.totalProducido = sistema.totalProducido.agregar(produccion);
             }
         }
 

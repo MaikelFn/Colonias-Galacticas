@@ -167,7 +167,12 @@ io.on("connection", (socket) => {
                 partida.jugadores.forEach(jugador => {
                     if (jugador.socketId) {
                         io.to(jugador.socketId).emit("actualizar_clientes", {
-                            jugadores: jugadoresInfo
+                            jugadores: jugadoresInfo,
+                            galaxia: {
+                                nombre: partida.galaxia.nombre,
+                                sistemas: partida.galaxia.sistemas.map(sistema => sistema.toJSON()),
+                                rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
+                            }
                         });
                     }
                 });
@@ -352,19 +357,19 @@ io.on("connection", (socket) => {
 
             io.to(idPartida).emit("partida_iniciada", {
                 idPartida: partida.id,
-                    estado: partida.estado,
-                    jugadores: partida.jugadores.map(j => ({
-                        id: j.socketId,
-                        nombre: j.nickname,
-                        planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
-                        recursos: j.recursos,
-                        sistemasConquistados: j.getSistemasControlados().length
-                    })),
-                    galaxia: {
-                            nombre: partida.galaxia.nombre || "Desconocida",
-                            sistemas: partida.galaxia.sistemas || [],
-                            rutas: partida.galaxia.rutas ? partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id]) : []
-                        }
+                estado: partida.estado,
+                jugadores: partida.jugadores.map(j => ({
+                    id: j.socketId,
+                    nombre: j.nickname,
+                    planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
+                    recursos: j.recursos,
+                    sistemasConquistados: j.getSistemasControlados().length
+                })),
+                galaxia: {
+                    nombre: partida.galaxia.nombre,
+                    sistemas: partida.galaxia.sistemas,
+                    rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
+                }
             });
         } else {
             console.log(`Error: No se pudo iniciar la partida`);
