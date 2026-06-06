@@ -373,6 +373,9 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     function onActualizarClientes(data) {
       if (data.idPartida && data.idPartida !== idPartidaRef.current) return
       if (data.jugadores) setJugadores(data.jugadores)
+      if (data.galaxia) {
+        setEstadoPartida(prev => ({ ...prev, galaxia: data.galaxia }))
+      }
     }
 
     function onEstadoJugadores(data) {

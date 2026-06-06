@@ -3,3 +3,132 @@
 .mg-nodo { fill: #cbd5e0; cursor: pointer; transition: all 0.3s; }
 .mg-nodo:hover { fill: #63b3ed; r: 15; }
 .mg-nombre { fill: #a0aec0; font-size: 14px; text-anchor: middle; pointer-events: none; }
+
+.mg-container { position: relative; width: 100%; height: 100%; }
+
+.mg-popup {
+  position: fixed;
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  border: 1px solid #4a5568;
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  transform: translate(-50%, -100%);
+  margin-top: -10px;
+  animation: mg-popup-appear 0.2s ease-out;
+}
+
+@keyframes mg-popup-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -90%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+}
+
+.mg-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #4a5568;
+}
+
+.mg-popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.mg-popup-close {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.mg-popup-close:hover {
+  background: #4a5568;
+  color: #fff;
+}
+
+.mg-popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mg-popup-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mg-popup-label {
+  color: #a0aec0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.mg-popup-value {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mg-popup-divider {
+  height: 1px;
+  background: #4a5568;
+  margin: 8px 0;
+}
+
+.mg-popup-title {
+  color: #63b3ed;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.mg-popup-resources {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.mg-popup-resource {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mg-resource-name {
+  color: #cbd5e0;
+  font-size: 13px;
+}
+
+.mg-resource-amount {
+  color: #4ade80;
+  font-size: 15px;
+  font-weight: 700;
+}
