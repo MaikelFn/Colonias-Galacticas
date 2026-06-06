@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import HomePage from './pages/HomePage/index'
-import LobbyPage from './pages/LobbyPage/index'
-import GamePage from './pages/GamePage/index'
+import HomePage from './pages/HomePage/HomePage'
+import LobbyPage from './pages/LobbyPage/LobbyPage'
+import GamePage from './pages/GamePage/GamePage'
 import './App.css'
 
 function App() {

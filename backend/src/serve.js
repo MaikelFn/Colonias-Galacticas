@@ -291,6 +291,7 @@ io.on("connection", (socket) => {
 
             if (partida.jugadores.length === 0) {
                 partidas.delete(idPartida);
+                clearInterval(partida._timerInterval);
                 console.log(`[Partida Destruida] ${idPartida} (vacía tras salida de jugador)`);
             }
         }
@@ -325,6 +326,7 @@ io.on("connection", (socket) => {
         const iniciada = partida.iniciar();
         
         if (iniciada) {
+            
             console.log(`Partida iniciada exitosamente: ${idPartida}`);
             console.log('=== JUGADORES Y SUS RECURSOS ===');
             partida.jugadores.forEach(j => {
@@ -334,16 +336,35 @@ io.on("connection", (socket) => {
             });
             console.log('================================');
 
+            const inicioMs = Date.now()
+            const duracionMs = partida.duracionMaximaSeg * 1000
+
+            partida._timerInterval = setInterval(() => {
+                const transcurrido = Date.now() - inicioMs
+                const restanteSeg = Math.max(0, Math.ceil((duracionMs - transcurrido) / 1000))
+
+                io.to(idPartida).emit('tick_timer', { segsRestantes: restanteSeg })
+
+                if (restanteSeg <= 0) {
+                clearInterval(partida._timerInterval)
+                }
+            }, 1000)
+
             io.to(idPartida).emit("partida_iniciada", {
                 idPartida: partida.id,
-                estado: partida.estado,
-                jugadores: partida.jugadores.map(j => ({
-                    id: j.socketId,
-                    nombre: j.nickname,
-                    planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
-                    recursos: j.recursos,
-                    sistemasConquistados: j.getSistemasControlados().length
-                }))
+                    estado: partida.estado,
+                    jugadores: partida.jugadores.map(j => ({
+                        id: j.socketId,
+                        nombre: j.nickname,
+                        planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
+                        recursos: j.recursos,
+                        sistemasConquistados: j.getSistemasControlados().length
+                    })),
+                    galaxia: {
+                            nombre: partida.galaxia.nombre || "Desconocida",
+                            sistemas: partida.galaxia.sistemas || [],
+                            rutas: partida.galaxia.rutas ? partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id]) : []
+                        }
             });
         } else {
             console.log(`Error: No se pudo iniciar la partida`);
@@ -365,6 +386,7 @@ io.on("connection", (socket) => {
             
             if (partida.jugadores.length === 0) {
                 partidas.delete(idPartida);
+                clearInterval(partida._timerInterval);
             }
         }
     });
@@ -387,6 +409,7 @@ io.on("connection", (socket) => {
 
                 if (partida.jugadores.length === 0) {
                     partidas.delete(idPartida);
+                    clearInterval(partida._timerInterval);
                     console.log(`[Partida Destruida] ${idPartida} (vacía tras desconexión forzada)`);
                 }
             }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSocket } from '../../hooks/useSocket'
-import './index.css'
+import { getPlayerColor } from '../../utils/playerColors'
+import './LobbyPage.css'
 
 const STARS = Array.from({ length: 120 }, (_, i) => ({
   id: i,
@@ -27,23 +28,29 @@ function Star({ x, y, size, delay, duration }) {
   )
 }
 
+// index es la posición del jugador en la lista — determina su color
 function PlayerSlot({ jugador, index, isCreador, esYo }) {
+  const color = jugador ? getPlayerColor(index) : null
+
   return (
-    <div className={`lb-player-slot ${jugador ? 'lb-slot-filled' : 'lb-slot-empty'} ${esYo ? 'lb-slot-yo' : ''}`}>
+    <div
+      className={`lb-player-slot ${jugador ? 'lb-slot-filled' : 'lb-slot-empty'} ${esYo ? 'lb-slot-yo' : ''}`}
+      style={color ? { '--player-color': color, borderLeftColor: color } : undefined}
+    >
       <div className="lb-slot-index">P{index + 1}</div>
       {jugador ? (
         <>
-          <div className="lb-slot-avatar">
+          <div className="lb-slot-avatar" style={{ background: color }}>
             {jugador.nombre.charAt(0).toUpperCase()}
           </div>
           <div className="lb-slot-info">
             <span className="lb-slot-name">
               {jugador.nombre}
-              {esYo && <span className="lb-slot-tag"> (tú)</span>}
+              {esYo && <span className="lb-slot-tag" style={{ color }}> (tú)</span>}
             </span>
             {isCreador && <span className="lb-slot-badge">⭐ ANFITRIÓN</span>}
           </div>
-          <div className="lb-slot-status lb-status-ready">LISTO</div>
+          <div className="lb-slot-status lb-status-ready" style={{ color }}>LISTO</div>
         </>
       ) : (
         <>
@@ -91,13 +98,13 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   const [texto, setTexto] = useState('')
   const [cuentaRegresiva, setCuentaRegresiva] = useState(null)
   const [partidaCerrada, setPartidaCerrada] = useState(null)
-  const [tiempoEspera, setTiempoEspera] = useState(null) 
+  const [tiempoEspera, setTiempoEspera] = useState(null)
   const [lleno, setLleno] = useState(false)
   const [mounted, setMounted] = useState(false)
   const onIniciarJuegoRef = useRef(onIniciarJuego)
   const partidaActualRef  = useRef(partidaActual)
   const chatBottomRef = useRef(null)
-  
+
   const esCreador = partidaActual?.creador === undefined
     ? partidaActual?.jugadores?.[0]?.nombre === nombreJugador
     : true
@@ -114,29 +121,29 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   }, [jugadoresActuales.length, maxJugadores])
 
   useEffect(() => {
-      const unsub = on('jugador_unido', (data) => {
-        setPartidaActual(prev => {
-          if (prev.jugadores.some(j => j.id === data.jugador.id)) return prev
-          return { ...prev, jugadores: [...prev.jugadores, data.jugador] }
-        })
+    const unsub = on('jugador_unido', (data) => {
+      setPartidaActual(prev => {
+        if (prev.jugadores.some(j => j.id === data.jugador.id)) return prev
+        return { ...prev, jugadores: [...prev.jugadores, data.jugador] }
       })
-      return unsub
-    }, [on])
+    })
+    return unsub
+  }, [on])
 
   useEffect(() => {
-      const unsub = on('jugador_salio', (data) => {
-        setPartidaActual(prev => ({
-          ...prev,
-          jugadores: prev.jugadores.filter(j => j.id !== data.jugadorId)
-        }))
-        setMensajes(prev => [...prev, { 
-          nombreJugador: 'Sistema', 
-          mensaje: 'Un comandante ha abandonado la sala.',
-          isSystem: true 
-        }])
-      })
-      return unsub
-    }, [on])
+    const unsub = on('jugador_salio', (data) => {
+      setPartidaActual(prev => ({
+        ...prev,
+        jugadores: prev.jugadores.filter(j => j.id !== data.jugadorId)
+      }))
+      setMensajes(prev => [...prev, {
+        nombreJugador: 'Sistema',
+        mensaje: 'Un comandante ha abandonado la sala.',
+        isSystem: true
+      }])
+    })
+    return unsub
+  }, [on])
 
   useEffect(() => {
     const unsub = on('cuenta_regresiva', (data) => {
@@ -153,7 +160,6 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   useEffect(() => {
     const unsub = on('partida_cerrada', (data) => {
       if (data.idPartida === partidaActual?.id) {
-        console.log('Partida cerrada:', data.razon)
         setPartidaCerrada(data.razon)
         setTimeout(() => onSalir(), 2000)
       }
@@ -173,13 +179,13 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   useEffect(() => {
     const unsub = on('chat_mensaje', (data) => {
       setMensajes(prev => {
-        const existe = prev.some(m => m.idLocal === data.idLocal);
-        if (existe) return prev;
-        return [...prev, data];
-      });
-    });
-    return unsub;
-  }, [on, partidaActual?.id]);
+        const existe = prev.some(m => m.idLocal === data.idLocal)
+        if (existe) return prev
+        return [...prev, data]
+      })
+    })
+    return unsub
+  }, [on, partidaActual?.id])
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -211,6 +217,7 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
       const partidaActualizada = {
         ...partida,
         estado: data.estado,
+        galaxia: data.galaxia,           // ← incluye la galaxia completa
         jugadores: data.jugadores.map(j => ({
           id: j.id,
           nombre: j.nombre,
@@ -226,31 +233,29 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   }, [on])
 
   useEffect(() => { onIniciarJuegoRef.current = onIniciarJuego }, [onIniciarJuego])
-
   useEffect(() => { partidaActualRef.current  = partidaActual  }, [partidaActual])
 
   const handleIniciarPartida = useCallback(() => {
-      emit('iniciar_partida', { idPartida: partidaActual?.id })
-    }, [emit, partidaActual?.id])
+    emit('iniciar_partida', { idPartida: partidaActual?.id })
+  }, [emit, partidaActual?.id])
 
   const handleSalirDeLobby = () => {
-      emit('salir_sala', { idPartida: partidaActual?.id })
-      onSalir()
-    }
+    emit('salir_sala', { idPartida: partidaActual?.id })
+    onSalir()
+  }
 
   const enviarMensaje = () => {
     const msg = texto.trim()
     if (!msg) return
 
-    const msgObj = { 
-      nombreJugador, 
-      mensaje: msg, 
-      ts: Date.now(), 
+    const msgObj = {
+      nombreJugador,
+      mensaje: msg,
+      ts: Date.now(),
       idLocal: Math.random().toString(36).substr(2, 9)
     }
-    
-    setMensajes(prev => [...prev, msgObj])
 
+    setMensajes(prev => [...prev, msgObj])
     emit('chat_mensaje', {
       idPartida: partidaActual?.id,
       nombreJugador,

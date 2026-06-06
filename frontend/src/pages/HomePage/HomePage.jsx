@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import './index.css'
+import './HomePage.css'
 import { useSocket } from '../../hooks/useSocket'
 import CrearPartidaModal from '../Modals/CrearPartidaModal'
 import VerPartidasModal from '../Modals/VerPartidasModal'

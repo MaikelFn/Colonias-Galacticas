@@ -5,6 +5,12 @@
   flex-direction: column;
 }
 
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #060b14;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
