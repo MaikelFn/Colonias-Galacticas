@@ -132,3 +132,105 @@
   font-size: 15px;
   font-weight: 700;
 }
+
+.mg-popup-modern {
+  position: fixed;
+  transform: translate(-50%, -105%);
+  background: rgba(16, 20, 30, 0.94);
+  border: 1px solid #4a5568;
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 220px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(56, 189, 248, 0.1);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #e2e8f0;
+}
+
+.mg-popup-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.mg-popup-header-modern h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #fff;
+}
+.mg-popup-close-modern {
+  background: none;
+  border: none;
+  color: #a0aec0;
+  font-size: 16px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+.mg-popup-close-modern:hover { color: #f56565; }
+
+.mg-tag-tipo {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #2d3748;
+  color: #cbd5e1;
+  text-transform: uppercase;
+}
+.mg-tag-tipo.minero { color: #fb923c; background: rgba(251, 146, 60, 0.1); }
+.mg-tag-tipo.energetico { color: #facc15; background: rgba(250, 204, 21, 0.1); }
+.mg-tag-tipo.cientifico { color: #38bdf8; background: rgba(56, 189, 248, 0.1); }
+.mg-tag-tipo.balanceado { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+
+.mg-popup-body-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mg-popup-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+.mg-label-muted { color: #a0aec0; }
+.mg-value-highlight { font-weight: 500; color: #38bdf8; }
+.mg-value-flotas { font-weight: bold; color: #f87171; }
+
+.mg-grid-subseccion {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.mg-grid-item {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+.mg-grid-item strong {
+  color: #fff;
+  float: right;
+}
+
+.mg-produccion-barra {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.mg-prod-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.mg-prod-item span {
+  font-weight: 600;
+}
