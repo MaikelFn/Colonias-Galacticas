@@ -157,6 +157,10 @@ class Partida {
         return true;
     }
 
+    obtenerJugadorPorSocketId(socketId) {
+        return this.jugadores.find(jugador => jugador.socketId === socketId);
+    }
+
     obtenerInformacion() {
         return {
             id: this.id,

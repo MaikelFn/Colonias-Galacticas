@@ -25,7 +25,6 @@ class GestorProduccion {
             }
         }
 
-        // Llamar al callback para que serve.js maneje la emisión del evento
         if (this.onProduccionRecursos) {
             this.onProduccionRecursos(this.estadoRef);
         }

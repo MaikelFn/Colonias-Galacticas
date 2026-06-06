@@ -8,6 +8,7 @@ const path = require("path");
 const Galaxia = require('./clases/Entidades/Galaxia');
 const Jugador = require('./clases/Entidades/Jugador');
 const { Partida } = require('./clases/Entidades/Partida');
+const GestorConstruccion = require('./clases/gestores/GestorConstruccion');
 
 function cargarConfiguracion() {
     const rutaConfig = path.join(__dirname, 'data', 'Configuracion.json');
@@ -393,6 +394,54 @@ io.on("connection", (socket) => {
                 partidas.delete(idPartida);
                 clearInterval(partida._timerInterval);
             }
+        }
+    });
+
+    socket.on("construccion", (datos) => {
+        const { idPartida } = datos;
+        const partida = partidas.get(idPartida);
+        
+        if (!partida) {
+            socket.emit("construccion_error", { mensaje: "La partida no existe." });
+            return;
+        }
+
+        const gestor = new GestorConstruccion(partida);
+        const resultado = gestor.construir(datos, socket.id);
+
+        if (resultado.success) {
+            socket.emit("construccion_exito", { 
+                mensaje: resultado.mensaje,
+                construccion: resultado.construccion,
+                sistema: resultado.sistema,
+                recursosRestantes: resultado.recursosRestantes
+            });
+
+            const jugadoresInfo = partida.jugadores.map(jugador => ({
+                id: jugador.socketId,
+                nombre: jugador.nickname,
+                recursos: jugador.recursos,
+                sistemasConquistados: jugador.getSistemasControlados().length
+            }));
+
+            partida.jugadores.forEach(jugador => {
+                if (jugador.socketId) {
+                    io.to(jugador.socketId).emit("actualizar_clientes", {
+                        jugadores: jugadoresInfo,
+                        galaxia: {
+                            nombre: partida.galaxia.nombre,
+                            sistemas: partida.galaxia.sistemas.map(s => s.toJSON()),
+                            rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
+                        }
+                    });
+                }
+            });
+        } else {
+            socket.emit("construccion_error", { 
+                mensaje: resultado.error,
+                costo: resultado.costo,
+                recursosActuales: resultado.recursosActuales
+            });
         }
     });
 
