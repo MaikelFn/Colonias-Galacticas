@@ -1,173 +1,184 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { useSocket } from '../../hooks/useSocket'
 
-export default function StarfieldCanvas() {
-  const canvasRef = useRef(null)
+export default function CrearPartidaModal({
+  onClose,
+  nombrePartida,
+  setNombrePartida,
+  galaxia,
+  setGalaxia,
+  maxJugadores,
+  setMaxJugadores,
+  duracion,
+  setDuracion,
+  recursos,
+  setRecursos,
+  comandante
+}) {
+  const { emit, on } = useSocket()
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState(null)
+  const [galaxiasDisponibles, setGalaxiasDisponibles] = useState([])
+  const [cargandoGalaxias, setCargandoGalaxias] = useState(true)
+  const [recursosConfig, setRecursosConfig] = useState({})
+  const [cargandoRecursos, setCargandoRecursos] = useState(true)
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')
-
-    let W = canvas.width  = window.innerWidth
-    let H = canvas.height = window.innerHeight
-    let raf
-    let lastFrameAt = Date.now()
-
-    const TEAL_PALETTE = [
-      'rgba(20, 184, 166, ',
-      'rgba(45, 212, 191, ',
-      'rgba(94, 234, 212, ',
-      'rgba(153, 246, 228, ',
-      'rgba(6,  182, 212, ',
-      'rgba(34, 211, 238, ',
-      'rgba(103, 232, 249, ',
-    ]
-    function randColor() {
-      return TEAL_PALETTE[Math.floor(Math.random() * TEAL_PALETTE.length)]
-    }
-
-    const STAR_COUNT = 220
-    const stars = Array.from({ length: STAR_COUNT }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 1.2 + 0.2,
-      a: Math.random(),
-      da: (Math.random() - 0.5) * 0.008,
-      color: randColor(),
-    }))
-
-    const STREAK_COUNT = 55
-    function makeStreak() {
-      const angle = Math.random() * Math.PI * 2
-      const speed = Math.random() * 0.6 + 0.15
-      return {
-        x: Math.random() * W, y: Math.random() * H,
-        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-        length: Math.random() * 60 + 20,
-        life: 1,
-        decay: Math.random() * 0.003 + 0.001,
-        width: Math.random() * 1.2 + 0.3,
-        color: randColor(),
+    emit('obtener_galaxias')
+    const unsub = on('galaxias_disponibles', (data) => {
+      setGalaxiasDisponibles(data)
+      setCargandoGalaxias(false)
+      // Seleccionar la primera galaxia por defecto si no hay ninguna seleccionada
+      if (!galaxia && data.length > 0) {
+        setGalaxia(data[0].id)
       }
-    }
-    const streaks = Array.from({ length: STREAK_COUNT }, makeStreak)
+    })
+    return unsub
+  }, [emit, on, galaxia, setGalaxia])
 
-    const ORB_COUNT = 18
-    const orbs = Array.from({ length: ORB_COUNT }, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      r: Math.random() * 2.5 + 1,
-      vx: (Math.random() - 0.5) * 0.12, vy: (Math.random() - 0.5) * 0.12,
-      a: Math.random() * 0.5 + 0.1,
-      da: (Math.random() - 0.5) * 0.004,
-      color: randColor(),
-    }))
-
-    function draw() {
-      lastFrameAt = Date.now()   // ← el watchdog lo monitorea
-
-      try {
-        ctx.clearRect(0, 0, W, H)
-
-        const radials = [
-          { x: W * 0.2, y: H * 0.3, r: 280, c: 'rgba(20,184,166,0.028)' },
-          { x: W * 0.8, y: H * 0.7, r: 240, c: 'rgba(6,182,212,0.022)'  },
-          { x: W * 0.5, y: H * 0.1, r: 180, c: 'rgba(45,212,191,0.018)' },
-        ]
-        for (const nb of radials) {
-          const g = ctx.createRadialGradient(nb.x, nb.y, 0, nb.x, nb.y, nb.r)
-          g.addColorStop(0, nb.c)
-          g.addColorStop(1, 'transparent')
-          ctx.fillStyle = g
-          ctx.beginPath()
-          ctx.arc(nb.x, nb.y, nb.r, 0, Math.PI * 2)
-          ctx.fill()
-        }
-
-        for (const s of stars) {
-          s.a += s.da
-          if (s.a > 0.95 || s.a < 0.05) s.da *= -1
-          ctx.beginPath()
-          ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
-          ctx.fillStyle = s.color + s.a + ')'
-          ctx.fill()
-        }
-
-        for (let i = 0; i < streaks.length; i++) {
-          const s = streaks[i]
-          s.x += s.vx; s.y += s.vy; s.life -= s.decay
-          const tailX = s.x - s.vx * (s.length / s.width / 4)
-          const tailY = s.y - s.vy * (s.length / s.width / 4)
-          const grad = ctx.createLinearGradient(tailX, tailY, s.x, s.y)
-          grad.addColorStop(0, s.color + '0)')
-          grad.addColorStop(1, s.color + (s.life * 0.7).toFixed(3) + ')')
-          ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(s.x, s.y)
-          ctx.strokeStyle = grad; ctx.lineWidth = s.width * s.life
-          ctx.lineCap = 'round'; ctx.stroke()
-          ctx.beginPath()
-          ctx.arc(s.x, s.y, s.width * 1.5 * s.life, 0, Math.PI * 2)
-          ctx.fillStyle = s.color + (s.life * 0.5).toFixed(3) + ')'; ctx.fill()
-          if (s.life <= 0 || s.x < -100 || s.x > W+100 || s.y < -100 || s.y > H+100)
-            streaks[i] = makeStreak()
-        }
-
-        for (const o of orbs) {
-          o.x += o.vx; o.y += o.vy; o.a += o.da
-          if (o.a > 0.6 || o.a < 0.08) o.da *= -1
-          if (o.x < 0) o.x = W; if (o.x > W) o.x = 0
-          if (o.y < 0) o.y = H; if (o.y > H) o.y = 0
-          const g = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, o.r * 3)
-          g.addColorStop(0, o.color + o.a + ')'); g.addColorStop(1, 'transparent')
-          ctx.beginPath(); ctx.arc(o.x, o.y, o.r * 3, 0, Math.PI * 2)
-          ctx.fillStyle = g; ctx.fill()
-        }
-      } catch (_) { /* frame roto, continúa */ }
-
-      raf = requestAnimationFrame(draw)
-    }
-
-    // ── Watchdog: si el loop lleva +600ms sin ejecutarse, lo reinicia ────────
-    const watchdog = setInterval(() => {
-      if (Date.now() - lastFrameAt > 600) {
-        cancelAnimationFrame(raf)
-        draw()
+  useEffect(() => {
+    emit('obtener_configuracion')
+    const unsub = on('configuracion_recursos', (data) => {
+      setRecursosConfig(data)
+      setCargandoRecursos(false)
+      // Seleccionar la primera opción por defecto si no hay ninguna seleccionada
+      if (!recursos && Object.keys(data).length > 0) {
+        const primeraOpcion = Object.keys(data)[0]
+        setRecursos(primeraOpcion)
       }
-    }, 600)
+    })
+    return unsub
+  }, [emit, on, recursos, setRecursos])
 
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        cancelAnimationFrame(raf)
-        draw()
-      }
+  const handleCrearPartida = () => {
+    if (!nombrePartida.trim()) {
+      setError('Ingresa un nombre para la partida')
+      return
     }
 
-    const onResize = () => {
-      W = canvas.width  = window.innerWidth
-      H = canvas.height = window.innerHeight
-      for (const s of stars) { s.x = Math.random() * W; s.y = Math.random() * H }
-    }
+    setEnviando(true)
+    setError(null)
 
-    draw()
-    window.addEventListener('resize', onResize)
-    document.addEventListener('visibilitychange', onVisibilityChange)
+    const galaxiaSeleccionada = galaxiasDisponibles.find(g => g.id === galaxia)
+    const nombreGalaxia = galaxiaSeleccionada ? galaxiaSeleccionada.nombre : galaxia
 
-    return () => {
-      cancelAnimationFrame(raf)
-      clearInterval(watchdog)
-      window.removeEventListener('resize', onResize)
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
-  }, [])
+    emit('crear_partida', {
+      nombre: nombrePartida,
+      galaxiaId: galaxia,
+      galaxia: nombreGalaxia,
+      maxJugadores,
+      duracion,
+      recursos,
+      comandante
+    })
+
+    // Cerrar después de crear
+    setTimeout(() => {
+      setEnviando(false)
+      onClose()
+    }, 500)
+  }
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        zIndex: 0,
-        pointerEvents: 'none',
-      }}
-    />
+    <div className="gc-modal-overlay">
+      <section className="gc-card gc-modal-content">
+        <header className="gc-modal-header">
+          <h2 className="gc-modal-title">CONFIGURAR NUEVA PARTIDA</h2>
+          <p className="gc-hint">[RF-02/RF-03] Ajusta los parámetros para inicializar el nexo galáctico.</p>
+        </header>
+
+        <div className="gc-modal-body">
+          <div className="gc-field-group">
+            <label className="gc-label">Nombre de la Sala</label>
+            <input 
+              className="gc-input" 
+              type="text" 
+              placeholder="Ej: Flota Alfa..." 
+              value={nombrePartida}
+              onChange={e => setNombrePartida(e.target.value)}
+              disabled={enviando}
+            />
+          </div>
+
+          <div className="gc-modal-grid-2">
+            <div className="gc-field-group">
+              <label className="gc-label">Galaxia</label>
+              {cargandoGalaxias ? (
+                <select className="gc-input gc-select" disabled>
+                  <option>Cargando galaxias...</option>
+                </select>
+              ) : (
+                <select className="gc-input gc-select" value={galaxia} onChange={e => setGalaxia(e.target.value)} disabled={enviando}>
+                  {galaxiasDisponibles.length > 0 ? (
+                    galaxiasDisponibles.map(g => (
+                      <option key={g.id} value={g.id}>{g.nombre}</option>
+                    ))
+                  ) : (
+                    <option value="">No hay galaxias disponibles</option>
+                  )}
+                </select>
+              )}
+            </div>
+
+            <div className="gc-field-group">
+              <label className="gc-label">Máx. Jugadores</label>
+              <input 
+                className="gc-input" 
+                type="number" 
+                min="2" 
+                max="8" 
+                value={maxJugadores}
+                onChange={e => setMaxJugadores(parseInt(e.target.value) || 4)}
+                disabled={enviando}
+              />
+            </div>
+          </div>
+
+          <div className="gc-modal-grid-2">
+            <div className="gc-field-group">
+              <label className="gc-label">Tiempo Límite (min)</label>
+              <input 
+                className="gc-input" 
+                type="number" 
+                step="5" 
+                value={duracion}
+                onChange={e => setDuracion(parseInt(e.target.value) || 20)}
+                disabled={enviando}
+              />
+            </div>
+
+            <div className="gc-field-group">
+              <label className="gc-label">Recursos Iniciales</label>
+              {cargandoRecursos ? (
+                <select className="gc-input gc-select" disabled>
+                  <option>Cargando configuración...</option>
+                </select>
+              ) : (
+                <select className="gc-input gc-select" value={recursos} onChange={e => setRecursos(e.target.value)} disabled={enviando}>
+                  {Object.keys(recursosConfig).length > 0 ? (
+                    Object.entries(recursosConfig).map(([key, value]) => (
+                      <option key={key} value={key}>
+                        {key.charAt(0).toUpperCase() + key.slice(1)} ({value.minerales}M, {value.energia}E, {value.cristales}C)
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No hay configuración disponible</option>
+                  )}
+                </select>
+              )}
+            </div>
+          </div>
+
+          {error && <p className="gc-error" style={{ color: '#ff6b6b', marginTop: '10px' }}>{error}</p>}
+        </div>
+
+        <div className="gc-actions-row2">
+          <button className="gc-btn gc-btn-ghost" onClick={onClose} disabled={enviando}>Cancelar</button>
+          <button className="gc-btn gc-btn-primary" onClick={handleCrearPartida} disabled={enviando || !nombrePartida.trim()}>
+            {enviando ? 'Inicializando...' : 'Inicializar'}
+          </button>
+        </div>
+      </section>
+    </div>
   )
 }
