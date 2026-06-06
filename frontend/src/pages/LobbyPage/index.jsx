@@ -94,11 +94,10 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   const [tiempoEspera, setTiempoEspera] = useState(null) 
   const [lleno, setLleno] = useState(false)
   const [mounted, setMounted] = useState(false)
-  
   const onIniciarJuegoRef = useRef(onIniciarJuego)
   const partidaActualRef  = useRef(partidaActual)
-
   const chatBottomRef = useRef(null)
+  
   const esCreador = partidaActual?.creador === undefined
     ? partidaActual?.jugadores?.[0]?.nombre === nombreJugador
     : true
@@ -115,32 +114,29 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   }, [jugadoresActuales.length, maxJugadores])
 
   useEffect(() => {
-    const unsub = on('jugador_unido', (data) => {
-      if (data.idPartida === partidaActual?.id) {
+      const unsub = on('jugador_unido', (data) => {
         setPartidaActual(prev => {
-          const yaEsta = prev.jugadores.some(j => j.id === data.jugador.id)
-          if (yaEsta) return prev
-          return {
-            ...prev,
-            jugadores: [...prev.jugadores, data.jugador]
-          }
+          if (prev.jugadores.some(j => j.id === data.jugador.id)) return prev
+          return { ...prev, jugadores: [...prev.jugadores, data.jugador] }
         })
-      }
-    })
-    return unsub
-  }, [on, partidaActual?.id])
+      })
+      return unsub
+    }, [on])
 
   useEffect(() => {
-    const unsub = on('jugador_salio', (data) => {
-      if (data.idPartida === partidaActual?.id) {
+      const unsub = on('jugador_salio', (data) => {
         setPartidaActual(prev => ({
           ...prev,
           jugadores: prev.jugadores.filter(j => j.id !== data.jugadorId)
         }))
-      }
-    })
-    return unsub
-  }, [on, partidaActual?.id])
+        setMensajes(prev => [...prev, { 
+          nombreJugador: 'Sistema', 
+          mensaje: 'Un comandante ha abandonado la sala.',
+          isSystem: true 
+        }])
+      })
+      return unsub
+    }, [on])
 
   useEffect(() => {
     const unsub = on('cuenta_regresiva', (data) => {
@@ -176,9 +172,11 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
 
   useEffect(() => {
     const unsub = on('chat_mensaje', (data) => {
-      if (data.idPartida === partidaActual?.id) {
-        setMensajes(prev => [...prev, data]);
-      }
+      setMensajes(prev => {
+        const existe = prev.some(m => m.idLocal === data.idLocal);
+        if (existe) return prev;
+        return [...prev, data];
+      });
     });
     return unsub;
   }, [on, partidaActual?.id]);
@@ -232,26 +230,32 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   useEffect(() => { partidaActualRef.current  = partidaActual  }, [partidaActual])
 
   const handleIniciarPartida = useCallback(() => {
-    emit('iniciar_partida', { idPartida: partidaActual?.id })
-  }, [emit, partidaActual?.id])
+      emit('iniciar_partida', { idPartida: partidaActual?.id })
+    }, [emit, partidaActual?.id])
 
   const handleSalirDeLobby = () => {
-    emit('salir_sala', { idPartida: partidaActual?.id, nombreJugador })
-    onSalir()
-  }
+      emit('salir_sala', { idPartida: partidaActual?.id })
+      onSalir()
+    }
 
   const enviarMensaje = () => {
     const msg = texto.trim()
     if (!msg) return
 
-    const msgObj = { nombreJugador, mensaje: msg, ts: Date.now() }
+    const msgObj = { 
+      nombreJugador, 
+      mensaje: msg, 
+      ts: Date.now(), 
+      idLocal: Math.random().toString(36).substr(2, 9)
+    }
     
     setMensajes(prev => [...prev, msgObj])
 
     emit('chat_mensaje', {
       idPartida: partidaActual?.id,
       nombreJugador,
-      mensaje: msg
+      mensaje: msg,
+      idLocal: msgObj.idLocal
     })
     setTexto('')
   }

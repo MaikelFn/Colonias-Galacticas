@@ -128,7 +128,11 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema }) {
   useEffect(() => {
     function onChatMensaje(data) {
       if (data.idPartida && data.idPartida !== idPartidaRef.current) return
-      setMensajes(prev => [...prev, data])
+      
+      setMensajes(prev => {
+        if (prev.some(m => m.idLocal === data.idLocal)) return prev
+        return [...prev, data]
+      })
     }
     socket.on('chat_mensaje', onChatMensaje)
     return () => socket.off('chat_mensaje', onChatMensaje)
@@ -150,7 +154,23 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema }) {
   const enviar = () => {
     const msg = texto.trim()
     if (!msg) return
-    socket.emit('chat_mensaje', { idPartida: idPartidaRef.current, nombreJugador, mensaje: msg })
+
+    const mensajePropio = {
+      nombreJugador,
+      mensaje: msg,
+      idLocal: Date.now(),
+      ts: Date.now()
+    }
+
+    setMensajes(prev => [...prev, mensajePropio])
+
+    socket.emit('chat_mensaje', { 
+      idPartida: idPartidaRef.current, 
+      nombreJugador, 
+      mensaje: msg,
+      idLocal: mensajePropio.idLocal 
+    })
+    
     setTexto('')
   }
 
@@ -233,19 +253,18 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
 
     function onJugadorSalio(data) {
       if (data.idPartida !== idPartidaRef.current) return
+      
       setJugadores(prev => {
-        const saliente = prev.find(
-          j => j.id === data.jugadorId || j.nombre === data.nombreJugador
-        )
-        const nombre = saliente.nombre
+        const saliente = prev.find(j => j.id === data.jugadorId)
+        const nombre = saliente ? saliente.nombre : "Un comandante"
+
         setMensajesSistema(ms => [...ms, {
           nombreJugador: 'Sistema',
           mensaje: `${nombre} ha abandonado la partida.`,
           ts: Date.now(),
         }])
-        return prev.filter(
-          j => j.id !== data.jugadorId && j.nombre !== data.nombreJugador
-        )
+
+        return prev.filter(j => j.id !== data.jugadorId)
       })
     }
 
@@ -319,11 +338,11 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const handleConfirmarSalida = useCallback(() => {
     socket.emit('abandonar_partida', {
       idPartida: idPartidaRef.current,
-      nombreJugador: nombreRef.current,
+      jugadorId: miSocketId
     })
     setMostrarModalSalida(false)
     onSalir()
-  }, [onSalir])
+  }, [onSalir, miSocketId])
 
   const duracionMin = partidaActual.duracion
 

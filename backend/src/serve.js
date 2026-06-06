@@ -129,12 +129,14 @@ io.on("connection", (socket) => {
 
         const galaxia = cargarGalaxiaDesdeArchivo(galaxiaId);
         if (!galaxia) {
+            console.log(`Error al crear partida: No se pudo cargar la galaxia ${galaxiaId}`);
             socket.emit("error_crear_partida", { mensaje: "No se pudo cargar la galaxia seleccionada" });
             return;
         }
 
         const jugadorCreador = jugadores.get(socket.id);
         if (!jugadorCreador) {
+            console.log(`Error al crear partida: Jugador no registrado (${socket.id})`);
             socket.emit("error_crear_partida", { mensaje: "Jugador no registrado" });
             return;
         }
@@ -155,7 +157,6 @@ io.on("connection", (socket) => {
                 });
             },
             (partida) => {
-                // Callback para producción de recursos
                 const jugadoresInfo = partida.jugadores.map(j => ({
                     id: j.socketId,
                     nombre: j.nickname,
@@ -180,7 +181,7 @@ io.on("connection", (socket) => {
         partidas.set(idPartida, partida);
 
         console.log('=== PARTIDA CREADA ===');
-        console.log(`Temporizador de espera iniciado: ${partida.gestorTemporizadores.temporizadorEspera ? 'SI' : 'NO'}`);
+        console.log(`Temporizador de espera iniciado: ${partida.gestorTemporizadores?.temporizadorEspera ? 'SI' : 'NO'}`);
         console.log(`Tiempo de espera: ${partida.tiempoEsperaSeg} segundos`);
         console.log(`ID: ${partida.id}`);
         console.log(`Nombre: ${partida.nombre}`);
@@ -213,21 +214,27 @@ io.on("connection", (socket) => {
         const { idPartida, nombreJugador } = datos;
         const partida = partidas.get(idPartida);
 
+        console.log(`Intento de unión a partida: ${nombreJugador} a ${idPartida}`);
+
         if (!partida) {
+            console.log(`Error al unirse: La partida ${idPartida} no existe.`);
             socket.emit("error_unirse", { mensaje: "La partida no existe." });
             return;
         }
         if (partida.estado !== 'esperando') {
+            console.log(`Error al unirse: La partida ${idPartida} no está en espera (${partida.estado}).`);
             socket.emit("error_unirse", { mensaje: "La partida ya no está disponible." });
             return;
         }
         if (partida.jugadores.length >= partida.maxJugadores) {
+            console.log(`Error al unirse: La partida ${idPartida} está llena.`);
             socket.emit("error_unirse", { mensaje: "La partida ya está llena." });
             return;
         }
 
         const jugadorUnirse = jugadores.get(socket.id);
         if (!jugadorUnirse) {
+            console.log(`Error al unirse: Jugador no registrado (${socket.id}).`);
             socket.emit("error_unirse", { mensaje: "Jugador no registrado" });
             return;
         }
@@ -235,7 +242,7 @@ io.on("connection", (socket) => {
         partida.agregarJugador(jugadorUnirse);
         socket.join(idPartida);
 
-        console.log(`${nombreJugador} se unió a la partida ${idPartida}`);
+        console.log(`Exito: ${nombreJugador} se unió a la partida ${idPartida}`);
 
         io.to(idPartida).emit("jugador_unido", {
             idPartida,
@@ -252,6 +259,41 @@ io.on("connection", (socket) => {
             recursos: partida.dificultadRecursos,
             jugadores: partida.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
         });
+    });
+
+    socket.on("chat_mensaje", (datos) => {
+        const { idPartida, nombreJugador, mensaje, idLocal } = datos;
+        console.log(`[Chat] ${nombreJugador} en ${idPartida}: ${mensaje}`);
+        socket.to(idPartida).emit("chat_mensaje", { 
+            idPartida, 
+            nombreJugador, 
+            mensaje, 
+            idLocal 
+        });
+    });
+
+    socket.on("salir_sala", (datos) => {
+        const { idPartida } = datos;
+        const partida = partidas.get(idPartida);
+
+        console.log(`[Salir] Jugador ${socket.id} intenta salir de la sala ${idPartida}`);
+
+        if (partida) {
+            partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
+            socket.leave(idPartida);
+            
+            console.log(`[Salir] Jugador ${socket.id} eliminado de ${idPartida}. Jugadores restantes: ${partida.jugadores.length}`);
+            
+            io.to(idPartida).emit("jugador_salio", { 
+                idPartida, 
+                jugadorId: socket.id 
+            });
+
+            if (partida.jugadores.length === 0) {
+                partidas.delete(idPartida);
+                console.log(`[Partida Destruida] ${idPartida} (vacía tras salida de jugador)`);
+            }
+        }
     });
 
     socket.on("iniciar_partida", (datos) => {
@@ -281,6 +323,7 @@ io.on("connection", (socket) => {
 
         console.log(`Intentando iniciar partida...`);
         const iniciada = partida.iniciar();
+        
         if (iniciada) {
             console.log(`Partida iniciada exitosamente: ${idPartida}`);
             console.log('=== JUGADORES Y SUS RECURSOS ===');
@@ -308,9 +351,46 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("abandonar_partida", (datos) => {
+        const { idPartida } = datos;
+        const partida = partidas.get(idPartida);
+        
+        if (partida) {
+            partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
+            
+            io.to(idPartida).emit("jugador_salio", { 
+                idPartida, 
+                jugadorId: socket.id 
+            });
+            
+            if (partida.jugadores.length === 0) {
+                partidas.delete(idPartida);
+            }
+        }
+    });
+
     socket.on("disconnect", () => {
         console.log(`Cliente desconectado: ${socket.id}`);
         jugadores.delete(socket.id);
+
+        for (const [idPartida, partida] of partidas.entries()) {
+            const estabaEnPartida = partida.jugadores.some(j => j.socketId === socket.id);
+            
+            if (estabaEnPartida) {
+                console.log(`[Desconexión] Eliminando jugador fantasma ${socket.id} de la partida ${idPartida}`);
+                partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
+                
+                io.to(idPartida).emit("jugador_salio", { 
+                    idPartida, 
+                    jugadorId: socket.id 
+                });
+
+                if (partida.jugadores.length === 0) {
+                    partidas.delete(idPartida);
+                    console.log(`[Partida Destruida] ${idPartida} (vacía tras desconexión forzada)`);
+                }
+            }
+        }
     });
 });
 
