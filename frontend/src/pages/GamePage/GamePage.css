@@ -411,6 +411,112 @@
   font-style: italic;
 }
 
+/* ─── Menu Construcciones ───────────────────────────────────────────────────── */
+.gp-menu-construcciones-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+}
+
+.gp-menu-construcciones {
+  background: rgba(10, 20, 38, 0.96);
+  border: 1px solid rgba(45, 212, 191, 0.28);
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.gp-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+.gp-menu-titulo {
+  font-size: 1rem;
+  color: #e2e8f0;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.gp-menu-cerrar {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.gp-menu-cerrar:hover {
+  color: #e2e8f0;
+}
+
+.gp-construcciones-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gp-construccion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.gp-construccion-item:hover {
+  background: rgba(45, 212, 191, 0.15);
+  border-color: rgba(45, 212, 191, 0.3);
+  transform: translateY(-1px);
+}
+
+.gp-construccion-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.gp-construccion-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.gp-construccion-nombre {
+  display: block;
+  font-size: 0.875rem;
+  color: #e2e8f0;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.gp-construccion-costos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gp-costo {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 /* ─── Modal ────────────────────────────────────────────────────────────────── */
 .gp-modal-overlay {
   position: fixed;

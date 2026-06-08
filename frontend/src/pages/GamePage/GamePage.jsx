@@ -7,7 +7,6 @@ import './GamePage.css'
 
 function Temporizador({ partidaIniciada }) {
   const [segsRestantes, setSegsRestantes] = useState(null)
-
   useEffect(() => {
     if (!partidaIniciada) { setSegsRestantes(null); return }
 
@@ -243,6 +242,7 @@ const ACCIONES = [
   },
   {
     id: 'CONSTR_MINA',
+    tipoConstruccion: 'Mina',
     label: 'Construir Mina',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -255,6 +255,7 @@ const ACCIONES = [
   },
   {
     id: 'CONSTR_CENTRAL',
+    tipoConstruccion: 'CentralInvestigacion',
     label: 'Central Inv.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -266,6 +267,7 @@ const ACCIONES = [
   },
   {
     id: 'CONSTR_ASTILLERO',
+    tipoConstruccion: 'Astillero',
     label: 'Astillero',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -277,6 +279,7 @@ const ACCIONES = [
   },
   {
     id: 'CONSTR_FORTALEZA',
+    tipoConstruccion: 'Fortaleza',
     label: 'Fortaleza',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -299,25 +302,22 @@ const ACCIONES = [
   },
 ]
 
-function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador }) {
+function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, onAccionClick }) {
   
   const obtenerDeshabilitado = (accionId) => {
     // Si la partida no ha empezado, todo está deshabilitado (RF-07/RF-13)
     if (!partidaIniciada) return true;
-    // Si no hay un planeta seleccionado, no se puede operar sobre nada
+
+    // Para construcciones, no requieren sistema seleccionado en el mapa
+    if (accionId.startsWith('CONSTR_')) return false;
+
+    // Para otras acciones, requieren sistema seleccionado
     if (!sistemaSeleccionado) return true;
 
     const esPropietario = sistemaSeleccionado.propietario === nombreJugador;
     const tienePropietario = !!sistemaSeleccionado.propietario;
 
     switch (accionId) {
-      case 'CONSTR_MINA':
-      case 'CONSTR_CENTRAL':
-      case 'CONSTR_ASTILLERO':
-      case 'CONSTR_FORTALEZA':
-        // RF-15: Solo puedes construir instalaciones dentro de sistemas que controles
-        return !esPropietario;
-
       case 'ENVIAR_FLOTAS':
         // RF-18 / RF-19: Envías flotas a atacar o conquistar un sistema ajeno o libre
         return esPropietario;
@@ -342,7 +342,7 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador }) 
               className={`gp-accion-btn ${isDisabled ? 'gp-accion-disabled' : ''}`}
               style={{ '--accion-color': accion.color }}
               disabled={isDisabled}
-              onClick={() => console.log(`Ejecutando ${accion.id} en ${sistemaSeleccionado?.nombre}`)}
+              onClick={() => onAccionClick(accion)}
             >
               <span className="gp-accion-icon">{accion.icon}</span>
               <span className="gp-accion-label">{accion.label}</span>
@@ -352,6 +352,44 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador }) 
       </div>
     </section>
   );
+}
+
+function MenuSistemas({ visible, onClose, onSistemaSeleccionado, sistemas, nombreJugador }) {
+  if (!visible) return null
+
+  const sistemasControlados = sistemas?.filter(s => s.propietario === nombreJugador) || []
+
+  return (
+    <div className="gp-menu-construcciones-overlay" onClick={onClose}>
+      <div className="gp-menu-construcciones" onClick={(e) => e.stopPropagation()}>
+        <div className="gp-menu-header">
+          <h3 className="gp-menu-titulo">Seleccionar Sistema</h3>
+          <button className="gp-menu-cerrar" onClick={onClose}>✕</button>
+        </div>
+        <div className="gp-construcciones-lista">
+          {sistemasControlados.length === 0 ? (
+            <p className="gp-empty">No controlas ningún sistema</p>
+          ) : (
+            sistemasControlados.map((s) => (
+              <button
+                key={s.id}
+                className="gp-construccion-item"
+                onClick={() => onSistemaSeleccionado(s)}
+              >
+                <span className="gp-construccion-icon">🌍</span>
+                <div className="gp-construccion-info">
+                  <span className="gp-construccion-nombre">{s.nombre}</span>
+                  <div className="gp-construccion-costos">
+                    <span className="gp-costo">Tipo: {s.tipo || 'Desconocido'}</span>
+                  </div>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─── MapaArea ─────────────────────────────────────────────────────────────────
@@ -381,7 +419,9 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [mensajesSistema, setMensajesSistema] = useState([])
   const [estadoPartida, setEstadoPartida] = useState(partida)
   const [jugadores, setJugadores] = useState(partida?.jugadores || [])
-  const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null);
+  const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null)
+  const [menuSistemasVisible, setMenuSistemasVisible] = useState(false)
+  const [tipoConstruccionSeleccionado, setTipoConstruccionSeleccionado] = useState(null)
 
   const idPartidaRef = useRef(partida?.id)
 
@@ -398,6 +438,23 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     }
     socket.on('partida_iniciada', handleIniciada)
     return () => socket.off('partida_iniciada', handleIniciada)
+  }, [])
+
+  useEffect(() => {
+    const handleConstruccionError = (data) => {
+      alert(`Error: ${data.mensaje}`)
+    }
+    const handleConstruccionExito = (data) => {
+      alert(data.mensaje)
+    }
+    
+    socket.on('construccion_error', handleConstruccionError)
+    socket.on('construccion_exito', handleConstruccionExito)
+    
+    return () => {
+      socket.off('construccion_error', handleConstruccionError)
+      socket.off('construccion_exito', handleConstruccionExito)
+    }
   }, [])
 
   useEffect(() => {
@@ -477,6 +534,23 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     onSalir()
   }, [onSalir, miSocketId])
 
+  const handleAccionClick = useCallback((accion) => {
+    if (accion.tipoConstruccion) {
+      setTipoConstruccionSeleccionado(accion.tipoConstruccion)
+      setMenuSistemasVisible(true)
+    }
+  }, [])
+
+  const handleSistemaSeleccionado = useCallback((sistema) => {
+    socket.emit('construccion', {
+      idPartida: idPartidaRef.current,
+      nombreConstruccion: tipoConstruccionSeleccionado,
+      idSistema: sistema.id
+    })
+    setMenuSistemasVisible(false)
+    setTipoConstruccionSeleccionado(null)
+  }, [tipoConstruccionSeleccionado])
+
   const duracionMin = partidaActual.duracion
 
   return (
@@ -528,6 +602,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
             partidaIniciada={partidaIniciada} 
             sistemaSeleccionado={sistemaSeleccionado}
             nombreJugador={nombreJugador}
+            onAccionClick={handleAccionClick}
           />
 
           <section className="gp-frame gp-frame-chat">
@@ -539,6 +614,16 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
           />
         </section>
         </div>
+
+        {menuSistemasVisible && (
+          <MenuSistemas
+            visible={menuSistemasVisible}
+            onClose={() => setMenuSistemasVisible(false)}
+            onSistemaSeleccionado={handleSistemaSeleccionado}
+            sistemas={estadoPartida?.galaxia?.sistemas}
+            nombreJugador={nombreJugador}
+          />
+        )}
 
       </div>
     </div>
