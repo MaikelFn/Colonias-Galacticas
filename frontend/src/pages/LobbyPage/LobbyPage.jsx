@@ -66,16 +66,23 @@ function PlayerSlot({ jugador, index, isCreador, esYo }) {
 }
 
 function CountdownOverlay({ cuenta }) {
+  const esAlertaCritica = cuenta === 1;
+
   return (
-    <div className="lb-countdown-overlay">
-      <div className="lb-countdown-ring" />
-      <div className="lb-countdown-content">
-        <p className="lb-countdown-label">INICIANDO EN</p>
-        <div className="lb-countdown-number">{cuenta}</div>
-        <p className="lb-countdown-sub">¡Prepárate, comandante!</p>
+    <div className={`lb-countdown-overlay ${esAlertaCritica ? 'lb-neon-alert' : ''}`}>
+      <div className="lb-scanlines" />
+      
+      <div className="lb-countdown-container">
+        <span className="lb-countdown-title">INICIO DE SECUENCIA DE SALTO</span>
+        
+        <div key={cuenta} className="lb-countdown-number-wrapper">
+          <span className="lb-countdown-number">{cuenta}</span>
+        </div>
+
+        <span className="lb-countdown-subtitle">PREPARANDO MOTORES DE CURVATURA...</span>
       </div>
     </div>
-  )
+  );
 }
 
 function ClosedOverlay({ razon }) {
@@ -192,16 +199,20 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   }, [mensajes])
 
   useEffect(() => {
-      const handleKey = (e) => {
-        if ((e.key === 'u' || e.key === 'U') && esCreador) { 
-          if (lleno && cuentaRegresiva === null && !partidaCerrada) {
-            handleIniciarPartida()
-          }
+    const handleKeyDown = (e) => {
+      if (e.key === 'u' || e.key === 'U') {
+        if (esCreador && lleno && cuentaRegresiva === null && !partidaCerrada) {
+          handleIniciarPartida();
         }
       }
-      window.addEventListener('keydown', handleKey)
-      return () => window.removeEventListener('keydown', handleKey)
-    }, [lleno, cuentaRegresiva, partidaCerrada, esCreador]) 
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [esCreador, lleno, cuentaRegresiva, partidaCerrada]);
 
   useEffect(() => {
     const unsub = on('partida_iniciada', (data) => {
@@ -438,7 +449,7 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
       </div>
 
       {cuentaRegresiva !== null && (
-        <CountdownOverlay cuenta={cuentaRegresiva} />
+            <CountdownOverlay cuenta={cuentaRegresiva} />
       )}
 
       {partidaCerrada && (

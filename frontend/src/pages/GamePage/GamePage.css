@@ -675,3 +675,53 @@
 .gp-accion-btn:not(:disabled):hover .gp-accion-label {
   color: #fff;
 }
+/* ─── Modal Flotas ─────────────────────────────────────────────────────────── */
+.gp-mf-etiqueta {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.gp-mf-cantidad-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.gp-mf-step-btn {
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  transition: border-color 0.2s, color 0.2s;
+}
+.gp-mf-step-btn:hover {
+  border-color: rgba(45, 212, 191, 0.5);
+  color: #2dd4bf;
+}
+
+.gp-mf-input {
+  width: 64px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(45, 212, 191, 0.22);
+  color: #e2e8f0;
+  border-radius: 3px;
+  padding: 6px 0;
+  outline: none;
+}
+.gp-mf-input:focus { border-color: rgba(45, 212, 191, 0.5); }
+.gp-mf-input::-webkit-inner-spin-button,
+.gp-mf-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.gp-mf-input[type=number] { -moz-appearance: textfield; }

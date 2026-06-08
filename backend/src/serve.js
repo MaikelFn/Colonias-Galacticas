@@ -331,8 +331,7 @@ io.on("connection", (socket) => {
         console.log(`Intentando iniciar partida...`);
         const iniciada = partida.iniciar();
         
-        if (iniciada) {
-            
+       if (iniciada) {
             console.log(`Partida iniciada exitosamente: ${idPartida}`);
             console.log('=== JUGADORES Y SUS RECURSOS ===');
             partida.jugadores.forEach(j => {
@@ -342,36 +341,45 @@ io.on("connection", (socket) => {
             });
             console.log('================================');
 
-            const inicioMs = Date.now()
-            const duracionMs = partida.duracionMaximaSeg * 1000
+            let cuenta = 3;
+            io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
 
-            partida._timerInterval = setInterval(() => {
-                const transcurrido = Date.now() - inicioMs
-                const restanteSeg = Math.max(0, Math.ceil((duracionMs - transcurrido) / 1000))
+            const intervalo = setInterval(() => {
+                cuenta--;
+                io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
 
-                io.to(idPartida).emit('tick_timer', { segsRestantes: restanteSeg })
+                if (cuenta <= 0) {
+                    clearInterval(intervalo);
 
-                if (restanteSeg <= 0) {
-                clearInterval(partida._timerInterval)
+                    const inicioMs = Date.now();
+                    const duracionMs = partida.duracionMaximaSeg * 1000;
+
+                    partida._timerInterval = setInterval(() => {
+                        const transcurrido = Date.now() - inicioMs;
+                        const restanteSeg = Math.max(0, Math.ceil((duracionMs - transcurrido) / 1000));
+                        io.to(idPartida).emit('tick_timer', { segsRestantes: restanteSeg });
+                        if (restanteSeg <= 0) clearInterval(partida._timerInterval);
+                    }, 1000);
+
+                    io.to(idPartida).emit('partida_iniciada', {
+                        idPartida: partida.id,
+                        estado: partida.estado,
+                        jugadores: partida.jugadores.map(j => ({
+                            id: j.socketId,
+                            nombre: j.nickname,
+                            planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
+                            recursos: j.recursos,
+                            sistemasConquistados: j.getSistemasControlados().length
+                        })),
+                        galaxia: {
+                            nombre: partida.galaxia.nombre,
+                            sistemas: partida.galaxia.sistemas,
+                            rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
+                        }
+                    });
                 }
-            }, 1000)
+            }, 1000);
 
-            io.to(idPartida).emit("partida_iniciada", {
-                idPartida: partida.id,
-                estado: partida.estado,
-                jugadores: partida.jugadores.map(j => ({
-                    id: j.socketId,
-                    nombre: j.nickname,
-                    planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
-                    recursos: j.recursos,
-                    sistemasConquistados: j.getSistemasControlados().length
-                })),
-                galaxia: {
-                    nombre: partida.galaxia.nombre,
-                    sistemas: partida.galaxia.sistemas,
-                    rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
-                }
-            });
         } else {
             console.log(`Error: No se pudo iniciar la partida`);
             socket.emit("error_inicio", { mensaje: "No se pudo iniciar la partida." });

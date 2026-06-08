@@ -58,6 +58,40 @@ function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
   )
 }
 
+function ModalFlotas({ accion, sistemaDestino, onConfirmar, onCancelar }) {
+  const [cantidad, setCantidad] = useState(1)
+  const esAtaque = accion === 'ENVIAR_FLOTAS'
+
+  return (
+    <div className="gp-modal-overlay">
+      <div className="gp-modal">
+        <p className="gp-mf-etiqueta">{esAtaque ? 'ASALTO ORBITAL' : 'MANIOBRA DE FLOTA'}</p>
+        <h2 className="gp-modal-titulo">{sistemaDestino?.nombre?.toUpperCase()}</h2>
+        <p className="gp-modal-texto">Unidades a despachar</p>
+
+        <div className="gp-mf-cantidad-row">
+          <button className="gp-mf-step-btn" onClick={() => setCantidad(c => Math.max(1, c - 1))}>−</button>
+          <input
+            type="number"
+            min={1}
+            value={cantidad}
+            onChange={e => setCantidad(Math.max(1, Number(e.target.value)))}
+            className="gp-mf-input"
+          />
+          <button className="gp-mf-step-btn" onClick={() => setCantidad(c => c + 1)}>+</button>
+        </div>
+
+        <div className="gp-modal-botones">
+          <button className="gp-modal-btn gp-modal-cancelar" onClick={onCancelar}>ABORTAR</button>
+          <button className="gp-modal-btn gp-modal-confirmar" onClick={() => onConfirmar(cantidad)}>
+            {esAtaque ? 'ATACAR' : 'MOVER'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Tarjeta de jugador con nuevo diseño ──────────────────────────────────────
 function JugadoresPanel({ jugadores, miSocketId }) {
   if (!jugadores || jugadores.length === 0) {
@@ -75,7 +109,6 @@ function JugadoresPanel({ jugadores, miSocketId }) {
             className={`gp-jugador-card ${esYo ? 'gp-jugador-yo' : ''}`}
             style={{ '--player-color': color }}
           >
-            {/* Avatar grande centrado */}
             <div className="gp-jugador-nombre-row">
               <span className="gp-jugador-nombre-text">
                 {j.nombre}
@@ -85,7 +118,6 @@ function JugadoresPanel({ jugadores, miSocketId }) {
             <div className="gp-jugador-avatar-grande" style={{ background: color }}>
               {j.nombre.charAt(0).toUpperCase()}
             </div>
-            {/* Recursos en fila */}
             <div className="gp-jugador-recursos-fila">
               <div className="gp-recurso-col">
                 <span className="gp-recurso-label-small">Minerales</span>
@@ -100,7 +132,6 @@ function JugadoresPanel({ jugadores, miSocketId }) {
                 <span className="gp-recurso-valor-big">{r?.cristales ?? 0}</span>
               </div>
             </div>
-            {/* Planetas conquistados */}
             <div className="gp-jugador-planetas-row">
               <span className="gp-planetas-label">Planetas</span>
               <span className="gp-planetas-count" style={{ color }}>{j.sistemasConquistados}</span>
@@ -238,7 +269,7 @@ const ACCIONES = [
         <path d="M12 2L8 9H3l4.5 4-1.5 7L12 17l6 3-1.5-7L21 9h-5L12 2z" />
       </svg>
     ),
-    color: '#f87171',   // rojo — acción ofensiva/militar
+    color: '#f87171',
   },
   {
     id: 'CONSTR_MINA',
@@ -251,7 +282,7 @@ const ACCIONES = [
         <path d="M10 20v-5h4v5" />
       </svg>
     ),
-    color: '#fb923c',   // naranja — extracción de recursos
+    color: '#fb923c',
   },
   {
     id: 'CONSTR_CENTRAL',
@@ -263,7 +294,7 @@ const ACCIONES = [
         <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" />
       </svg>
     ),
-    color: '#38bdf8',   // azul cian — ciencia
+    color: '#38bdf8',
   },
   {
     id: 'CONSTR_ASTILLERO',
@@ -275,7 +306,7 @@ const ACCIONES = [
         <path d="M3 21h18" />
       </svg>
     ),
-    color: '#a78bfa',   // violeta — producción militar
+    color: '#a78bfa',
   },
   {
     id: 'CONSTR_FORTALEZA',
@@ -287,7 +318,7 @@ const ACCIONES = [
         <path d="M3 11V7h3V4h3v3h6V4h3v3h3v4" />
       </svg>
     ),
-    color: '#fbbf24',   // ámbar — defensa
+    color: '#fbbf24',
   },
   {
     id: 'MOVER_FLOTAS',
@@ -298,36 +329,28 @@ const ACCIONES = [
         <path d="M12 5l7 7-7 7" />
       </svg>
     ),
-    color: '#4ade80',   // verde — movilización
+    color: '#4ade80',
   },
 ]
 
 function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, onAccionClick }) {
   
   const obtenerDeshabilitado = (accionId) => {
-    // Si la partida no ha empezado, todo está deshabilitado (RF-07/RF-13)
-    if (!partidaIniciada) return true;
+    if (!partidaIniciada) return true
 
-    // Para construcciones, no requieren sistema seleccionado en el mapa
-    if (accionId.startsWith('CONSTR_')) return false;
+    if (accionId.startsWith('CONSTR_')) {
+      return !sistemaSeleccionado || sistemaSeleccionado.propietario !== nombreJugador
+    }
 
-    // Para otras acciones, requieren sistema seleccionado
-    if (!sistemaSeleccionado) return true;
+    if (!sistemaSeleccionado) return true
 
-    const esPropietario = sistemaSeleccionado.propietario === nombreJugador;
-    const tienePropietario = !!sistemaSeleccionado.propietario;
+    const esPropietario = sistemaSeleccionado.propietario === nombreJugador
+    const esEnemigo = sistemaSeleccionado.propietario && !esPropietario
 
     switch (accionId) {
-      case 'ENVIAR_FLOTAS':
-        // RF-18 / RF-19: Envías flotas a atacar o conquistar un sistema ajeno o libre
-        return esPropietario;
-
-      case 'MOVER_FLOTAS':
-        // RF-17: Movilizas flotas desde un sistema que tú controlas
-        return !esPropietario;
-
-      default:
-        return true;
+      case 'ENVIAR_FLOTAS': return !esEnemigo && !!sistemaSeleccionado.propietario || !sistemaSeleccionado
+      case 'MOVER_FLOTAS':  return !esPropietario
+      default:              return true
     }
   };
 
@@ -352,44 +375,6 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, on
       </div>
     </section>
   );
-}
-
-function MenuSistemas({ visible, onClose, onSistemaSeleccionado, sistemas, nombreJugador }) {
-  if (!visible) return null
-
-  const sistemasControlados = sistemas?.filter(s => s.propietario === nombreJugador) || []
-
-  return (
-    <div className="gp-menu-construcciones-overlay" onClick={onClose}>
-      <div className="gp-menu-construcciones" onClick={(e) => e.stopPropagation()}>
-        <div className="gp-menu-header">
-          <h3 className="gp-menu-titulo">Seleccionar Sistema</h3>
-          <button className="gp-menu-cerrar" onClick={onClose}>✕</button>
-        </div>
-        <div className="gp-construcciones-lista">
-          {sistemasControlados.length === 0 ? (
-            <p className="gp-empty">No controlas ningún sistema</p>
-          ) : (
-            sistemasControlados.map((s) => (
-              <button
-                key={s.id}
-                className="gp-construccion-item"
-                onClick={() => onSistemaSeleccionado(s)}
-              >
-                <span className="gp-construccion-icon">🌍</span>
-                <div className="gp-construccion-info">
-                  <span className="gp-construccion-nombre">{s.nombre}</span>
-                  <div className="gp-construccion-costos">
-                    <span className="gp-costo">Tipo: {s.tipo || 'Desconocido'}</span>
-                  </div>
-                </div>
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 // ─── MapaArea ─────────────────────────────────────────────────────────────────
@@ -420,9 +405,8 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [estadoPartida, setEstadoPartida] = useState(partida)
   const [jugadores, setJugadores] = useState(partida?.jugadores || [])
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null)
-  const [menuSistemasVisible, setMenuSistemasVisible] = useState(false)
-  const [tipoConstruccionSeleccionado, setTipoConstruccionSeleccionado] = useState(null)
-
+  const [modalFlotasVisible, setModalFlotasVisible] = useState(false)
+  const [accionFlotaActual, setAccionFlotaActual] = useState(null)
   const idPartidaRef = useRef(partida?.id)
 
   useEffect(() => {
@@ -536,20 +520,32 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
 
   const handleAccionClick = useCallback((accion) => {
     if (accion.tipoConstruccion) {
-      setTipoConstruccionSeleccionado(accion.tipoConstruccion)
-      setMenuSistemasVisible(true)
+      if (!sistemaSeleccionado) return
+      if (sistemaSeleccionado.propietario !== nombreJugador) return
+      socket.emit('construccion', {
+        idPartida: idPartidaRef.current,
+        nombreConstruccion: accion.tipoConstruccion,
+        idSistema: sistemaSeleccionado.id
+      })
+      return
     }
-  }, [])
 
-  const handleSistemaSeleccionado = useCallback((sistema) => {
-    socket.emit('construccion', {
+    if (accion.id === 'ENVIAR_FLOTAS' || accion.id === 'MOVER_FLOTAS') {
+      setAccionFlotaActual(accion.id)
+      setModalFlotasVisible(true)
+    }
+  }, [sistemaSeleccionado, nombreJugador])
+
+  const handleConfirmarFlotas = useCallback((cantidad) => {
+    socket.emit('mover_flotas', {
       idPartida: idPartidaRef.current,
-      nombreConstruccion: tipoConstruccionSeleccionado,
-      idSistema: sistema.id
+      idSistemaOrigen: sistemaSeleccionado?.id,
+      accion: accionFlotaActual,
+      cantidad
     })
-    setMenuSistemasVisible(false)
-    setTipoConstruccionSeleccionado(null)
-  }, [tipoConstruccionSeleccionado])
+    setModalFlotasVisible(false)
+    setAccionFlotaActual(null)
+  }, [sistemaSeleccionado, accionFlotaActual])
 
   const duracionMin = partidaActual.duracion
 
@@ -564,12 +560,10 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
         />
       )}
 
-      {/* Temporizador flotante centrado, sin header */}
       <Temporizador partidaIniciada={partidaIniciada} />
 
       <div className="gp-layout">
 
-        {/* Columna izquierda: jugadores + botón salir */}
         <aside className="gp-sidebar">
           <div className="gp-frame gp-frame-jugadores">
             <JugadoresPanel jugadores={jugadores} miSocketId={miSocketId} />
@@ -582,7 +576,6 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
           </div>
         </aside>
 
-        {/* Centro: mapa */}
         <section className="gp-frame gp-frame-mapa">
           <div className="gp-frame-body gp-frame-body-mapa">
             <MapaArea
@@ -596,7 +589,6 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
           </div>
         </section>
 
-        {/* Derecha: acciones + chat */}
         <div className="gp-right-col">
           <AccionesPanel 
             partidaIniciada={partidaIniciada} 
@@ -615,15 +607,14 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
         </section>
         </div>
 
-        {menuSistemasVisible && (
-          <MenuSistemas
-            visible={menuSistemasVisible}
-            onClose={() => setMenuSistemasVisible(false)}
-            onSistemaSeleccionado={handleSistemaSeleccionado}
-            sistemas={estadoPartida?.galaxia?.sistemas}
-            nombreJugador={nombreJugador}
-          />
-        )}
+          {modalFlotasVisible && (
+            <ModalFlotas
+              accion={accionFlotaActual}
+              sistemaDestino={sistemaSeleccionado}
+              onConfirmar={handleConfirmarFlotas}
+              onCancelar={() => setModalFlotasVisible(false)}
+            />
+          )}
 
       </div>
     </div>
