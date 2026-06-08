@@ -106,8 +106,8 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   const chatBottomRef = useRef(null)
 
   const esCreador = partidaActual?.creador === undefined
-    ? partidaActual?.jugadores?.[0]?.nombre === nombreJugador
-    : true
+      ? partidaActual?.jugadores?.[0]?.nombre === nombreJugador
+      : partidaActual?.creador === nombreJugador
 
   const jugadoresActuales = partidaActual.jugadores
   const maxJugadores = partidaActual.maxJugadores
@@ -192,16 +192,16 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   }, [mensajes])
 
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'u' || e.key === 'U') {
-        if (lleno && cuentaRegresiva === null && !partidaCerrada) {
-          handleIniciarPartida()
+      const handleKey = (e) => {
+        if ((e.key === 'u' || e.key === 'U') && esCreador) { 
+          if (lleno && cuentaRegresiva === null && !partidaCerrada) {
+            handleIniciarPartida()
+          }
         }
       }
-    }
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
-  }, [lleno, cuentaRegresiva, partidaCerrada])
+      window.addEventListener('keydown', handleKey)
+      return () => window.removeEventListener('keydown', handleKey)
+    }, [lleno, cuentaRegresiva, partidaCerrada, esCreador]) 
 
   useEffect(() => {
     const unsub = on('partida_iniciada', (data) => {
@@ -375,11 +375,11 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
               <button
                 className="lb-start-btn lb-start-ready"
                 onClick={handleIniciarPartida}
-                disabled={cuentaRegresiva !== null}
+                disabled={cuentaRegresiva !== null || !esCreador}
               >
                 <span className="lb-start-icon">▶</span>
-                INICIAR PARTIDA
-                <span className="lb-start-hint">(o presiona U)</span>
+                {esCreador ? 'INICIAR PARTIDA' : 'ESPERANDO AL ANFITRIÓN'} 
+                {esCreador && <span className="lb-start-hint">(o presiona U)</span>}
               </button>
             ) : (
               <div className="lb-start-waiting">

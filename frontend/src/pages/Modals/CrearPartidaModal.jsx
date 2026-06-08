@@ -84,7 +84,7 @@ export default function CrearPartidaModal({
       <section className="gc-card gc-modal-content">
         <header className="gc-modal-header">
           <h2 className="gc-modal-title">CONFIGURAR NUEVA PARTIDA</h2>
-          <p className="gc-hint">[RF-02/RF-03] Ajusta los parámetros para inicializar el nexo galáctico.</p>
+          <p className="gc-hint">Ajusta los parámetros para inicializar el nexo galáctico.</p>
         </header>
 
         <div className="gc-modal-body">
@@ -122,29 +122,31 @@ export default function CrearPartidaModal({
 
             <div className="gc-field-group">
               <label className="gc-label">Máx. Jugadores</label>
-              <input 
-                className="gc-input" 
-                type="number" 
-                min="2" 
-                max="8" 
-                value={maxJugadores}
-                onChange={e => setMaxJugadores(parseInt(e.target.value) || 4)}
-                disabled={enviando}
-              />
+                <input 
+                  className="gc-input" 
+                  type="number" 
+                  min="2" 
+                  max="inf" 
+                  value={maxJugadores}
+                  onChange={e => setMaxJugadores(parseInt(e.target.value) || 4)}
+                  onKeyDown={(e) => e.preventDefault()}
+                  disabled={enviando}
+                />
             </div>
           </div>
 
           <div className="gc-modal-grid-2">
             <div className="gc-field-group">
               <label className="gc-label">Tiempo Límite (min)</label>
-              <input 
-                className="gc-input" 
-                type="number" 
-                step="5" 
-                value={duracion}
-                onChange={e => setDuracion(parseInt(e.target.value) || 20)}
-                disabled={enviando}
-              />
+                <input 
+                  className="gc-input" 
+                  type="number" 
+                  step="5" 
+                  value={duracion}
+                  onChange={e => setDuracion(parseInt(e.target.value) || 20)}
+                  onKeyDown={(e) => e.preventDefault()}
+                  disabled={enviando}
+                />
             </div>
 
             <div className="gc-field-group">
