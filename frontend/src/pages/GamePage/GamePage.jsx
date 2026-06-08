@@ -148,6 +148,10 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
   const bottomRef = useRef(null)
   const [texto, setTexto] = useState('')
   const idPartidaRef = useRef(idPartida)
+  const [toastConstruccion, setToastConstruccion] = useState(null)
+  const posicionSistemaRef = useRef({ x: 0, y: 0 })
+  const sistemaSeleccionadoRef = useRef(null)
+
   useEffect(() => { idPartidaRef.current = idPartida }, [idPartida])
 
   useEffect(() => {
@@ -333,6 +337,24 @@ const ACCIONES = [
   },
 ]
 
+function ToastConstruccion({ toast }) {
+  if (!toast) return null;
+  return (
+    <div 
+      className="gp-toast-construccion" 
+      style={{ 
+        position: 'fixed',
+        left: toast.x, 
+        top: toast.y,
+        transform: 'translateX(-50%)',
+        zIndex: 1100
+      }}
+    >
+      {toast.texto}
+    </div>
+  );
+}
+
 function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, onAccionClick }) {
   
   const obtenerDeshabilitado = (accionId) => {
@@ -404,10 +426,18 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [mensajesSistema, setMensajesSistema] = useState([])
   const [estadoPartida, setEstadoPartida] = useState(partida)
   const [jugadores, setJugadores] = useState(partida?.jugadores || [])
+  const [accionFlotaActual, setAccionFlotaActual] = useState(null)
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null)
   const [modalFlotasVisible, setModalFlotasVisible] = useState(false)
-  const [accionFlotaActual, setAccionFlotaActual] = useState(null)
+  const [toastConstruccion, setToastConstruccion] = useState(null)
   const idPartidaRef = useRef(partida?.id)
+  const posicionSistemaRef = useRef({ x: 0, y: 0 })
+  const sistemaSeleccionadoRef = useRef(null)
+  
+  
+  useEffect(() => {
+    sistemaSeleccionadoRef.current = sistemaSeleccionado
+  }, [sistemaSeleccionado])
 
   useEffect(() => {
     const yo = jugadores.find(j => j.nombre === nombreJugador)
@@ -425,18 +455,20 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   }, [])
 
   useEffect(() => {
-    const handleConstruccionError = (data) => {
-      alert(`Error: ${data.mensaje}`)
-    }
     const handleConstruccionExito = (data) => {
-      alert(data.mensaje)
+      const pos = posicionSistemaRef.current
+      const sistema = sistemaSeleccionadoRef.current
+      setToastConstruccion({
+        texto: `${data.construccion?.nombre || data.construccion} construida exitosamente en ${sistema?.nombre}`,
+        x: pos.x,
+        y: pos.y
+      })
+      setTimeout(() => setToastConstruccion(null), 2000)
     }
-    
-    socket.on('construccion_error', handleConstruccionError)
+    socket.on('construccion_error', () => {})
     socket.on('construccion_exito', handleConstruccionExito)
-    
     return () => {
-      socket.off('construccion_error', handleConstruccionError)
+      socket.off('construccion_error', () => {})
       socket.off('construccion_exito', handleConstruccionExito)
     }
   }, [])
@@ -581,9 +613,9 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
             <MapaArea
               estadoPartida={estadoPartida}
               jugadores={jugadores}
-              onSistemaClick={(sis) => {
-                console.log('Sistema seleccionado:', sis);
+              onSistemaClick={(sis, posPopup, posToast) => {
                 setSistemaSeleccionado(sis);
+                posicionSistemaRef.current = posToast; 
               }}
             />
           </div>
@@ -615,6 +647,8 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
               onCancelar={() => setModalFlotasVisible(false)}
             />
           )}
+
+          <ToastConstruccion toast={toastConstruccion} />
 
       </div>
     </div>

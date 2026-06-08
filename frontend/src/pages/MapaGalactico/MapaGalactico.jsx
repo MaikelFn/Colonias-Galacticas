@@ -97,11 +97,13 @@ function SistemaPopup({ sistema, onClose, position }) {
 // ─── Componente principal ─────────────────────────────────────────────────────
 export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaClick }) {
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null);
-  const [popupPosition, setPopupPosition]             = useState({ x: 0, y: 0 });
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [toastConstruccion, setToastConstruccion] = useState(null);
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const posicionSistemaRef = useRef({ x: 0, y: 0 });
   
   const dragStart = useRef({ x: 0, y: 0 });
   const hasDraggedRef = useRef(false);
@@ -186,10 +188,19 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
   const handleClick = (sis, event) => {
     if (hasDraggedRef.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    setPopupPosition({ x: rect.right, y: rect.top + rect.height / 2 });
+    
+    const posPopup = { x: rect.right, y: rect.top + rect.height / 2 };
+    
+    const posToast = {
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 12
+    };
+    
+    setPopupPosition(posPopup);
     setSistemaSeleccionado(sis);
-    if (onSistemaClick) onSistemaClick(sis);
-  }
+    
+    if (onSistemaClick) onSistemaClick(sis, posPopup, posToast);
+  };
 
   const RADIO = 24;
 
