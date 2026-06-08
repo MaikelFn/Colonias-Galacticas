@@ -25,46 +25,71 @@ function getPlanetImage(tipo) {
 function SistemaPopup({ sistema, onClose, position }) {
   if (!sistema) return null;
 
-  const totalProducido = sistema.produccion || sistema.totalProducido || { minerales: 0, energia: 0, cristales: 0 };
+  const prodTurno = sistema.produccion ?? { minerales: 0, energia: 0, cristales: 0 }
   const instalaciones = sistema.instalaciones || [];
   const contar = (tipo) => instalaciones.filter(inst => inst.nombre === tipo).length;
 
   return (
     <div className="mg-popup-modern" style={{ left: position.x + 'px', top: position.y + 'px' }}>
-      
+
       <div className="mg-popup-header-modern">
-        <div>
+        <div className="mg-popup-header-left">
           <h4>{sistema.nombre}</h4>
           <span className={`mg-tag-tipo ${sistema.tipo?.toLowerCase()}`}>{sistema.tipo}</span>
         </div>
         <button className="mg-popup-close-modern" onClick={onClose}>×</button>
       </div>
 
+      <div className="mg-popup-divider" />
+
       <div className="mg-popup-body-modern">
+
         <div className="mg-popup-row">
-          <span className="mg-label-muted">Propietario:</span>
-          <span className="mg-value-highlight">{sistema.propietario || 'Sect. Libre'}</span>
+          <span className="mg-label-muted">Propietario</span>
+          <span className="mg-value-highlight">{sistema.propietario || 'Sector Libre'}</span>
         </div>
 
         <div className="mg-popup-row">
-          <span className="mg-label-muted">Flotas en Órbita:</span>
-          <span className="mg-value-flotas">🚀 {sistema.astillerosEstacionados ?? 0}</span>
+          <span className="mg-label-muted">Flotas en órbita</span>
+          <span className="mg-value-flotas">{sistema.astillerosEstacionados ?? 0}</span>
         </div>
+
+        <div className="mg-popup-divider" />
 
         <div className="mg-grid-subseccion">
-          <div className="mg-grid-item">🏭 <small>Minas:</small> <strong>{contar('Mina')}</strong></div>
-          <div className="mg-grid-item">🛰️ <small>Astilleros:</small> <strong>{contar('Astillero')}</strong></div>
-          <div className="mg-grid-item">🧪 <small>C. Inv:</small> <strong>{contar('CentralInvestigacion')}</strong></div>
-          <div className="mg-grid-item">🛡️ <small>Forts:</small> <strong>{contar('Fortaleza')}</strong></div>
+          <div className="mg-grid-item">
+            <small>Minas</small>
+            <strong>{contar('Mina')}</strong>
+          </div>
+          <div className="mg-grid-item">
+            <small>Astilleros</small>
+            <strong>{contar('Astillero')}</strong>
+          </div>
+          <div className="mg-grid-item">
+            <small>C. Inv.</small>
+            <strong>{contar('CentralInvestigacion')}</strong>
+          </div>
+          <div className="mg-grid-item">
+            <small>Fortalezas</small>
+            <strong>{contar('Fortaleza')}</strong>
+          </div>
         </div>
+
+        <div className="mg-popup-divider" />
 
         <div className="mg-produccion-barra">
-          <div className="mg-prod-item" title="Minerales">🪨 <span>{totalProducido.minerales}</span></div>
-          <div className="mg-prod-item" title="Energía">⚡ <span>{totalProducido.energia}</span></div>
-          <div className="mg-prod-item" title="Cristales">💎 <span>{totalProducido.cristales}</span></div>
+          <div className="mg-prod-item" title="Minerales">
+            🪨 <span className="txt-minerales">+{prodTurno.minerales}</span>
+          </div>
+          <div className="mg-prod-item" title="Energía">
+            ⚡ <span className="txt-energia">+{prodTurno.energia}</span>
+          </div>
+          <div className="mg-prod-item" title="Cristales">
+            💎 <span className="txt-cristales">+{prodTurno.cristales}</span>
+          </div>
         </div>
-      </div>
 
+      </div>
     </div>
   );
 }
@@ -160,12 +185,11 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
 
   const handleClick = (sis, event) => {
     if (hasDraggedRef.current) return;
-
     const rect = event.currentTarget.getBoundingClientRect();
-    setPopupPosition({ x: rect.left + rect.width / 2, y: rect.top });
+    setPopupPosition({ x: rect.right, y: rect.top + rect.height / 2 });
     setSistemaSeleccionado(sis);
     if (onSistemaClick) onSistemaClick(sis);
-  };
+  }
 
   const RADIO = 24;
 
