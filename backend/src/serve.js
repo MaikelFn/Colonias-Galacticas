@@ -8,7 +8,7 @@ const path = require("path");
 const Galaxia = require('./clases/Entidades/Galaxia');
 const Jugador = require('./clases/Entidades/Jugador');
 const { Partida } = require('./clases/Entidades/Partida');
-const GestorConstruccion = require('./clases/gestores/GestorConstruccion');
+const GestorConstruccion = require('./clases/Gestores/GestorConstruccion');
 
 function cargarConfiguracion() {
     const rutaConfig = path.join(__dirname, 'data', 'Configuracion.json');
