@@ -122,18 +122,113 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
   }, [jugadores]);
 
   const sistemasConCoords = useMemo(() => {
-    const total  = sistemas.length;
-    const centroX = 400, centroY = 300, radio = 220;
-    return sistemas.map((sis, index) => {
+    const total = sistemas.length;
+    const centroX = 400, centroY = 300;
+    
+    // Si todos los sistemas ya tienen coordenadas, usarlas
+    const todosTienenCoords = sistemas.every(sis => 
+      typeof sis.x === 'number' && typeof sis.y === 'number'
+    );
+    
+    if (todosTienenCoords) {
+      return sistemas;
+    }
+
+    // Inicializar posiciones en círculo
+    const nodos = sistemas.map((sis, index) => {
       const tieneCoords = typeof sis.x === 'number' && typeof sis.y === 'number';
       const angulo = (2 * Math.PI * index) / total;
       return {
         ...sis,
-        x: tieneCoords ? sis.x : centroX + radio * Math.cos(angulo),
-        y: tieneCoords ? sis.y : centroY + radio * Math.sin(angulo),
+        x: tieneCoords ? sis.x : centroX + 220 * Math.cos(angulo),
+        y: tieneCoords ? sis.y : centroY + 220 * Math.sin(angulo),
+        vx: 0,
+        vy: 0
       };
     });
-  }, [sistemas]);
+
+    // Construir mapa de conexiones (rutas)
+    const conexiones = new Map();
+    if (rutas) {
+      rutas.forEach(ruta => {
+        const [id1, id2] = ruta;
+        if (!conexiones.has(id1)) conexiones.set(id1, []);
+        if (!conexiones.has(id2)) conexiones.set(id2, []);
+        conexiones.get(id1).push(id2);
+        conexiones.get(id2).push(id1);
+      });
+    }
+
+    // Parámetros del algoritmo force-directed
+    const ITERACIONES = 300;
+    const FUERZA_REPULSION = 80000;
+    const FUERZA_ATRACCION = 0.005;
+    const FUERZA_CENTRO = 0.05;
+    const TEMPERATURA_INICIAL = 300;
+    const ENFRIAMIENTO = 0.98;
+
+    let temperatura = TEMPERATURA_INICIAL;
+
+    for (let iter = 0; iter < ITERACIONES; iter++) {
+      // Aplicar fuerzas
+      for (let i = 0; i < nodos.length; i++) {
+        const nodo = nodos[i];
+        let fx = 0, fy = 0;
+
+        // Fuerza de repulsión entre todos los pares
+        for (let j = 0; j < nodos.length; j++) {
+          if (i === j) continue;
+          const otro = nodos[j];
+          const dx = nodo.x - otro.x;
+          const dy = nodo.y - otro.y;
+          const distancia = Math.sqrt(dx * dx + dy * dy) || 1;
+          const fuerza = FUERZA_REPULSION / (distancia * distancia);
+          fx += (dx / distancia) * fuerza;
+          fy += (dy / distancia) * fuerza;
+        }
+
+        // Fuerza de atracción entre nodos conectados
+        const vecinos = conexiones.get(nodo.id) || [];
+        vecinos.forEach(idVecino => {
+          const vecino = nodos.find(n => n.id === idVecino);
+          if (vecino) {
+            const dx = vecino.x - nodo.x;
+            const dy = vecino.y - nodo.y;
+            const distancia = Math.sqrt(dx * dx + dy * dy) || 1;
+            const fuerza = distancia * FUERZA_ATRACCION;
+            fx += (dx / distancia) * fuerza;
+            fy += (dy / distancia) * fuerza;
+          }
+        });
+
+        // Fuerza hacia el centro
+        const dxCentro = centroX - nodo.x;
+        const dyCentro = centroY - nodo.y;
+        fx += dxCentro * FUERZA_CENTRO;
+        fy += dyCentro * FUERZA_CENTRO;
+
+        // Actualizar velocidad con límite de temperatura
+        nodo.vx = (nodo.vx + fx) * 0.9;
+        nodo.vy = (nodo.vy + fy) * 0.9;
+        
+        const velocidad = Math.sqrt(nodo.vx * nodo.vx + nodo.vy * nodo.vy);
+        if (velocidad > temperatura) {
+          nodo.vx = (nodo.vx / velocidad) * temperatura;
+          nodo.vy = (nodo.vy / velocidad) * temperatura;
+        }
+
+        // Actualizar posición
+        nodo.x += nodo.vx;
+        nodo.y += nodo.vy;
+      }
+
+      // Enfriar temperatura
+      temperatura *= ENFRIAMIENTO;
+    }
+
+    // Remover propiedades de simulación
+    return nodos.map(({ vx, vy, ...resto }) => resto);
+  }, [sistemas, rutas]);
 
   // ─── Gestores de Eventos para Cámara (Pan & Zoom) ───────────────────────────
   const handleMouseDown = (e) => {
