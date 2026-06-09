@@ -66,6 +66,26 @@ function HomePage({ onEntrarLobby }) {
     return unsub
   }, [on, usuario, onEntrarLobby])
 
+  // Escuchar errores de crear partida
+  useEffect(() => {
+    const unsub = on('error_crear_partida', (data) => {
+      if (window.showAlert) {
+        window.showAlert(data.mensaje)
+      }
+    })
+    return unsub
+  }, [on])
+
+  // Escuchar errores de unirse a partida
+  useEffect(() => {
+    const unsub = on('error_unirse', (data) => {
+      if (window.showAlert) {
+        window.showAlert(data.mensaje)
+      }
+    })
+    return unsub
+  }, [on])
+
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100

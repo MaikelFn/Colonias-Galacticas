@@ -243,6 +243,16 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     return unsub
   }, [on])
 
+  // Escuchar errores de inicio de partida
+  useEffect(() => {
+    const unsub = on('error_inicio', (data) => {
+      if (window.showAlert) {
+        window.showAlert(data.mensaje)
+      }
+    })
+    return unsub
+  }, [on])
+
   useEffect(() => { onIniciarJuegoRef.current = onIniciarJuego }, [onIniciarJuego])
   useEffect(() => { partidaActualRef.current  = partidaActual  }, [partidaActual])
 

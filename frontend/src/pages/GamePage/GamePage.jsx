@@ -698,6 +698,9 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       console.log('Mensaje:', data.mensaje);
       console.log('Errores:', data.errores);
       console.log('=======================');
+      if (window.showAlert) {
+        window.showAlert(data.mensaje)
+      }
     }
 
     socket.on('actualizar_clientes', handleActualizarClientes)
@@ -722,10 +725,20 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       })
       setTimeout(() => setToastConstruccion(null), 2000)
     }
-    socket.on('construccion_error', () => {})
+
+    const handleConstruccionError = (data) => {
+      console.log('=== CONSTRUCCIÓN ERROR ===');
+      console.log('Mensaje:', data.mensaje);
+      console.log('========================');
+      if (window.showAlert) {
+        window.showAlert(data.mensaje)
+      }
+    }
+
+    socket.on('construccion_error', handleConstruccionError)
     socket.on('construccion_exito', handleConstruccionExito)
     return () => {
-      socket.off('construccion_error', () => {})
+      socket.off('construccion_error', handleConstruccionError)
       socket.off('construccion_exito', handleConstruccionExito)
     }
   }, [])

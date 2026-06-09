@@ -2,6 +2,7 @@ import { useState } from 'react'
 import HomePage from './pages/HomePage/HomePage'
 import LobbyPage from './pages/LobbyPage/LobbyPage'
 import GamePage from './pages/GamePage/GamePage'
+import AlertContainer from './components/Alert/Alert'
 import './App.css'
 
 function App() {
@@ -28,29 +29,38 @@ function App() {
 
   if (pantalla === 'lobby') {
     return (
-      <LobbyPage
-        partida={partida}
-        nombreJugador={nombreJugador}
-        onIniciarJuego={irAJuego}
-        onSalir={irAHome}
-      />
+      <>
+        <LobbyPage
+          partida={partida}
+          nombreJugador={nombreJugador}
+          onIniciarJuego={irAJuego}
+          onSalir={irAHome}
+        />
+        <AlertContainer />
+      </>
     )
   }
 
   if (pantalla === 'game') {
     return (
-      <GamePage
-        partida={partida}
-        nombreJugador={nombreJugador}
-        onSalir={irAHome}
-      />
+      <>
+        <GamePage
+          partida={partida}
+          nombreJugador={nombreJugador}
+          onSalir={irAHome}
+        />
+        <AlertContainer />
+      </>
     )
   }
 
   return (
-    <HomePage
-      onEntrarLobby={irALobby}
-    />
+    <>
+      <HomePage
+        onEntrarLobby={irALobby}
+      />
+      <AlertContainer />
+    </>
   )
 }
 
