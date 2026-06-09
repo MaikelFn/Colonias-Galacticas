@@ -1,44 +1,62 @@
 {
   "nombre": "Galaxia Andrómeda",
   "sistemas": [
-    {
-      "id": "A1",
-      "nombre": "Alpha Centauri",
-      "tipo": "balanceado"
-    },
-    {
-      "id": "A2",
-      "nombre": "Betelgeuse",
-      "tipo": "minero"
-    },
-    {
-      "id": "A3",
-      "nombre": "Sirius",
-      "tipo": "energetico"
-    },
-    {
-      "id": "A4",
-      "nombre": "Vega",
-      "tipo": "cientifico"
-    },
-    {
-      "id": "A5",
-      "nombre": "Rigel",
-      "tipo": "minero"
-    },
-    {
-      "id": "A6",
-      "nombre": "Deneb",
-      "tipo": "energetico"
-    }
+    { "id": "A1", "nombre": "Alpha Centauri", "tipo": "balanceado" },
+    { "id": "A2", "nombre": "Betelgeuse", "tipo": "minero" },
+    { "id": "A3", "nombre": "Sirius", "tipo": "energetico" },
+    { "id": "A4", "nombre": "Vega", "tipo": "cientifico" },
+    { "id": "A5", "nombre": "Rigel", "tipo": "minero" },
+    { "id": "A6", "nombre": "Deneb", "tipo": "energetico" },
+    { "id": "A7", "nombre": "Altair", "tipo": "balanceado" },
+    { "id": "A8", "nombre": "Antares", "tipo": "minero" },
+    { "id": "A9", "nombre": "Spica", "tipo": "cientifico" },
+    { "id": "A10", "nombre": "Pollux", "tipo": "energetico" },
+    { "id": "A11", "nombre": "Fomalhaut", "tipo": "balanceado" },
+    { "id": "A12", "nombre": "Denebola", "tipo": "minero" },
+    { "id": "A13", "nombre": "Regulus", "tipo": "cientifico" },
+    { "id": "A14", "nombre": "Castor", "tipo": "energetico" },
+    { "id": "A15", "nombre": "Bellatrix", "tipo": "balanceado" },
+    { "id": "A16", "nombre": "Alnilam", "tipo": "minero" },
+    { "id": "A17", "nombre": "Alioth", "tipo": "cientifico" },
+    { "id": "A18", "nombre": "Dubhe", "tipo": "energetico" },
+    { "id": "A19", "nombre": "Alkaid", "tipo": "balanceado" },
+    { "id": "A20", "nombre": "Mizar", "tipo": "minero" },
+    { "id": "A21", "nombre": "Merak", "tipo": "cientifico" },
+    { "id": "A22", "nombre": "Phecda", "tipo": "energetico" },
+    { "id": "A23", "nombre": "Megrez", "tipo": "balanceado" },
+    { "id": "A24", "nombre": "Thuban", "tipo": "minero" },
+    { "id": "A25", "nombre": "Etamin", "tipo": "cientifico" },
+    { "id": "A26", "nombre": "Edasich", "tipo": "energetico" },
+    { "id": "A27", "nombre": "Aldhibah", "tipo": "balanceado" },
+    { "id": "A28", "nombre": "Tania", "tipo": "minero" },
+    { "id": "A29", "nombre": "Kochab", "tipo": "cientifico" },
+    { "id": "A30", "nombre": "Pherkad", "tipo": "energetico" },
+    { "id": "A31", "nombre": "Wezen", "tipo": "balanceado" },
+    { "id": "A32", "nombre": "Suhail", "tipo": "minero" },
+    { "id": "A33", "nombre": "Avior", "tipo": "cientifico" },
+    { "id": "A34", "nombre": "Miaplacidus", "tipo": "energetico" },
+    { "id": "A35", "nombre": "Alnitak", "tipo": "balanceado" }
   ],
   "rutas": [
-    ["A1", "A2"],
-    ["A2", "A3"],
-    ["A3", "A4"],
-    ["A4", "A5"],
-    ["A5", "A6"],
-    ["A1", "A4"],
-    ["A2", "A5"]
+    ["A1", "A2"], ["A2", "A3"], ["A3", "A4"], ["A4", "A5"], ["A5", "A6"],
+    ["A6", "A7"], ["A7", "A8"], ["A8", "A9"], ["A9", "A10"], ["A10", "A11"],
+    ["A11", "A12"], ["A12", "A13"], ["A13", "A14"], ["A14", "A15"], ["A15", "A16"],
+    ["A16", "A17"], ["A17", "A18"], ["A18", "A19"], ["A19", "A20"], ["A20", "A21"],
+    ["A21", "A22"], ["A22", "A23"], ["A23", "A24"], ["A24", "A25"], ["A25", "A26"],
+    ["A26", "A27"], ["A27", "A28"], ["A28", "A29"], ["A29", "A30"], ["A30", "A31"],
+    ["A31", "A32"], ["A32", "A33"], ["A33", "A34"], ["A34", "A35"], ["A35", "A1"],
+    ["A1", "A3"], ["A2", "A4"], ["A3", "A5"], ["A4", "A6"], ["A5", "A7"],
+    ["A6", "A8"], ["A7", "A9"], ["A8", "A10"], ["A9", "A11"], ["A10", "A12"],
+    ["A11", "A13"], ["A12", "A14"], ["A13", "A15"], ["A14", "A16"], ["A15", "A17"],
+    ["A16", "A18"], ["A17", "A19"], ["A18", "A20"], ["A19", "A21"], ["A20", "A22"],
+    ["A21", "A23"], ["A22", "A24"], ["A23", "A25"], ["A24", "A26"], ["A25", "A27"],
+    ["A26", "A28"], ["A27", "A29"], ["A28", "A30"], ["A29", "A31"], ["A30", "A32"],
+    ["A31", "A33"], ["A32", "A34"], ["A33", "A35"], ["A1", "A6"], ["A2", "A7"],
+    ["A3", "A8"], ["A4", "A9"], ["A5", "A10"], ["A6", "A11"], ["A7", "A12"],
+    ["A8", "A13"], ["A9", "A14"], ["A10", "A15"], ["A11", "A16"], ["A12", "A17"],
+    ["A13", "A18"], ["A14", "A19"], ["A15", "A20"], ["A16", "A21"], ["A17", "A22"],
+    ["A18", "A23"], ["A19", "A24"], ["A20", "A25"], ["A21", "A26"], ["A22", "A27"],
+    ["A23", "A28"], ["A24", "A29"], ["A25", "A30"], ["A26", "A31"], ["A27", "A32"],
+    ["A28", "A33"], ["A29", "A34"], ["A30", "A35"]
   ]
 }

@@ -1,36 +1,54 @@
 {
   "nombre": "Nebulosa Orion",
   "sistemas": [
-    {
-      "id": "S1",
-      "nombre": "Terra",
-      "tipo": "balanceado"
-    },
-    {
-      "id": "S2",
-      "nombre": "Nova",
-      "tipo": "minero"
-    },
-    {
-      "id": "S3",
-      "nombre": "Sol",
-      "tipo": "energetico"
-    },
-    {
-      "id": "S4",
-      "nombre": "Luna",
-      "tipo": "cientifico"
-    },
-    {
-      "id": "S5",
-      "nombre": "Marte",
-      "tipo": "energetico"
-    }
+    { "id": "S1", "nombre": "Terra", "tipo": "balanceado" },
+    { "id": "S2", "nombre": "Nova", "tipo": "minero" },
+    { "id": "S3", "nombre": "Sol", "tipo": "energetico" },
+    { "id": "S4", "nombre": "Luna", "tipo": "cientifico" },
+    { "id": "S5", "nombre": "Marte", "tipo": "energetico" },
+    { "id": "S6", "nombre": "Jupiter", "tipo": "minero" },
+    { "id": "S7", "nombre": "Saturno", "tipo": "cientifico" },
+    { "id": "S8", "nombre": "Urano", "tipo": "balanceado" },
+    { "id": "S9", "nombre": "Neptuno", "tipo": "energetico" },
+    { "id": "S10", "nombre": "Pluton", "tipo": "minero" },
+    { "id": "S11", "nombre": "Alpha", "tipo": "cientifico" },
+    { "id": "S12", "nombre": "Beta", "tipo": "balanceado" },
+    { "id": "S13", "nombre": "Gamma", "tipo": "energetico" },
+    { "id": "S14", "nombre": "Delta", "tipo": "minero" },
+    { "id": "S15", "nombre": "Epsilon", "tipo": "cientifico" },
+    { "id": "S16", "nombre": "Zeta", "tipo": "balanceado" },
+    { "id": "S17", "nombre": "Eta", "tipo": "energetico" },
+    { "id": "S18", "nombre": "Theta", "tipo": "minero" },
+    { "id": "S19", "nombre": "Iota", "tipo": "cientifico" },
+    { "id": "S20", "nombre": "Kappa", "tipo": "balanceado" },
+    { "id": "S21", "nombre": "Lambda", "tipo": "energetico" },
+    { "id": "S22", "nombre": "Mu", "tipo": "minero" },
+    { "id": "S23", "nombre": "Nu", "tipo": "cientifico" },
+    { "id": "S24", "nombre": "Xi", "tipo": "balanceado" },
+    { "id": "S25", "nombre": "Omicron", "tipo": "energetico" },
+    { "id": "S26", "nombre": "Pi", "tipo": "minero" },
+    { "id": "S27", "nombre": "Rho", "tipo": "cientifico" },
+    { "id": "S28", "nombre": "Sigma", "tipo": "balanceado" },
+    { "id": "S29", "nombre": "Tau", "tipo": "energetico" },
+    { "id": "S30", "nombre": "Upsilon", "tipo": "minero" }
   ],
   "rutas": [
-    ["S1", "S2"],
-    ["S2", "S3"],
-    ["S3", "S4"],
-    ["S4", "S5"]
+    ["S1", "S2"], ["S2", "S3"], ["S3", "S4"], ["S4", "S5"], ["S5", "S6"],
+    ["S6", "S7"], ["S7", "S8"], ["S8", "S9"], ["S9", "S10"], ["S10", "S11"],
+    ["S11", "S12"], ["S12", "S13"], ["S13", "S14"], ["S14", "S15"], ["S15", "S16"],
+    ["S16", "S17"], ["S17", "S18"], ["S18", "S19"], ["S19", "S20"], ["S20", "S21"],
+    ["S21", "S22"], ["S22", "S23"], ["S23", "S24"], ["S24", "S25"], ["S25", "S26"],
+    ["S26", "S27"], ["S27", "S28"], ["S28", "S29"], ["S29", "S30"], ["S30", "S1"],
+    ["S1", "S3"], ["S2", "S4"], ["S3", "S5"], ["S4", "S6"], ["S5", "S7"],
+    ["S6", "S8"], ["S7", "S9"], ["S8", "S10"], ["S9", "S11"], ["S10", "S12"],
+    ["S11", "S13"], ["S12", "S14"], ["S13", "S15"], ["S14", "S16"], ["S15", "S17"],
+    ["S16", "S18"], ["S17", "S19"], ["S18", "S20"], ["S19", "S21"], ["S20", "S22"],
+    ["S21", "S23"], ["S22", "S24"], ["S23", "S25"], ["S24", "S26"], ["S25", "S27"],
+    ["S26", "S28"], ["S27", "S29"], ["S28", "S30"], ["S1", "S6"], ["S2", "S7"],
+    ["S3", "S8"], ["S4", "S9"], ["S5", "S10"], ["S6", "S11"], ["S7", "S12"],
+    ["S8", "S13"], ["S9", "S14"], ["S10", "S15"], ["S11", "S16"], ["S12", "S17"],
+    ["S13", "S18"], ["S14", "S19"], ["S15", "S20"], ["S16", "S21"], ["S17", "S22"],
+    ["S18", "S23"], ["S19", "S24"], ["S20", "S25"], ["S21", "S26"], ["S22", "S27"],
+    ["S23", "S28"], ["S24", "S29"], ["S25", "S30"]
   ]
 }

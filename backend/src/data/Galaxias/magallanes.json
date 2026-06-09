@@ -1,25 +1,46 @@
 {
   "nombre": "Nubes de Magallanes",
   "sistemas": [
-    {
-      "id": "M1",
-      "nombre": "Tarantula",
-      "tipo": "energetico"
-    },
-    {
-      "id": "M2",
-      "nombre": "Dorado",
-      "tipo": "minero"
-    },
-    {
-      "id": "M3",
-      "nombre": "Hydra",
-      "tipo": "cientifico"
-    }
+    { "id": "M1", "nombre": "Tarantula", "tipo": "energetico" },
+    { "id": "M2", "nombre": "Dorado", "tipo": "minero" },
+    { "id": "M3", "nombre": "Hydra", "tipo": "cientifico" },
+    { "id": "M4", "nombre": "Phoenix", "tipo": "balanceado" },
+    { "id": "M5", "nombre": "Tucana", "tipo": "energetico" },
+    { "id": "M6", "nombre": "Grus", "tipo": "minero" },
+    { "id": "M7", "nombre": "Pavo", "tipo": "cientifico" },
+    { "id": "M8", "nombre": "Indus", "tipo": "balanceado" },
+    { "id": "M9", "nombre": "Octans", "tipo": "energetico" },
+    { "id": "M10", "nombre": "Hydrus", "tipo": "minero" },
+    { "id": "M11", "nombre": "Volans", "tipo": "cientifico" },
+    { "id": "M12", "nombre": "Mensa", "tipo": "balanceado" },
+    { "id": "M13", "nombre": "Chamaeleon", "tipo": "energetico" },
+    { "id": "M14", "nombre": "Musca", "tipo": "minero" },
+    { "id": "M15", "nombre": "Apus", "tipo": "cientifico" },
+    { "id": "M16", "nombre": "Triangulum", "tipo": "balanceado" },
+    { "id": "M17", "nombre": "Ara", "tipo": "energetico" },
+    { "id": "M18", "nombre": "Norma", "tipo": "minero" },
+    { "id": "M19", "nombre": "Circinus", "tipo": "cientifico" },
+    { "id": "M20", "nombre": "Lupus", "tipo": "balanceado" },
+    { "id": "M21", "nombre": "Scorpius", "tipo": "energetico" },
+    { "id": "M22", "nombre": "Corona", "tipo": "minero" },
+    { "id": "M23", "nombre": "Crater", "tipo": "cientifico" },
+    { "id": "M24", "nombre": "Sextans", "tipo": "balanceado" },
+    { "id": "M25", "nombre": "Antlia", "tipo": "energetico" }
   ],
   "rutas": [
-    ["M1", "M2"],
-    ["M2", "M3"],
-    ["M1", "M3"]
+    ["M1", "M2"], ["M2", "M3"], ["M3", "M4"], ["M4", "M5"], ["M5", "M6"],
+    ["M6", "M7"], ["M7", "M8"], ["M8", "M9"], ["M9", "M10"], ["M10", "M11"],
+    ["M11", "M12"], ["M12", "M13"], ["M13", "M14"], ["M14", "M15"], ["M15", "M16"],
+    ["M16", "M17"], ["M17", "M18"], ["M18", "M19"], ["M19", "M20"], ["M20", "M21"],
+    ["M21", "M22"], ["M22", "M23"], ["M23", "M24"], ["M24", "M25"], ["M25", "M1"],
+    ["M1", "M3"], ["M2", "M4"], ["M3", "M5"], ["M4", "M6"], ["M5", "M7"],
+    ["M6", "M8"], ["M7", "M9"], ["M8", "M10"], ["M9", "M11"], ["M10", "M12"],
+    ["M11", "M13"], ["M12", "M14"], ["M13", "M15"], ["M14", "M16"], ["M15", "M17"],
+    ["M16", "M18"], ["M17", "M19"], ["M18", "M20"], ["M19", "M21"], ["M20", "M22"],
+    ["M21", "M23"], ["M22", "M24"], ["M23", "M25"], ["M1", "M6"], ["M2", "M7"],
+    ["M3", "M8"], ["M4", "M9"], ["M5", "M10"], ["M6", "M11"], ["M7", "M12"],
+    ["M8", "M13"], ["M9", "M14"], ["M10", "M15"], ["M11", "M16"], ["M12", "M17"],
+    ["M13", "M18"], ["M14", "M19"], ["M15", "M20"], ["M16", "M21"], ["M17", "M22"],
+    ["M18", "M23"], ["M19", "M24"], ["M20", "M25"]
   ]
 }
