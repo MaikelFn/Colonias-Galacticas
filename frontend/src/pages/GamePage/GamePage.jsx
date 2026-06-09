@@ -58,6 +58,75 @@ function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
   )
 }
 
+// ─── NUEVO: Modal Flotante de Jugadores (Reutiliza el diseño de tarjetas) ─────
+function ModalVerJugadores({ jugadores, miSocketId, onCerrar }) {
+  return (
+    <div className="gp-modal-overlay">
+      <div className="gp-modal gp-modal-jugadores-flotante">
+        <div className="gp-modal-header-jugadores">
+          <h2 className="gp-modal-titulo">ESTADO DE LA GALAXIA</h2>
+          <p className="gp-modal-texto">Comandantes en el sector</p>
+        </div>
+
+        <div className="gp-jugadores-lista-scroll">
+          {!jugadores || jugadores.length === 0 ? (
+            <div className="gp-empty">Sin jugadores</div>
+          ) : (
+            <div className="gp-jugadores-lista">
+              {jugadores.map((jugador, indice) => {
+                const esYo = jugador.id === miSocketId
+                const recursosJugador = jugador.recursos
+                const color = getPlayerColor(indice)
+                return (
+                  <div
+                    key={jugador.id || indice}
+                    className={`gp-jugador-card ${esYo ? 'gp-jugador-yo' : ''}`}
+                    style={{ '--player-color': color }}
+                  >
+                    <div className="gp-jugador-nombre-row">
+                      <span className="gp-jugador-nombre-text">
+                        {jugador.nombre}
+                        {esYo && <span className="gp-jugador-tag"> (tú)</span>}
+                      </span>
+                    </div>
+                    <div className="gp-jugador-avatar-grande" style={{ background: color }}>
+                      {jugador.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="gp-jugador-recursos-fila">
+                      <div className="gp-recurso-col">
+                        <span className="gp-recurso-label-small">Minerales</span>
+                        <span className="gp-recurso-valor-big">{recursosJugador?.minerales ?? 0}</span>
+                      </div>
+                      <div className="gp-recurso-col">
+                        <span className="gp-recurso-label-small">Energía</span>
+                        <span className="gp-recurso-valor-big">{recursosJugador?.energia ?? 0}</span>
+                      </div>
+                      <div className="gp-recurso-col">
+                        <span className="gp-recurso-label-small">Cristales</span>
+                        <span className="gp-recurso-valor-big">{recursosJugador?.cristales ?? 0}</span>
+                      </div>
+                    </div>
+                    <div className="gp-jugador-planetas-row">
+                      <span className="gp-planetas-label">Planetas</span>
+                      <span className="gp-planetas-count" style={{ color }}>{jugador.sistemasConquistados}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="gp-modal-botones" style={{ marginTop: '16px' }}>
+          <button className="gp-modal-btn gp-modal-cancelar" onClick={onCerrar}>
+            CERRAR PANEL
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ModalFlotas({ accion, sistemaDestino, sistemasJugador, onConfirmar, onCancelar }) {
   const [paso, setPaso] = useState(1)
   const [sistemaOrigen, setSistemaOrigen] = useState(null)
@@ -152,14 +221,96 @@ function ModalFlotas({ accion, sistemaDestino, sistemasJugador, onConfirmar, onC
   )
 }
 
+// ─── Panel de info del sistema seleccionado (en sidebar) ─────────────────────
+// ─── Panel de info del sistema seleccionado (en sidebar) ─────────────────────
+function SistemaInfoPanel({ sistema, jugadores }) {
+  if (!sistema) {
+    return (
+      <div className="gp-sistema-info-vacio">
+        <span className="gp-sistema-info-hint">Selecciona un planeta para ver su información</span>
+      </div>
+    )
+  }
+
+  const colorMap = {}
+  const COLORS = ['#3B82F6','#EF4444','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#F97316']
+  ;(jugadores || []).forEach((j, i) => { colorMap[j.nombre] = COLORS[i % COLORS.length] })
+
+  const colorDueno = sistema.propietario ? (colorMap[sistema.propietario] ?? '#718096') : null
+  const prodTurno = sistema.produccion ?? { minerales: 0, energia: 0, cristales: 0 }
+  const instalaciones = sistema.instalaciones || []
+  const contar = (tipo) => instalaciones.filter(inst => inst.nombre === tipo).length
+
+  return (
+    <div className="gp-sistema-info-panel">
+      <div className="gp-sistema-info-header">
+        <div className="gp-sistema-info-nombre-row">
+          <span className="gp-sistema-info-nombre">{sistema.nombre}</span>
+          <span className={`gp-sistema-info-tipo gp-tag-tipo ${sistema.tipo?.toLowerCase()}`}>{sistema.tipo}</span>
+        </div>
+        {sistema.propietario && (
+          <span className="gp-sistema-info-dueno" style={{ color: colorDueno }}>
+            ◈ {sistema.propietario}
+          </span>
+        )}
+        {!sistema.propietario && (
+          <span className="gp-sistema-info-dueno gp-sistema-info-libre">Sector Libre</span>
+        )}
+      </div>
+
+      <div className="gp-sistema-info-divider" />
+
+      {/* Estructura modificada a 4 filas con alineación extrema (Nombre izq / Número der) */}
+      <div className="gp-sistema-info-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Minas:</span>
+          <strong>{contar('Mina')}</strong>
+        </div>
+        <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Astilleros:</span>
+          <strong>{contar('Astillero')}</strong>
+        </div>
+        <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Centrales de Inv.:</span>
+          <strong>{contar('CentralInvestigacion')}</strong>
+        </div>
+        <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Fortalezas:</span>
+          <strong>{contar('Fortaleza')}</strong>
+        </div>
+      </div>
+
+      <div className="gp-sistema-info-divider" />
+
+      <div className="gp-sistema-info-flotas-row">
+        <span className="gp-sistema-info-flotas-label">Flotas en órbita</span>
+        <span className="gp-sistema-info-flotas-val">{sistema.astillerosEstacionados ?? 0}</span>
+      </div>
+
+      <div className="gp-sistema-info-produccion">
+        <div className="gp-sistema-info-prod-item">
+          🪨 <span className="txt-minerales">+{prodTurno.minerales}</span>
+        </div>
+        <div className="gp-sistema-info-prod-item">
+          ⚡ <span className="txt-energia">+{prodTurno.energia}</span>
+        </div>
+        <div className="gp-sistema-info-prod-item">
+          💎 <span className="txt-cristales">+{prodTurno.cristales}</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Tarjeta de jugador con nuevo diseño ──────────────────────────────────────
-function JugadoresPanel({ jugadores, miSocketId }) {
+function JugadoresPanel({ jugadores, miSocketId, soloNombre }) {
   if (!jugadores || jugadores.length === 0) {
     return <div className="gp-empty">Sin jugadores</div>
   }
   return (
     <div className="gp-jugadores-lista">
       {jugadores.map((jugador, indice) => {
+        if (soloNombre && jugador.nombre !== soloNombre) return null;
         const esYo = jugador.id === miSocketId
         const recursosJugador = jugador.recursos
         const color = getPlayerColor(indice)
@@ -483,6 +634,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [miSocketId, setMiSocketId]   = useState(null)
   const [partidaIniciada, setPartidaIniciada] = useState(partida?.estado === 'iniciada')
   const [mostrarModalSalida, setMostrarModalSalida] = useState(false)
+  const [mostrarModalJugadores, setMostrarModalJugadores] = useState(false)
   const [mensajesSistema, setMensajesSistema] = useState([])
   const [estadoPartida, setEstadoPartida] = useState(partida)
   const [jugadores, setJugadores] = useState(partida?.jugadores || [])
@@ -705,18 +857,35 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
         />
       )}
 
+      {mostrarModalJugadores && (
+        <ModalVerJugadores
+          jugadores={jugadores}
+          miSocketId={miSocketId}
+          onCerrar={() => setMostrarModalJugadores(false)}
+        />
+      )}
+
       <Temporizador partidaIniciada={partidaIniciada} />
 
       <div className="gp-layout">
 
         <aside className="gp-sidebar">
+          <div className="gp-frame gp-frame-sistema-info">
+            <SistemaInfoPanel sistema={sistemaSeleccionado} jugadores={jugadores} />
+          </div>
           <div className="gp-frame gp-frame-jugadores">
-            <JugadoresPanel jugadores={jugadores} miSocketId={miSocketId} />
+            <JugadoresPanel
+              jugadores={jugadores}
+              miSocketId={miSocketId}
+              soloNombre={nombreJugador}
+            />
           </div>
           <div className="gp-sidebar-footer">
-            <span className="gp-comandante-label">⚑ {nombreJugador}</span>
+            <button className="gp-jugadores-btn" onClick={() => setMostrarModalJugadores(true)}>
+              Ver Jugadores
+            </button>
             <button className="gp-salir-btn" onClick={() => setMostrarModalSalida(true)}>
-              ← SALIR
+              ← Salir
             </button>
           </div>
         </aside>
@@ -728,7 +897,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
               jugadores={jugadores}
               onSistemaClick={(sis, posPopup, posToast) => {
                 setSistemaSeleccionado(sis);
-                posicionSistemaRef.current = posToast; 
+                posicionSistemaRef.current = posToast;
               }}
             />
           </div>

@@ -51,16 +51,14 @@
 .mg-popup-modern {
   position: fixed;
   transform: translate(20px, -50%);
-  background: rgba(8, 13, 22, 0.95);
+  background: rgba(8, 13, 22, 0.85); 
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   padding: 12px 14px;
   width: 220px;
   box-shadow:
     0 12px 30px -5px rgba(0, 0, 0, 0.8),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+    inset 0 1px 0 rgba(0, 0, 0, 0.05);
   z-index: 1000;
   font-family: 'Courier New', monospace;
   color: #f1f5f9;
@@ -192,3 +190,14 @@
 .txt-minerales { color: #e2e8f0; }
 .txt-energia   { color: #4ade80; }
 .txt-cristales { color: #38bdf8; }
+
+.mg-svg .mg-ruta.mg-ruta-activa {
+  stroke: #00d2ff !important;
+  stroke-width: 2.5px !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0px 0px 3px rgba(0, 210, 255, 0.8));
+}
+
+.mg-ruta {
+  transition: opacity 0.25s ease, stroke 0.25s ease, stroke-width 0.25s ease !important;
+}

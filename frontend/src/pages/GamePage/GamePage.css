@@ -66,8 +66,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 48px 8px 8px 8px; /* top padding para no chocar con el timer */
-  /* Scrollbar invisible */
+  padding: 10px 8px 12px 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -822,4 +821,250 @@
   15%  { opacity: 1; transform: translateX(-50%) translateY(0px); }
   80%  { opacity: 1; transform: translateX(-50%) translateY(-16px); }
   100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* ─── Panel info sistema seleccionado (sidebar) ────────────────────────────── */
+.gp-sistema-info-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.gp-sistema-info-hint {
+  font-size: 0.62rem;
+  color: #334155;
+  text-align: center;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+.gp-sistema-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.gp-sistema-info-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.gp-sistema-info-nombre-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.gp-sistema-info-nombre {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gp-sistema-info-tipo {
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.gp-sistema-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gp-sistema-info-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gp-sistema-info-tipo.minero      { color: #fb923c; border-color: rgba(251,146,60,0.3);  background: rgba(251,146,60,0.08);  }
+.gp-sistema-info-tipo.energético,
+.gp-sistema-info-tipo.energetico  { color: #facc15; border-color: rgba(250,204,21,0.3);  background: rgba(250,204,21,0.08);  }
+.gp-sistema-info-tipo.científico,
+.gp-sistema-info-tipo.cientifico  { color: #38bdf8; border-color: rgba(56,189,248,0.3);  background: rgba(56,189,248,0.08);  }
+.gp-sistema-info-tipo.balanceado  { color: #a78bfa; border-color: rgba(167,139,250,0.3); background: rgba(167,139,250,0.08); }
+
+.gp-sistema-info-dueno {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+}
+
+.gp-sistema-info-libre {
+  color: #475569;
+  font-style: italic;
+}
+
+.gp-sistema-info-divider {
+  height: 1px;
+  background: rgba(45, 212, 191, 0.1);
+  margin: 2px 0;
+}
+
+.gp-sistema-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 2px 2px;
+}
+
+.gp-sistema-info-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.gp-sistema-info-list-item span {
+  font-size: 0.62rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gp-sistema-info-list-item strong {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.gp-sistema-info-flotas-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 2px;
+}
+
+.gp-sistema-info-flotas-label {
+  font-size: 0.62rem;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.gp-sistema-info-flotas-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2dd4bf;
+  text-shadow: 0 0 8px rgba(45, 212, 191, 0.4);
+}
+
+.gp-sistema-info-produccion {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.gp-sistema-info-prod-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  padding: 4px 2px;
+  font-size: 0.75rem;
+}
+
+.txt-minerales { color: #fb923c; font-weight: 700; }
+.txt-energia   { color: #facc15; font-weight: 700; }
+.txt-cristales { color: #38bdf8; font-weight: 700; }
+
+/* ─── Elementos del Sidebar Ajustados ────────────────────────────────────── */
+.gp-frame-sistema-info {
+  flex-shrink: 0;
+  height: 300px;
+  padding: 2px 10px 8px 10px;
+  border-bottom: 1px solid rgba(45, 212, 191, 0.14);
+  overflow: hidden;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.gp-frame-sistema-info::-webkit-scrollbar {
+  display: none;
+}
+
+.gp-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-top: 1px solid rgba(45, 212, 191, 0.14);
+}
+
+/* NUEVO: Botón de Jugadores con estética Cyberpunk/Sci-fi */
+.gp-jugadores-btn {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gp-jugadores-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+/* ─── Estilos de la Ventana Flotante de Jugadores ─────────────────── */
+.gp-modal-jugadores-flotante {
+  max-width: 650px !important;
+  width: 90%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.gp-modal-header-jugadores {
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 10px;
+}
+
+.gp-jugadores-lista-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  max-height: 50vh;
+}
+
+.gp-jugadores-lista-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.gp-jugadores-lista-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+.gp-jugadores-lista-scroll::-webkit-scrollbar-thumb {
+  background: rgba(45, 212, 191, 0.3);
+  border-radius: 2px;
+}
+
+.gp-modal-jugadores-flotante .gp-jugadores-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  padding: 4px;
 }

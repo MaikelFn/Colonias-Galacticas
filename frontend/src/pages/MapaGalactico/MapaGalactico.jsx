@@ -21,91 +21,25 @@ function getPlanetImage(tipo) {
   return PLANET_IMAGES[tipo.toLowerCase()] ?? null;
 }
 
-// ─── Popup ────────────────────────────────────────────────────────────────────
-function SistemaPopup({ sistema, onClose, position }) {
-  if (!sistema) return null;
-
-  const prodTurno = sistema.produccion ?? { minerales: 0, energia: 0, cristales: 0 }
-  const instalaciones = sistema.instalaciones || [];
-  const contar = (tipo) => instalaciones.filter(inst => inst.nombre === tipo).length;
-
-  return (
-    <div className="mg-popup-modern" style={{ left: position.x + 'px', top: position.y + 'px' }}>
-
-      <div className="mg-popup-header-modern">
-        <div className="mg-popup-header-left">
-          <h4>{sistema.nombre}</h4>
-          <span className={`mg-tag-tipo ${sistema.tipo?.toLowerCase()}`}>{sistema.tipo}</span>
-        </div>
-        <button className="mg-popup-close-modern" onClick={onClose}>×</button>
-      </div>
-
-      <div className="mg-popup-divider" />
-
-      <div className="mg-popup-body-modern">
-
-        <div className="mg-popup-row">
-          <span className="mg-label-muted">Propietario</span>
-          <span className="mg-value-highlight">{sistema.propietario || 'Sector Libre'}</span>
-        </div>
-
-        <div className="mg-popup-row">
-          <span className="mg-label-muted">Flotas en órbita</span>
-          <span className="mg-value-flotas">{sistema.astillerosEstacionados ?? 0}</span>
-        </div>
-
-        <div className="mg-popup-divider" />
-
-        <div className="mg-grid-subseccion">
-          <div className="mg-grid-item">
-            <small>Minas</small>
-            <strong>{contar('Mina')}</strong>
-          </div>
-          <div className="mg-grid-item">
-            <small>Astilleros</small>
-            <strong>{contar('Astillero')}</strong>
-          </div>
-          <div className="mg-grid-item">
-            <small>C. Inv.</small>
-            <strong>{contar('CentralInvestigacion')}</strong>
-          </div>
-          <div className="mg-grid-item">
-            <small>Fortalezas</small>
-            <strong>{contar('Fortaleza')}</strong>
-          </div>
-        </div>
-
-        <div className="mg-popup-divider" />
-
-        <div className="mg-produccion-barra">
-          <div className="mg-prod-item" title="Minerales">
-            🪨 <span className="txt-minerales">+{prodTurno.minerales}</span>
-          </div>
-          <div className="mg-prod-item" title="Energía">
-            ⚡ <span className="txt-energia">+{prodTurno.energia}</span>
-          </div>
-          <div className="mg-prod-item" title="Cristales">
-            💎 <span className="txt-cristales">+{prodTurno.cristales}</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
 // ─── Componente principal ─────────────────────────────────────────────────────
-export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaClick }) {
+export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaClick, nombreJugador }) {
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null);
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
-  const [toastConstruccion, setToastConstruccion] = useState(null);
 
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const posicionSistemaRef = useRef({ x: 0, y: 0 });
-  
   const dragStart = useRef({ x: 0, y: 0 });
+  const idsConectados = useMemo(() => {
+    if (!sistemaSeleccionado || !rutas) return null;
+    const id = sistemaSeleccionado.id;
+    const vecinos = new Set([id]);
+    rutas.forEach(([a, b]) => {
+      if (a === id) vecinos.add(b);
+      if (b === id) vecinos.add(a);
+    });
+    return vecinos;
+  }, [sistemaSeleccionado, rutas]);
+
   const hasDraggedRef = useRef(false);
 
   if (!sistemas || sistemas.length === 0) {
@@ -125,7 +59,6 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
     const total = sistemas.length;
     const centroX = 400, centroY = 300;
     
-    // Si todos los sistemas ya tienen coordenadas, usarlas
     const todosTienenCoords = sistemas.every(sis => 
       typeof sis.x === 'number' && typeof sis.y === 'number'
     );
@@ -134,7 +67,6 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
       return sistemas;
     }
 
-    // Inicializar posiciones en círculo
     const nodos = sistemas.map((sis, index) => {
       const tieneCoords = typeof sis.x === 'number' && typeof sis.y === 'number';
       const angulo = (2 * Math.PI * index) / total;
@@ -147,7 +79,6 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
       };
     });
 
-    // Construir mapa de conexiones (rutas)
     const conexiones = new Map();
     if (rutas) {
       rutas.forEach(ruta => {
@@ -159,7 +90,6 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
       });
     }
 
-    // Parámetros del algoritmo force-directed
     const ITERACIONES = 300;
     const FUERZA_REPULSION = 80000;
     const FUERZA_ATRACCION = 0.005;
@@ -170,12 +100,10 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
     let temperatura = TEMPERATURA_INICIAL;
 
     for (let iter = 0; iter < ITERACIONES; iter++) {
-      // Aplicar fuerzas
       for (let i = 0; i < nodos.length; i++) {
         const nodo = nodos[i];
         let fx = 0, fy = 0;
 
-        // Fuerza de repulsión entre todos los pares
         for (let j = 0; j < nodos.length; j++) {
           if (i === j) continue;
           const otro = nodos[j];
@@ -187,7 +115,6 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
           fy += (dy / distancia) * fuerza;
         }
 
-        // Fuerza de atracción entre nodos conectados
         const vecinos = conexiones.get(nodo.id) || [];
         vecinos.forEach(idVecino => {
           const vecino = nodos.find(n => n.id === idVecino);
@@ -201,13 +128,11 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
           }
         });
 
-        // Fuerza hacia el centro
         const dxCentro = centroX - nodo.x;
         const dyCentro = centroY - nodo.y;
         fx += dxCentro * FUERZA_CENTRO;
         fy += dyCentro * FUERZA_CENTRO;
 
-        // Actualizar velocidad con límite de temperatura
         nodo.vx = (nodo.vx + fx) * 0.9;
         nodo.vy = (nodo.vy + fy) * 0.9;
         
@@ -217,18 +142,35 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
           nodo.vy = (nodo.vy / velocidad) * temperatura;
         }
 
-        // Actualizar posición
         nodo.x += nodo.vx;
         nodo.y += nodo.vy;
       }
 
-      // Enfriar temperatura
       temperatura *= ENFRIAMIENTO;
     }
 
-    // Remover propiedades de simulación
     return nodos.map(({ vx, vy, ...resto }) => resto);
   }, [sistemas, rutas]);
+
+  const getRutaColor = (ruta) => {
+    if (!sistemaSeleccionado) return null;
+
+    const [idA, idB] = ruta;
+    const esRutaDelSeleccionado = sistemaSeleccionado.id === idA || sistemaSeleccionado.id === idB;
+    if (!esRutaDelSeleccionado) return null;
+
+    const idOtroExtremo = sistemaSeleccionado.id === idA ? idB : idA;
+    const otroSistema = sistemasConCoords.find(s => s.id === idOtroExtremo);
+    if (!otroSistema) return null;
+
+    if (!otroSistema.propietario) {
+      return { stroke: '#38bdf8', glow: 'rgba(56, 189, 248, 0.6)' };
+    }
+    if (otroSistema.propietario === nombreJugador) {
+      return { stroke: '#4ade80', glow: 'rgba(74, 222, 128, 0.6)' };
+    }
+    return { stroke: '#f87171', glow: 'rgba(248, 113, 113, 0.6)' };
+  };
 
   // ─── Gestores de Eventos para Cámara (Pan & Zoom) ───────────────────────────
   const handleMouseDown = (e) => {
@@ -283,18 +225,15 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
   const handleClick = (sis, event) => {
     if (hasDraggedRef.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    
-    const posPopup = { x: rect.right, y: rect.top + rect.height / 2 };
-    
+
     const posToast = {
       x: rect.left + rect.width / 2,
       y: rect.bottom + 12
     };
-    
-    setPopupPosition(posPopup);
+
     setSistemaSeleccionado(sis);
-    
-    if (onSistemaClick) onSistemaClick(sis, posPopup, posToast);
+
+    if (onSistemaClick) onSistemaClick(sis, null, posToast);
   };
 
   const RADIO = 24;
@@ -324,9 +263,40 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
           {rutas && rutas.map((ruta, i) => {
             const s1 = sistemasConCoords.find(s => s.id === ruta[0]);
             const s2 = sistemasConCoords.find(s => s.id === ruta[1]);
-            return s1 && s2 ? (
-              <line key={i} x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y} className="mg-ruta" />
-            ) : null;
+            if (!s1 || !s2) return null;
+
+            const rutaColor = getRutaColor(ruta);
+            const esConectada = !idsConectados || (idsConectados.has(ruta[0]) && idsConectados.has(ruta[1]));
+
+            if (rutaColor) {
+              return (
+                <g key={i}>
+                  <line
+                    x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y}
+                    stroke={rutaColor.glow}
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    opacity="0.5"
+                  />
+                  <line
+                    x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y}
+                    stroke={rutaColor.stroke}
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    opacity="1"
+                  />
+                </g>
+              );
+            }
+
+            return (
+              <line
+                key={i}
+                x1={s1.x} y1={s1.y} x2={s2.x} y2={s2.y}
+                className="mg-ruta"
+                opacity={esConectada ? 1 : 0.08}
+              />
+            );
           })}
 
           {sistemasConCoords.map((sis) => {
@@ -334,13 +304,15 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
             const colorDueno    = sis.propietario ? (colorMap[sis.propietario] ?? '#718096') : null;
             const esSeleccion   = sistemaSeleccionado?.id === sis.id;
             const radioActual   = esSeleccion ? RADIO + 4 : RADIO;
+            const esConectado   = !idsConectados || idsConectados.has(sis.id);
+            const opacidadGrupo = esConectado ? 1 : 0.1;
 
             return (
               <g
                 key={sis.id}
                 className="mg-sistema"
                 onClick={(e) => handleClick(sis, e)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: 'pointer', opacity: opacidadGrupo, transition: 'opacity 0.25s' }}
               >
                 {esSeleccion && (
                   <circle
@@ -412,14 +384,6 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
           })}
         </g>
       </svg>
-
-      {sistemaSeleccionado && (
-        <SistemaPopup
-          sistema={sistemaSeleccionado}
-          onClose={() => setSistemaSeleccionado(null)}
-          position={popupPosition}
-        />
-      )}
     </div>
   );
 }
