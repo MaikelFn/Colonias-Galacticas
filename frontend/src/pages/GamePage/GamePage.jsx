@@ -610,7 +610,73 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, on
   );
 }
 
-// ─── MapaArea ─────────────────────────────────────────────────────────────────
+// ─── Sistema de Toasts Galácticos ─────────────────────────────────────────────
+function ToastGalactico({ toasts }) {
+  if (!toasts || toasts.length === 0) return null
+  return (
+    <div className="gp-toast-stack">
+      {toasts.map(t => (
+        <div key={t.id} className={`gp-toast gp-toast-${t.tipo}`}>
+          <span className="gp-toast-titulo">{t.titulo}</span>
+          {t.info && <span className="gp-toast-info">{t.info}</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Modal Partida Finalizada ──────────────────────────────────────────────────
+function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
+  const razonTexto = {
+    tiempo: 'Tiempo agotado',
+    conquista: 'Conquista total',
+    eliminacion: 'Último en pie',
+  }[resultado.razon] ?? 'Partida finalizada'
+
+  const soyGanador = resultado.ganador === nombreJugador
+
+  return (
+    <div className="gp-modal-overlay">
+      <div className="gp-modal gp-modal-fin">
+        <div className="gp-modal-fin-header">
+          <div className="gp-modal-fin-icono">{soyGanador ? '🏆' : '💫'}</div>
+          <h2 className="gp-modal-titulo">
+            {soyGanador ? '¡VICTORIA GALÁCTICA!' : 'PARTIDA FINALIZADA'}
+          </h2>
+          <p className="gp-modal-subtitulo">{razonTexto}</p>
+          {resultado.ganador && (
+            <p className="gp-modal-ganador">
+              Ganador: <strong>{resultado.ganador}</strong>
+            </p>
+          )}
+        </div>
+
+        <div className="gp-modal-fin-ranking">
+          <h3 className="gp-modal-fin-ranking-titulo">CLASIFICACIÓN FINAL</h3>
+          <div className="gp-modal-fin-tabla">
+            {(resultado.ranking || []).map((entry, i) => (
+              <div
+                key={entry.nombre}
+                className={`gp-modal-fin-fila ${entry.nombre === nombreJugador ? 'gp-modal-fin-fila-yo' : ''}`}
+              >
+                <span className="gp-modal-fin-pos">#{i + 1}</span>
+                <span className="gp-modal-fin-nombre">{entry.nombre}</span>
+                <span className="gp-modal-fin-sistemas">Planetas: {entry.sistemasConquistados}</span>
+                <span className="gp-modal-fin-puntaje">{(entry.puntaje ?? 0).toLocaleString()} pts</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button className="gp-modal-btn gp-modal-confirmar" onClick={onSalir}>
+          Volver al menú
+        </button>
+      </div>
+    </div>
+  )
+}
+
+
 function MapaArea({ estadoPartida, jugadores, onSistemaClick }) {
   const galaxia = estadoPartida?.galaxia
 
@@ -642,10 +708,18 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null)
   const [modalFlotasVisible, setModalFlotasVisible] = useState(false)
   const [toastConstruccion, setToastConstruccion] = useState(null)
+  const [toasts, setToasts] = useState([])
+  const [resultadoFinal, setResultadoFinal] = useState(null)
   const idPartidaRef = useRef(partida?.id)
   const posicionSistemaRef = useRef({ x: 0, y: 0 })
   const sistemaSeleccionadoRef = useRef(null)
-  
+
+  // ─── Helper para agregar toasts ──────────────────────────────────────────────
+  const addToast = useCallback((titulo, info, tipo = 'info', duracion = 3500) => {
+    const id = Date.now() + Math.random()
+    setToasts(prev => [...prev, { id, titulo, info, tipo }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duracion)
+  }, [])
   
   useEffect(() => {
     sistemaSeleccionadoRef.current = sistemaSeleccionado
@@ -811,6 +885,61 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     }
   }, [])
 
+  // ─── Eventos de combate y fin de partida ─────────────────────────────────────
+  useEffect(() => {
+    function onCombateResultado(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      const soyAtacante = data.atacante === nombreJugador
+      const gane = data.ganador === nombreJugador || (soyAtacante && data.conquista)
+
+      if (data.conquista) {
+        addToast(
+          soyAtacante ? 'Ataque exitoso' : 'Sistema perdido',
+          soyAtacante
+            ? `Conquistaste ${data.sistema} · Bajas: ${data.perdidasAtacante} flotas`
+            : `${data.atacante} tomó ${data.sistema} · Fuerzas enemigas: ${data.fuerzaAtacante}`,
+          soyAtacante ? 'exito' : 'peligro'
+        )
+      } else {
+        addToast(
+          soyAtacante ? 'Ataque fallido' : 'Ataque repelido',
+          soyAtacante
+            ? `No pudiste tomar ${data.sistema} · Fuerzas: ${data.fuerzaAtacante} vs ${data.fuerzaDefensor}`
+            : `Repeliste el ataque de ${data.atacante} en ${data.sistema}`,
+          soyAtacante ? 'peligro' : 'exito'
+        )
+      }
+    }
+
+    function onJugadorEliminado(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      const soyYo = data.jugador === nombreJugador
+      addToast(
+        soyYo ? 'Has sido eliminado' : 'Comandante eliminado',
+        soyYo
+          ? 'Has perdido todos tus sistemas. La galaxia te recuerda.'
+          : `${data.jugador} ha sido eliminado de la galaxia.`,
+        'peligro',
+        5000
+      )
+    }
+
+    function onPartidaFinalizada(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      setResultadoFinal(data)
+    }
+
+    socket.on('combate_resultado',  onCombateResultado)
+    socket.on('jugador_eliminado',  onJugadorEliminado)
+    socket.on('partida_finalizada', onPartidaFinalizada)
+
+    return () => {
+      socket.off('combate_resultado',  onCombateResultado)
+      socket.off('jugador_eliminado',  onJugadorEliminado)
+      socket.off('partida_finalizada', onPartidaFinalizada)
+    }
+  }, [nombreJugador, addToast])
+
   const handleConfirmarSalida = useCallback(() => {
     socket.emit('abandonar_partida', {
       idPartida: idPartidaRef.current,
@@ -878,6 +1007,16 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
         />
       )}
 
+      {resultadoFinal && (
+        <ModalPartidaFinalizada
+          resultado={resultadoFinal}
+          nombreJugador={nombreJugador}
+          onSalir={onSalir}
+        />
+      )}
+
+      <ToastGalactico toasts={toasts} />
+
       <Temporizador partidaIniciada={partidaIniciada} />
 
       <div className="gp-layout">
@@ -908,6 +1047,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
             <MapaArea
               estadoPartida={estadoPartida}
               jugadores={jugadores}
+              nombreJugador={nombreJugador}
               onSistemaClick={(sis, posPopup, posToast) => {
                 setSistemaSeleccionado(sis);
                 posicionSistemaRef.current = posToast;

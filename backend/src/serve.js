@@ -479,7 +479,6 @@ io.on("connection", (socket) => {
         console.log('Sistema Origen:', sistemaOrigen?.nombre, 'Astilleros:', sistemaOrigen?.obtenerCantidadAstilleros());
         console.log('Sistema Destino:', sistemaDestino?.nombre, 'Astilleros:', sistemaDestino?.obtenerCantidadAstilleros());
 
-        // Mostrar todos los sistemas y sus astilleros antes del movimiento
         console.log('--- ESTADO ANTES DEL MOVIMIENTO ---');
         partida.galaxia.sistemas.forEach(sistemaPlanetario => {
             console.log(`  ${sistemaPlanetario.nombre}: ${sistemaPlanetario.obtenerCantidadAstilleros()} astilleros, propietario: ${sistemaPlanetario.propietario?.nickname || 'ninguno'}`);
@@ -513,12 +512,40 @@ io.on("connection", (socket) => {
                 io.to(idPartida).emit("planeta_conquistado", {
                     idPartida,
                     conquistadorId: jugador.socketId,
+                    conquistador: jugador.nickname,
                     sistema: data.sistema
                 });
             }
+            if (evento === 'combateResuelto') {
+                io.to(idPartida).emit("combate_resultado", {
+                    idPartida,
+                    sistema: data.sistema,
+                    atacante: data.atacante,
+                    ganador: data.ganador,
+                    fuerzaAtacante: data.fuerzaAtacante,
+                    fuerzaDefensor: data.fuerzaDefensor,
+                    perdidasAtacante: data.perdidasAtacante,
+                    perdidasDefensor: data.perdidasDefensor,
+                    conquista: data.conquista
+                });
+
+                if (data.conquista) {
+                    const defensor = partida.jugadores.find(j => j.nickname === data.ganador === false && j.nickname !== data.atacante);
+                    partida.jugadores.forEach(j => {
+                        if (j.nickname !== data.atacante) {
+                            const sistemasRestantes = partida.galaxia.sistemas.filter(s => s.propietario === j).length;
+                            if (sistemasRestantes === 0) {
+                                io.to(idPartida).emit("jugador_eliminado", {
+                                    idPartida,
+                                    jugador: j.nickname
+                                });
+                            }
+                        }
+                    });
+                }
+            }
         });
 
-        // Mostrar todos los sistemas y sus astilleros después del movimiento
         console.log('--- ESTADO DESPUÉS DEL MOVIMIENTO ---');
         partida.galaxia.sistemas.forEach(sistemaPlanetario => {
             console.log(`  ${sistemaPlanetario.nombre}: ${sistemaPlanetario.obtenerCantidadAstilleros()} astilleros, propietario: ${sistemaPlanetario.propietario?.nickname || 'ninguno'}`);
@@ -552,6 +579,8 @@ io.on("connection", (socket) => {
                     });
                 }
             });
+
+            partida.chequearVictoriaPorConquista();
         } else {
             console.log('Error en movimiento:', resultado.errores);
             socket.emit("mover_flotas_error", {

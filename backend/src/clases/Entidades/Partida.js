@@ -27,6 +27,7 @@ class Partida {
         this.gestorProduccion = new GestorProduccion(this.gestorTemporizadores, this.galaxia, this, onProduccionRecursos);
         this.cuentaRegresivaActiva = false;
         this.onCierrePorTiempo = onCierrePorTiempo;
+        this.io = io;
     }
 
     puedeIniciar() {
@@ -76,12 +77,37 @@ class Partida {
         this.gestorProduccion.producirRecursos();
     }
 
+    emitirFinPartida(razon, jugadorGanador = null) {
+        if (!this.io) return;
+
+        const ranking = this.obtenerRanking();
+
+        this.io.to(this.id).emit('partida_finalizada', {
+            idPartida: this.id,
+            razon,
+            ganador: jugadorGanador ? jugadorGanador.nickname : (ranking[0]?.nombre ?? null),
+            ranking,
+            tiempoJuego: Math.floor((this.fechaFin - this.fechaInicio) / 1000),
+            galaxia: this.galaxia.nombre
+        });
+
+        // ── Aquí se pasarán los datos al ranking histórico cuando esté implementado ──
+        // guardarEnRanking({
+        //     idPartida: this.id,
+        //     ganador: ranking[0]?.nombre,
+        //     galaxia: this.galaxia.nombre,
+        //     tiempoJuego: ...,
+        //     ranking
+        // });
+    }
+
     finalizarPorTiempo() {
         if (this.estado !== EstadoPartida.INICIADA) return;
         this.estado = EstadoPartida.FINALIZADA;
         this.fechaFin = Date.now();
         this.calcularPuntajes();
         this.detenerTemporizadores();
+        this.emitirFinPartida('tiempo');
     }
 
     finalizarPorConquista(jugadorGanador) {
@@ -90,13 +116,33 @@ class Partida {
         this.fechaFin = Date.now();
         this.calcularPuntajes();
         this.detenerTemporizadores();
+        this.emitirFinPartida('conquista', jugadorGanador);
     }
 
     finalizarPorEliminacion() {
-        const jugadoresActivos = this.jugadores.filter(jugador => this.galaxia.sistemas.some(sistema => sistema.propietario === jugador));
+        const jugadoresActivos = this.jugadores.filter(jugador =>
+            this.galaxia.sistemas.some(sistema => sistema.propietario === jugador)
+        );
         if (jugadoresActivos.length === 1) {
             this.finalizarPorConquista(jugadoresActivos[0]);
         }
+    }
+
+    chequearVictoriaPorConquista() {
+        if (this.estado !== EstadoPartida.INICIADA) return;
+        const totalSistemas = this.galaxia.sistemas.length;
+        const porcentaje = config.get('juego.porcentajeSistemasParaGanar');
+        const umbral = Math.ceil(totalSistemas * porcentaje);
+
+        for (const jugador of this.jugadores) {
+            const controlados = this.galaxia.sistemas.filter(s => s.propietario === jugador).length;
+            if (controlados >= umbral) {
+                this.finalizarPorConquista(jugador);
+                return;
+            }
+        }
+
+        this.finalizarPorEliminacion();
     }
 
     calcularPuntajes() {
