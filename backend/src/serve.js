@@ -408,7 +408,7 @@ io.on("connection", (socket) => {
     socket.on("construccion", (datos) => {
         const { idPartida } = datos;
         const partida = partidas.get(idPartida);
-        
+
         if (!partida) {
             socket.emit("construccion_error", { mensaje: "La partida no existe." });
             return;
@@ -418,7 +418,7 @@ io.on("connection", (socket) => {
         const resultado = gestor.construir(datos, socket.id);
 
         if (resultado.success) {
-            socket.emit("construccion_exito", { 
+            socket.emit("construccion_exito", {
                 mensaje: resultado.mensaje,
                 construccion: resultado.construccion,
                 sistema: resultado.sistema,
@@ -445,12 +445,121 @@ io.on("connection", (socket) => {
                 }
             });
         } else {
-            socket.emit("construccion_error", { 
+            socket.emit("construccion_error", {
                 mensaje: resultado.error,
                 costo: resultado.costo,
                 recursosActuales: resultado.recursosActuales
             });
         }
+    });
+
+    socket.on("mover_flotas", (datos) => {
+        const { idPartida, idSistemaOrigen, idSistemaDestino, cantidad } = datos;
+        const partida = partidas.get(idPartida);
+
+        console.log('=== MOVER FLOTAS ===');
+        console.log('Datos recibidos:', datos);
+
+        if (!partida) {
+            socket.emit("mover_flotas_error", { mensaje: "La partida no existe." });
+            return;
+        }
+
+        const jugador = partida.jugadores.find(j => j.socketId === socket.id);
+        if (!jugador) {
+            socket.emit("mover_flotas_error", { mensaje: "Jugador no encontrado en la partida." });
+            return;
+        }
+
+        console.log('Jugador:', jugador.nickname);
+
+        const sistemaOrigen = partida.galaxia.sistemas.find(s => s.id === idSistemaOrigen);
+        const sistemaDestino = partida.galaxia.sistemas.find(s => s.id === idSistemaDestino);
+
+        console.log('Sistema Origen:', sistemaOrigen?.nombre, 'Astilleros:', sistemaOrigen?.obtenerCantidadAstilleros());
+        console.log('Sistema Destino:', sistemaDestino?.nombre, 'Astilleros:', sistemaDestino?.obtenerCantidadAstilleros());
+
+        // Mostrar todos los sistemas y sus astilleros antes del movimiento
+        console.log('--- ESTADO ANTES DEL MOVIMIENTO ---');
+        partida.galaxia.sistemas.forEach(sistemaPlanetario => {
+            console.log(`  ${sistemaPlanetario.nombre}: ${sistemaPlanetario.obtenerCantidadAstilleros()} astilleros, propietario: ${sistemaPlanetario.propietario?.nickname || 'ninguno'}`);
+        });
+
+        if (!sistemaOrigen || !sistemaDestino) {
+            socket.emit("mover_flotas_error", { mensaje: "Sistema no encontrado." });
+            return;
+        }
+
+        if (sistemaOrigen.propietario !== jugador) {
+            socket.emit("mover_flotas_error", { mensaje: "No eres el propietario del sistema de origen." });
+            return;
+        }
+
+        const flotasDisponibles = sistemaOrigen.obtenerCantidadAstilleros();
+        if (cantidad > flotasDisponibles) {
+            socket.emit("mover_flotas_error", { mensaje: `No tienes suficientes flotas. Disponibles: ${flotasDisponibles}` });
+            return;
+        }
+
+        const GestorMovimiento = require('./clases/Gestores/GestorMovimiento');
+        const gestorMovimiento = new GestorMovimiento(partida.galaxia);
+
+        const astillerosAMover = sistemaOrigen.astillerosEstacionados.slice(0, cantidad);
+        console.log('Astilleros a mover:', astillerosAMover.length);
+
+        const resultado = gestorMovimiento.moverAstilleros(astillerosAMover, sistemaDestino, (evento, data) => {
+            if (evento === 'sistemaConquistado') {
+                console.log('Sistema conquistado:', data.sistema.nombre);
+                io.to(idPartida).emit("planeta_conquistado", {
+                    idPartida,
+                    conquistadorId: jugador.socketId,
+                    sistema: data.sistema
+                });
+            }
+        });
+
+        // Mostrar todos los sistemas y sus astilleros después del movimiento
+        console.log('--- ESTADO DESPUÉS DEL MOVIMIENTO ---');
+        partida.galaxia.sistemas.forEach(sistemaPlanetario => {
+            console.log(`  ${sistemaPlanetario.nombre}: ${sistemaPlanetario.obtenerCantidadAstilleros()} astilleros, propietario: ${sistemaPlanetario.propietario?.nickname || 'ninguno'}`);
+        });
+
+        if (resultado.exitoso) {
+            console.log('Movimiento exitoso');
+            socket.emit("mover_flotas_exito", {
+                mensaje: "Flotas movidas exitosamente",
+                origen: sistemaOrigen.nombre,
+                destino: sistemaDestino.nombre,
+                cantidad
+            });
+
+            const jugadoresInfo = partida.jugadores.map(jugadorActual => ({
+                id: jugadorActual.socketId,
+                nombre: jugadorActual.nickname,
+                recursos: jugadorActual.recursos,
+                sistemasConquistados: jugadorActual.getSistemasControlados().length
+            }));
+
+            partida.jugadores.forEach(jugadorActual => {
+                if (jugadorActual.socketId) {
+                    io.to(jugadorActual.socketId).emit("actualizar_clientes", {
+                        jugadores: jugadoresInfo,
+                        galaxia: {
+                            nombre: partida.galaxia.nombre,
+                            sistemas: partida.galaxia.sistemas.map(sistemaPlanetario => sistemaPlanetario.toJSON()),
+                            rutas: partida.galaxia.rutas.map(ruta => [ruta.origen.id, ruta.destino.id])
+                        }
+                    });
+                }
+            });
+        } else {
+            console.log('Error en movimiento:', resultado.errores);
+            socket.emit("mover_flotas_error", {
+                mensaje: "Error al mover flotas",
+                errores: resultado.errores
+            });
+        }
+        console.log('====================');
     });
 
     socket.on("disconnect", () => {

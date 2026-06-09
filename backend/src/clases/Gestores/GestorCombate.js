@@ -69,14 +69,15 @@ class GestorCombate {
         return resultado;
     }
 
-    aplicarConquista(sistema, nuevoPropietario, astillerosAtacantes, perdidas) {        
+    aplicarConquista(sistema, nuevoPropietario, astillerosAtacantes, perdidas) {
         sistema.propietario = nuevoPropietario;
         sistema.estado = 'controlado';
-        
+
         const centrosInvestigacion = sistema.instalaciones.filter(inst => inst.nombre === 'CentralInvestigacion');
         sistema.instalaciones = centrosInvestigacion;
-        
+
         const astillerosRestantes = astillerosAtacantes.slice(perdidas);
+
         sistema.astillerosEstacionados = astillerosRestantes;
     }
 

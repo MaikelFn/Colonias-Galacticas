@@ -60,8 +60,13 @@ class GestorMovimiento {
 
     moverAstilleros(astilleros, sistemaDestino, callbackEvento) {
         const errores = [];
-        
+
+        console.log('=== MOVER ASTILLEROS EN GESTOR ===');
+        console.log('Astilleros a mover:', astilleros.length);
+        console.log('Sistema destino:', sistemaDestino.nombre);
+
         for (const astillero of astilleros) {
+            console.log('  Astillero ID:', astillero.id, 'sistemaActual:', astillero.sistemaActual?.nombre);
             const validacion = this.validarMovimiento(astillero, sistemaDestino);
             if (!validacion.valido) {
                 errores.push(...validacion.errores);
@@ -69,33 +74,42 @@ class GestorMovimiento {
         }
 
         if (errores.length > 0) {
+            console.log('Errores de validación:', errores);
             return { exitoso: false, errores };
         }
 
         const sistemaOrigen = astilleros[0].sistemaActual;
-        
+        console.log('Sistema origen detectado:', sistemaOrigen?.nombre);
+        console.log('Astilleros en origen antes de mover:', sistemaOrigen?.obtenerCantidadAstilleros());
+
         if (sistemaDestino.propietario && sistemaDestino.propietario !== astilleros[0].propietario) {
             if (this.gestorCombate.puedeAtacar(sistemaDestino, astilleros[0].propietario)) {
+                // Primero remover los astilleros del origen ANTES del combate
+                for (const astillero of astilleros) {
+                    if (astillero.sistemaActual) {
+                        console.log('  Removiendo astillero de:', astillero.sistemaActual.nombre);
+                        astillero.sistemaActual.removerAstillero(astillero);
+                    }
+                }
+
                 const resultado = this.gestorCombate.resolverCombate(
                     sistemaDestino,
                     astilleros,
                     astilleros[0].propietario,
                     callbackEvento
                 );
-                
+
                 if (resultado.conquista && callbackEvento) {
                     callbackEvento('sistemaConquistado', {
                         sistema: sistemaDestino,
                         nuevoPropietario: astilleros[0].propietario.nickname
                     });
                 }
-                
-                for (const astillero of astilleros) {
-                    if (astillero.sistemaActual) {
-                        astillero.sistemaActual.removerAstillero(astillero);
-                    }
+
+                for (const astillero of sistemaDestino.astillerosEstacionados) {
+                    astillero.mover(sistemaDestino);
                 }
-                
+
                 if (callbackEvento) {
                     callbackEvento('astillerosMovidos', {
                         astilleros: astilleros,
@@ -103,20 +117,29 @@ class GestorMovimiento {
                         destino: sistemaDestino
                     });
                 }
-                
+
                 return { exitoso: true, resultado };
             }
         }
-        
+
         for (const astillero of astilleros) {
-            astillero.sistemaActual.removerAstillero(astillero);
+            console.log('  Moviendo astillero desde:', astillero.sistemaActual?.nombre, 'hacia:', sistemaDestino.nombre);
+            if (astillero.sistemaActual) {
+                astillero.sistemaActual.removerAstillero(astillero);
+                console.log('    Astilleros en origen después de remover:', astillero.sistemaActual.obtenerCantidadAstilleros());
+            }
             astillero.mover(sistemaDestino);
             sistemaDestino.agregarAstillero(astillero);
+            console.log('    Astilleros en destino después de agregar:', sistemaDestino.obtenerCantidadAstilleros());
         }
 
         if (!sistemaDestino.propietario) {
             sistemaDestino.setPropietario(astilleros[0].propietario);
         }
+
+        console.log('Astilleros en origen final:', sistemaOrigen?.obtenerCantidadAstilleros());
+        console.log('Astilleros en destino final:', sistemaDestino.obtenerCantidadAstilleros());
+        console.log('================================');
 
         if (callbackEvento) {
             callbackEvento('astillerosMovidos', {
