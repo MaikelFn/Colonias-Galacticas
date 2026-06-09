@@ -723,8 +723,81 @@
 }
 .gp-mf-input:focus { border-color: rgba(45, 212, 191, 0.5); }
 .gp-mf-input::-webkit-inner-spin-button,
-.gp-mf-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-.gp-mf-input[type=number] { -moz-appearance: textfield; }
+.gp-mf-input::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; }
+.gp-mf-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+.gp-modal-sistemas {
+  max-width: 420px;
+  padding: 28px 24px;
+}
+
+.gp-mf-sistemas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(45, 212, 191, 0.3) transparent;
+}
+.gp-mf-sistemas-lista::-webkit-scrollbar {
+  width: 6px;
+}
+.gp-mf-sistemas-lista::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gp-mf-sistemas-lista::-webkit-scrollbar-thumb {
+  background: rgba(45, 212, 191, 0.3);
+  border-radius: 3px;
+}
+
+.gp-mf-sistema-btn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+.gp-mf-sistema-btn:hover {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(45, 212, 191, 0.3);
+  transform: translateY(-1px);
+}
+
+.gp-mf-sistema-nombre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  letter-spacing: 0.04em;
+}
+
+.gp-mf-sistema-flotas {
+  font-size: 0.75rem;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.gp-mf-vacio {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+.gp-mf-max {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: -16px;
+  margin-bottom: 20px;
+  letter-spacing: 0.04em;
+}
 
 /* ─── Toast construcción ───────────────────────────────────────────────────── */
 .gp-toast-construccion {

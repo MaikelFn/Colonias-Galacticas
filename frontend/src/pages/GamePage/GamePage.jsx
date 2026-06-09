@@ -18,11 +18,11 @@ function Temporizador({ partidaIniciada }) {
     return () => socket.off('tick_timer', onTick)
   }, [partidaIniciada])
 
-  const formatTime = (secs) => {
-    if (secs === null) return '--:--'
-    const m = Math.floor(secs / 60).toString().padStart(2, '0')
-    const s = (secs % 60).toString().padStart(2, '0')
-    return `${m}:${s}`
+  const formatTime = (segundos) => {
+    if (segundos === null) return '--:--'
+    const minutos = Math.floor(segundos / 60).toString().padStart(2, '0')
+    const segundosStr = (segundos % 60).toString().padStart(2, '0')
+    return `${minutos}:${segundosStr}`
   }
 
   const isRojo = segsRestantes !== null && segsRestantes <= 120
@@ -58,32 +58,92 @@ function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
   )
 }
 
-function ModalFlotas({ accion, sistemaDestino, onConfirmar, onCancelar }) {
+function ModalFlotas({ accion, sistemaDestino, sistemasJugador, onConfirmar, onCancelar }) {
+  const [paso, setPaso] = useState(1)
+  const [sistemaOrigen, setSistemaOrigen] = useState(null)
   const [cantidad, setCantidad] = useState(1)
   const esAtaque = accion === 'ENVIAR_FLOTAS'
+
+  const handleSistemaClick = (sistema) => {
+    setSistemaOrigen(sistema)
+    setPaso(2)
+  }
+
+  const handleVolver = () => {
+    setPaso(1)
+    setSistemaOrigen(null)
+  }
+
+  const handleConfirmar = () => {
+    if (sistemaOrigen) {
+      onConfirmar(sistemaOrigen, cantidad)
+    }
+  }
+
+  // Paso 1: Seleccionar sistema de origen
+  if (paso === 1) {
+    return (
+      <div className="gp-modal-overlay">
+        <div className="gp-modal gp-modal-sistemas">
+          <p className="gp-mf-etiqueta">{esAtaque ? 'ASALTO ORBITAL' : 'MANIOBRA DE FLOTA'}</p>
+          <h2 className="gp-modal-titulo">{sistemaDestino?.nombre?.toUpperCase()}</h2>
+          <p className="gp-modal-texto">Selecciona sistema de origen</p>
+
+          <div className="gp-mf-sistemas-lista">
+            {sistemasJugador && sistemasJugador.length > 0 ? (
+              sistemasJugador.map(sis => (
+                <button
+                  key={sis.id}
+                  className="gp-mf-sistema-btn"
+                  onClick={() => handleSistemaClick(sis)}
+                >
+                  <div className="gp-mf-sistema-nombre">{sis.nombre}</div>
+                  <div className="gp-mf-sistema-flotas">
+                    Flotas: {sis.astillerosEstacionados ?? 0}
+                  </div>
+                </button>
+              ))
+            ) : (
+              <p className="gp-mf-vacio">No tienes sistemas controlados</p>
+            )}
+          </div>
+
+          <div className="gp-modal-botones">
+            <button className="gp-modal-btn gp-modal-cancelar" onClick={onCancelar}>ABORTAR</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Paso 2: Seleccionar cantidad
+  const maxFlotas = sistemaOrigen?.astillerosEstacionados ?? 1
 
   return (
     <div className="gp-modal-overlay">
       <div className="gp-modal">
         <p className="gp-mf-etiqueta">{esAtaque ? 'ASALTO ORBITAL' : 'MANIOBRA DE FLOTA'}</p>
         <h2 className="gp-modal-titulo">{sistemaDestino?.nombre?.toUpperCase()}</h2>
+        <p className="gp-modal-texto">Desde: {sistemaOrigen?.nombre}</p>
         <p className="gp-modal-texto">Unidades a despachar</p>
 
         <div className="gp-mf-cantidad-row">
-          <button className="gp-mf-step-btn" onClick={() => setCantidad(c => Math.max(1, c - 1))}>−</button>
+          <button className="gp-mf-step-btn" onClick={() => setCantidad(cantidadActual => Math.max(1, cantidadActual - 1))}>−</button>
           <input
             type="number"
             min={1}
+            max={maxFlotas}
             value={cantidad}
-            onChange={e => setCantidad(Math.max(1, Number(e.target.value)))}
+            onChange={evento => setCantidad(Math.max(1, Math.min(maxFlotas, Number(evento.target.value))))}
             className="gp-mf-input"
           />
-          <button className="gp-mf-step-btn" onClick={() => setCantidad(c => c + 1)}>+</button>
+          <button className="gp-mf-step-btn" onClick={() => setCantidad(cantidadActual => Math.min(maxFlotas, cantidadActual + 1))}>+</button>
         </div>
+        <p className="gp-mf-max">Máximo: {maxFlotas}</p>
 
         <div className="gp-modal-botones">
-          <button className="gp-modal-btn gp-modal-cancelar" onClick={onCancelar}>ABORTAR</button>
-          <button className="gp-modal-btn gp-modal-confirmar" onClick={() => onConfirmar(cantidad)}>
+          <button className="gp-modal-btn gp-modal-cancelar" onClick={handleVolver}>VOLVER</button>
+          <button className="gp-modal-btn gp-modal-confirmar" onClick={handleConfirmar}>
             {esAtaque ? 'ATACAR' : 'MOVER'}
           </button>
         </div>
@@ -99,42 +159,42 @@ function JugadoresPanel({ jugadores, miSocketId }) {
   }
   return (
     <div className="gp-jugadores-lista">
-      {jugadores.map((j, i) => {
-        const esYo = j.id === miSocketId
-        const r = j.recursos
-        const color = getPlayerColor(i)
+      {jugadores.map((jugador, indice) => {
+        const esYo = jugador.id === miSocketId
+        const recursosJugador = jugador.recursos
+        const color = getPlayerColor(indice)
         return (
           <div
-            key={j.id || i}
+            key={jugador.id || indice}
             className={`gp-jugador-card ${esYo ? 'gp-jugador-yo' : ''}`}
             style={{ '--player-color': color }}
           >
             <div className="gp-jugador-nombre-row">
               <span className="gp-jugador-nombre-text">
-                {j.nombre}
+                {jugador.nombre}
                 {esYo && <span className="gp-jugador-tag"> (tú)</span>}
               </span>
             </div>
             <div className="gp-jugador-avatar-grande" style={{ background: color }}>
-              {j.nombre.charAt(0).toUpperCase()}
+              {jugador.nombre.charAt(0).toUpperCase()}
             </div>
             <div className="gp-jugador-recursos-fila">
               <div className="gp-recurso-col">
                 <span className="gp-recurso-label-small">Minerales</span>
-                <span className="gp-recurso-valor-big">{r?.minerales ?? 0}</span>
+                <span className="gp-recurso-valor-big">{recursosJugador?.minerales ?? 0}</span>
               </div>
               <div className="gp-recurso-col">
                 <span className="gp-recurso-label-small">Energía</span>
-                <span className="gp-recurso-valor-big">{r?.energia ?? 0}</span>
+                <span className="gp-recurso-valor-big">{recursosJugador?.energia ?? 0}</span>
               </div>
               <div className="gp-recurso-col">
                 <span className="gp-recurso-label-small">Cristales</span>
-                <span className="gp-recurso-valor-big">{r?.cristales ?? 0}</span>
+                <span className="gp-recurso-valor-big">{recursosJugador?.cristales ?? 0}</span>
               </div>
             </div>
             <div className="gp-jugador-planetas-row">
               <span className="gp-planetas-label">Planetas</span>
-              <span className="gp-planetas-count" style={{ color }}>{j.sistemasConquistados}</span>
+              <span className="gp-planetas-count" style={{ color }}>{jugador.sistemasConquistados}</span>
             </div>
           </div>
         )
@@ -157,9 +217,9 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
   useEffect(() => {
       function onChatMensaje(data) {
         if (data.idPartida && data.idPartida !== idPartidaRef.current) return
-        setMensajes(prev => {
-          if (prev.some(m => m.idLocal === data.idLocal)) return prev
-          return [...prev, data]
+        setMensajes(mensajesPrevios => {
+          if (mensajesPrevios.some(mensaje => mensaje.idLocal === data.idLocal)) return mensajesPrevios
+          return [...mensajesPrevios, data]
         })
       }
       socket.on('chat_mensaje', onChatMensaje)
@@ -169,9 +229,9 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
     useEffect(() => {
         if (!mensajesSistema || mensajesSistema.length === 0) return
         const ultimo = mensajesSistema[mensajesSistema.length - 1]
-        setMensajes(prev => {
-          if (prev.some(m => m.ts === ultimo.ts)) return prev
-          return [...prev, ultimo]
+        setMensajes(mensajesPrevios => {
+          if (mensajesPrevios.some(mensaje => mensaje.ts === ultimo.ts)) return mensajesPrevios
+          return [...mensajesPrevios, ultimo]
         })
       }, [mensajesSistema])
 
@@ -198,8 +258,8 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
       setTexto('')
     }
 
-  const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar() }
+  const handleKey = (evento) => {
+    if (evento.key === 'Enter' && !evento.shiftKey) { evento.preventDefault(); enviar() }
   }
 
   return (
@@ -209,32 +269,32 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
             <p className="gp-chat-vacio">El chat está vacío. ¡Di algo, comandante!</p>
           )}
 
-          {mensajes.map((m, i) => {
-            const esSistema = m.nombreJugador === 'Sistema';
-            const esMio = !esSistema && m.nombreJugador === nombreJugador;
-            
-            const jugadorIndex = jugadores ? jugadores.findIndex(j => j.nombre === m.nombreJugador) : -1;
+          {mensajes.map((mensaje, indice) => {
+            const esSistema = mensaje.nombreJugador === 'Sistema';
+            const esMio = !esSistema && mensaje.nombreJugador === nombreJugador;
+
+            const jugadorIndex = jugadores ? jugadores.findIndex(jugador => jugador.nombre === mensaje.nombreJugador) : -1;
             const colorJugador = jugadorIndex !== -1 ? getPlayerColor(jugadorIndex) : '#ffffff';
 
             return (
-              <div key={i} className={`gp-chat-msg ${esMio ? 'gp-chat-self' : ''} ${esSistema ? 'gp-chat-sistema' : ''}`}
+              <div key={indice} className={`gp-chat-msg ${esMio ? 'gp-chat-self' : ''} ${esSistema ? 'gp-chat-sistema' : ''}`}
                 style={esMio ? { opacity: 1 } : {}}
               >
                 {esSistema ? (
-                  <span className="gp-chat-texto">🔔 {m.mensaje}</span>
+                  <span className="gp-chat-texto">🔔 {mensaje.mensaje}</span>
                 ) : (
                   <>
-                    <span 
-                      className="gp-chat-autor" 
-                      style={{ 
+                    <span
+                      className="gp-chat-autor"
+                      style={{
                         color: colorJugador,
                         opacity: 1
                       }}
                     >
-                      {m.nombreJugador}
+                      {mensaje.nombreJugador}
                     </span>
                     <span className="gp-chat-separador">:</span>
-                    <span className="gp-chat-texto">{m.mensaje}</span>
+                    <span className="gp-chat-texto">{mensaje.mensaje}</span>
                   </>
                 )}
               </div>
@@ -249,7 +309,7 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
             type="text"
             placeholder="Mensaje..."
             value={texto}
-            onChange={e => setTexto(e.target.value)}
+            onChange={evento => setTexto(evento.target.value)}
             onKeyDown={handleKey}
             maxLength={200}
             autoComplete="off"
@@ -455,6 +515,51 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   }, [])
 
   useEffect(() => {
+    const handleActualizarClientes = (data) => {
+      console.log('=== ACTUALIZANDO CLIENTES ===');
+      console.log('Jugadores:', data.jugadores);
+      if (data.galaxia && data.galaxia.sistemas) {
+        console.log('Sistemas y sus astilleros:');
+        data.galaxia.sistemas.forEach(s => {
+          console.log(`  ${s.nombre}: ${s.astillerosEstacionados} astilleros, propietario: ${s.propietario || 'ninguno'}`);
+        });
+      }
+      console.log('=========================');
+
+      if (data.jugadores) setJugadores(data.jugadores)
+      if (data.galaxia) {
+        setEstadoPartida(prev => ({ ...prev, galaxia: data.galaxia }))
+      }
+    }
+
+    const handleMoverFlotasExito = (data) => {
+      console.log('=== MOVER FLOTAS EXITO ===');
+      console.log('Mensaje:', data.mensaje);
+      console.log('Origen:', data.origen);
+      console.log('Destino:', data.destino);
+      console.log('Cantidad:', data.cantidad);
+      console.log('========================');
+    }
+
+    const handleMoverFlotasError = (data) => {
+      console.log('=== MOVER FLOTAS ERROR ===');
+      console.log('Mensaje:', data.mensaje);
+      console.log('Errores:', data.errores);
+      console.log('=======================');
+    }
+
+    socket.on('actualizar_clientes', handleActualizarClientes)
+    socket.on('mover_flotas_exito', handleMoverFlotasExito)
+    socket.on('mover_flotas_error', handleMoverFlotasError)
+
+    return () => {
+      socket.off('actualizar_clientes', handleActualizarClientes)
+      socket.off('mover_flotas_exito', handleMoverFlotasExito)
+      socket.off('mover_flotas_error', handleMoverFlotasError)
+    }
+  }, [])
+
+  useEffect(() => {
     const handleConstruccionExito = (data) => {
       const pos = posicionSistemaRef.current
       const sistema = sistemaSeleccionadoRef.current
@@ -568,10 +673,18 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     }
   }, [sistemaSeleccionado, nombreJugador])
 
-  const handleConfirmarFlotas = useCallback((cantidad) => {
+  const handleConfirmarFlotas = useCallback((sistemaOrigen, cantidad) => {
+    console.log('=== ENVIANDO FLOTAS ===');
+    console.log('Sistema Origen:', sistemaOrigen?.nombre, 'ID:', sistemaOrigen?.id);
+    console.log('Sistema Destino:', sistemaSeleccionado?.nombre, 'ID:', sistemaSeleccionado?.id);
+    console.log('Acción:', accionFlotaActual);
+    console.log('Cantidad:', cantidad);
+    console.log('=====================');
+
     socket.emit('mover_flotas', {
       idPartida: idPartidaRef.current,
-      idSistemaOrigen: sistemaSeleccionado?.id,
+      idSistemaOrigen: sistemaOrigen?.id,
+      idSistemaDestino: sistemaSeleccionado?.id,
       accion: accionFlotaActual,
       cantidad
     })
@@ -643,6 +756,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
             <ModalFlotas
               accion={accionFlotaActual}
               sistemaDestino={sistemaSeleccionado}
+              sistemasJugador={estadoPartida?.galaxia?.sistemas?.filter(s => s.propietario === nombreJugador) || []}
               onConfirmar={handleConfirmarFlotas}
               onCancelar={() => setModalFlotasVisible(false)}
             />
