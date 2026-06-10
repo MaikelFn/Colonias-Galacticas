@@ -1,10 +1,11 @@
+require('dotenv').config()
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
 const path = require("path");
-
+const { guardarPartidaEnRanking } = require('./db/ranking')
 const Galaxia = require('./clases/Entidades/Galaxia');
 const Jugador = require('./clases/Entidades/Jugador');
 const { Partida } = require('./clases/Entidades/Partida');
@@ -178,7 +179,15 @@ io.on("connection", (socket) => {
                     }
                 });
             },
-            io
+            io,
+            async (datosFinales) => {
+                try {
+                    await guardarPartidaEnRanking(datosFinales);
+                    console.log(`Ranking guardado: ${datosFinales.idPartida}`);
+                } catch (error) {
+                    console.error('Error al guardar ranking:', error);
+                }
+            }
         );
 
         console.log(`Tiempo de espera configurado en partida: ${partida.tiempoEsperaSeg} segundos`);

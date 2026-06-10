@@ -9,7 +9,7 @@ const EstadoPartida = {
 };
 
 class Partida {
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, onProduccionRecursos, io) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, onProduccionRecursos, io, onFinPartida) {
         this.id = id;
         this.nombre = nombre;
         this.galaxia = galaxia;
@@ -28,6 +28,7 @@ class Partida {
         this.cuentaRegresivaActiva = false;
         this.onCierrePorTiempo = onCierrePorTiempo;
         this.io = io;
+        this.onFinPartida = onFinPartida
     }
 
     puedeIniciar() {
@@ -81,24 +82,27 @@ class Partida {
         if (!this.io) return;
 
         const ranking = this.obtenerRanking();
+        const ganador = jugadorGanador ? jugadorGanador.nickname : (ranking[0]?.nombre ?? null)
 
         this.io.to(this.id).emit('partida_finalizada', {
             idPartida: this.id,
             razon,
-            ganador: jugadorGanador ? jugadorGanador.nickname : (ranking[0]?.nombre ?? null),
+            ganador,
             ranking,
             tiempoJuego: Math.floor((this.fechaFin - this.fechaInicio) / 1000),
             galaxia: this.galaxia.nombre
         });
 
-        // ── Aquí se pasarán los datos al ranking histórico cuando esté implementado ──
-        // guardarEnRanking({
-        //     idPartida: this.id,
-        //     ganador: ranking[0]?.nombre,
-        //     galaxia: this.galaxia.nombre,
-        //     tiempoJuego: ...,
-        //     ranking
-        // });
+        // Guardar en ranking histórico
+        if (this.onFinPartida && ganador) {
+            this.onFinPartida({
+                idPartida: this.id,
+                ganador,
+                ranking,
+                galaxia: this.galaxia.nombre,
+                tiempoJuego: Math.floor((this.fechaFin - this.fechaInicio) / 1000)
+            })
+        }
     }
 
     finalizarPorTiempo() {
