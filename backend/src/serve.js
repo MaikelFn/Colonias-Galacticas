@@ -5,7 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const fs = require("fs");
 const path = require("path");
-const { guardarPartidaEnRanking } = require('./db/ranking')
+const { guardarPartidaEnRanking, obtenerRanking } = require('./db/ranking')
 const Galaxia = require('./clases/Entidades/Galaxia');
 const Jugador = require('./clases/Entidades/Jugador');
 const { Partida } = require('./clases/Entidades/Partida');
@@ -123,6 +123,16 @@ io.on("connection", (socket) => {
             jugadores: p.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
         }));
         socket.emit("partidas_disponibles", partidasInfo);
+    });
+
+    socket.on("obtener_ranking", async () => {
+        try {
+            const ranking = await obtenerRanking();
+            socket.emit("ranking_disponible", ranking);
+        } catch (error) {
+            console.error('Error al obtener ranking:', error);
+            socket.emit("error_ranking", { mensaje: "Error al obtener el ranking" });
+        }
     });
 
     socket.on("crear_partida", (datos) => {
