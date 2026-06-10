@@ -36,17 +36,35 @@ export default function RankingModal({ onClose }) {
               <table className="gc-table">
                 <thead>
                   <tr>
-                    <th>Posición</th>
-                    <th>Comandante Ganador</th>
-                    <th>Puntos</th>
+                    <th>ID Partida</th>
+                    <th>Fecha</th>
+                    <th>Ganador</th>
+                    <th>Sistemas</th>
+                    <th>Recursos</th>
+                    <th>Galaxia</th>
+                    <th>Tiempo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rankings.map((ranking) => (
-                    <tr key={ranking.posicion}>
-                      <td style={{ fontWeight: 'bold', color: '#0ff' }}>#{ranking.posicion}</td>
-                      <td className="text-highlight">{ranking.jugador}</td>
-                      <td>{ranking.puntos.toLocaleString()}</td>
+                  {rankings.map((ranking, index) => (
+                    <tr key={ranking.idPartida || index}>
+                      <td style={{ color: '#0ff', fontSize: '0.8em' }}>{ranking.idPartida}</td>
+                      <td style={{ color: '#0ff' }}>{new Date(ranking.fecha).toLocaleDateString()}</td>
+                      <td className="text-highlight">{ranking.nombreGanador}</td>
+                      <td>{ranking.sistemasControlados}</td>
+                      <td>
+                        {ranking.recursosAcumulados && typeof ranking.recursosAcumulados === 'object' ? (
+                          <span style={{ fontSize: '0.85em' }}>
+                            M: {ranking.recursosAcumulados.minerales || 0}, 
+                            E: {ranking.recursosAcumulados.energia || 0}, 
+                            C: {ranking.recursosAcumulados.cristales || 0}
+                          </span>
+                        ) : (
+                          '-'
+                        )}
+                      </td>
+                      <td>{ranking.galaxia}</td>
+                      <td>{ranking.tiempoPartida}s</td>
                     </tr>
                   ))}
                 </tbody>
