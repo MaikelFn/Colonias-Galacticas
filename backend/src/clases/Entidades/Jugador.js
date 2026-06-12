@@ -33,7 +33,7 @@ class Jugador {
     contarInstalaciones(tipoNombre) {
         let total = 0;
         for (const sistema of this.getSistemasControlados()) {
-            total += sistema.instalaciones.filter(inst => inst.nombre === tipoNombre).length;
+            total += sistema.instalaciones.filter(instalacion => instalacion.nombre === tipoNombre).length;
         }
         return total;
     }

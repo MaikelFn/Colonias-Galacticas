@@ -8,7 +8,7 @@ class Configuracion {
     }
 
     get(key) {
-        return key.split('.').reduce((obj, k) => obj && obj[k], this.valores);
+        return key.split('.').reduce((objeto, clave) => objeto && objeto[clave], this.valores);
     }
 }
 

@@ -171,7 +171,7 @@ class Partida {
         const umbral = Math.ceil(totalSistemas * porcentaje);
 
         for (const jugador of this.jugadores) {
-            const controlados = this.galaxia.sistemas.filter(s => s.propietario === jugador).length;
+            const controlados = this.galaxia.sistemas.filter(sistema => sistema.propietario === jugador).length;
             if (controlados >= umbral) {
                 this.finalizarPorConquista(jugador);
                 return;

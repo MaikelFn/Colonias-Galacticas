@@ -10,6 +10,9 @@ const Galaxia = require('./clases/Entidades/Galaxia');
 const Jugador = require('./clases/Entidades/Jugador');
 const { Partida } = require('./clases/Entidades/Partida');
 const GestorConstruccion = require('./clases/Gestores/GestorConstruccion');
+const GestorMovimiento = require('./clases/Gestores/GestorMovimiento');
+const { validarPartidaExiste, validarJugadorEnPartida, validarSistemaExiste, validarPropietarioSistema, validarFlotasSuficientes, validarEstadoPartida, validarPartidaNoLlena, validarNombreJugadorUnico, validarJugadorRegistrado, validarNombrePartidaUnico, validarGalaxiaCargada, validarJugadoresMinimos } = require('./utils/validaciones');
+const { crearInfoJugadores, crearInfoGalaxia, enviarActualizacionClientes, crearInfoPartida, crearInfoJugadoresIniciada, crearInfoGalaxiaIniciada, limpiarTimerPartida } = require('./utils/helpers');
 
 function cargarConfiguracion() {
     const rutaConfig = path.join(__dirname, 'data', 'Configuracion.json');
@@ -37,41 +40,14 @@ const io = new Server(server, {
 const partidas = new Map();
 const jugadores = new Map();
 
-function crearJugadoresInfo(jugadores) {
-    return jugadores.map(j => ({
-        id: j.socketId,
-        nombre: j.nickname,
-        recursos: j.recursos,
-        sistemasConquistados: j.getSistemasControlados().length
-    }));
-}
-
-function crearGalaxiaInfo(galaxia) {
-    return {
-        nombre: galaxia.nombre,
-        sistemas: galaxia.sistemas.map(s => s.toJSON()),
-        rutas: galaxia.rutas.map(r => [r.origen.id, r.destino.id])
-    };
-}
-
-function enviarActualizacionClientes(io, partida, jugadoresInfo) {
-    partida.jugadores.forEach(jugador => {
-        if (jugador.socketId) {
-            io.to(jugador.socketId).emit("actualizar_clientes", {
-                jugadores: jugadoresInfo,
-                galaxia: crearGalaxiaInfo(partida.galaxia)
-            });
-        }
-    });
-}
 
 function eliminarJugadorDePartida(partida, socketId, io, idPartida) {
-    partida.jugadores = partida.jugadores.filter(j => j.socketId !== socketId);
+    partida.jugadores = partida.jugadores.filter(jugador => jugador.socketId !== socketId);
     io.to(idPartida).emit("jugador_salio", { idPartida, jugadorId: socketId });
     
     if (partida.jugadores.length === 0) {
         partidas.delete(idPartida);
-        clearInterval(partida._timerInterval);
+        limpiarTimerPartida(partida);
     } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
         partida.finalizarPorEliminacion();
     }
@@ -141,26 +117,22 @@ io.on("connection", (socket) => {
     });
 
     socket.on("obtener_configuracion", () => {
-        if (configuracion && configuracion.juego && configuracion.juego.recursosIniciales) {
-            socket.emit("configuracion_recursos", configuracion.juego.recursosIniciales);
-        } else {
-            socket.emit("configuracion_recursos", {});
-        }
+        socket.emit("configuracion_recursos", configuracion?.juego?.recursosIniciales || {});
     });
 
     socket.on("obtener_partidas", () => {
-        const disponibles = Array.from(partidas.values()).filter(p =>
-            p.estado === 'esperando' && p.jugadores.length < p.maxJugadores
+        const disponibles = Array.from(partidas.values()).filter(partida =>
+            partida.estado === 'esperando' && partida.jugadores.length < partida.maxJugadores
         );
-        const partidasInfo = disponibles.map(p => ({
-            id: p.id,
-            nombre: p.nombre,
-            galaxia: p.galaxia.nombre,
-            maxJugadores: p.maxJugadores,
-            duracion: Math.floor(p.duracionMaximaSeg / 60),
-            recursos: p.dificultadRecursos,
-            estado: p.estado,
-            jugadores: p.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
+        const partidasInfo = disponibles.map(partida => ({
+            id: partida.id,
+            nombre: partida.nombre,
+            galaxia: partida.galaxia.nombre,
+            maxJugadores: partida.maxJugadores,
+            duracion: Math.floor(partida.duracionMaximaSeg / 60),
+            recursos: partida.dificultadRecursos,
+            estado: partida.estado,
+            jugadores: partida.jugadores.map(jugador => ({ id: jugador.socketId, nombre: jugador.nickname }))
         }));
         socket.emit("partidas_disponibles", partidasInfo);
     });
@@ -178,23 +150,13 @@ io.on("connection", (socket) => {
         const { nombre, galaxiaId, maxJugadores, duracion, recursos, comandante } = datos;
         const idPartida = `partida_${Date.now()}`;
 
-        const nombreDuplicado = Array.from(partidas.values()).some(p => p.nombre === nombre);
-        if (nombreDuplicado) {
-            socket.emit("error_crear_partida", { mensaje: "Ya existe una partida con ese nombre. Por favor, elige otro nombre." });
-            return;
-        }
+        if (!validarNombrePartidaUnico(partidas, nombre, socket, "error_crear_partida")) return;
 
         const galaxia = cargarGalaxiaDesdeArchivo(galaxiaId);
-        if (!galaxia) {
-            socket.emit("error_crear_partida", { mensaje: "No se pudo cargar la galaxia seleccionada" });
-            return;
-        }
+        if (!validarGalaxiaCargada(galaxia, socket, "error_crear_partida")) return;
 
-        const jugadorCreador = jugadores.get(socket.id);
-        if (!jugadorCreador) {
-            socket.emit("error_crear_partida", { mensaje: "Jugador no registrado" });
-            return;
-        }
+        const jugadorCreador = validarJugadorRegistrado(jugadores, socket.id, socket, "error_crear_partida");
+        if (!jugadorCreador) return;
 
         const partida = new Partida(
             idPartida,
@@ -213,8 +175,8 @@ io.on("connection", (socket) => {
                 partidas.delete(idPartida);
             },
             (partida) => {
-                const jugadoresInfo = crearJugadoresInfo(partida.jugadores);
-                enviarActualizacionClientes(io, partida, jugadoresInfo);
+                const jugadoresInfo = crearInfoJugadores(partida.jugadores);
+                enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
             },
             io,
             async (datosFinales) => {
@@ -226,8 +188,7 @@ io.on("connection", (socket) => {
             (idPartidaADestruir) => {
                 const partida = partidas.get(idPartidaADestruir);
                 if (partida) {
-                    clearInterval(partida._timerInterval);
-                    partida._timerInterval = null;
+                    limpiarTimerPartida(partida);
                 }
                 partidas.delete(idPartidaADestruir);
             }
@@ -239,47 +200,20 @@ io.on("connection", (socket) => {
 
 
         socket.join(idPartida);
-        socket.emit("partida_creada", {
-            id: partida.id,
-            nombre: partida.nombre,
-            galaxia: partida.galaxia.nombre,
-            maxJugadores: partida.maxJugadores,
-            minJugadores: partida.minJugadores,
-            duracion: duracion,
-            recursos: partida.dificultadRecursos,
-            jugadores: partida.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
-        });
+        socket.emit("partida_creada", crearInfoPartida(partida, duracion));
     });
 
     socket.on("unirse_partida", (datos) => {
         const { idPartida, nombreJugador } = datos;
         const partida = partidas.get(idPartida);
 
+        if (!validarPartidaExiste(partida, socket, "error_unirse")) return;
+        if (!validarEstadoPartida(partida, 'esperando', socket, "error_unirse")) return;
+        if (!validarPartidaNoLlena(partida, socket, "error_unirse")) return;
+        if (!validarNombreJugadorUnico(partida, nombreJugador, socket, "error_unirse")) return;
 
-        if (!partida) {
-            socket.emit("error_unirse", { mensaje: "La partida no existe." });
-            return;
-        }
-        if (partida.estado !== 'esperando') {
-            socket.emit("error_unirse", { mensaje: "La partida ya no está disponible." });
-            return;
-        }
-        if (partida.jugadores.length >= partida.maxJugadores) {
-            socket.emit("error_unirse", { mensaje: "La partida ya está llena." });
-            return;
-        }
-
-        const nombreDuplicado = partida.jugadores.some(j => j.nickname === nombreJugador);
-        if (nombreDuplicado) {
-            socket.emit("error_unirse", { mensaje: "Ya existe un jugador con ese nombre en la partida. Por favor, elige otro nombre." });
-            return;
-        }
-
-        const jugadorUnirse = jugadores.get(socket.id);
-        if (!jugadorUnirse) {
-            socket.emit("error_unirse", { mensaje: "Jugador no registrado" });
-            return;
-        }
+        const jugadorUnirse = validarJugadorRegistrado(jugadores, socket.id, socket, "error_unirse");
+        if (!jugadorUnirse) return;
 
         partida.agregarJugador(jugadorUnirse);
         socket.join(idPartida);
@@ -291,16 +225,7 @@ io.on("connection", (socket) => {
             totalJugadores: partida.jugadores.length
         });
 
-        socket.emit("partida_unida", {
-            id: partida.id,
-            nombre: partida.nombre,
-            galaxia: partida.galaxia.nombre,
-            maxJugadores: partida.maxJugadores,
-            minJugadores: partida.minJugadores,
-            duracion: Math.floor(partida.duracionMaximaSeg / 60),
-            recursos: partida.dificultadRecursos,
-            jugadores: partida.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
-        });
+        socket.emit("partida_unida", crearInfoPartida(partida));
     });
 
     socket.on("chat_mensaje", (datos) => {
@@ -327,21 +252,9 @@ io.on("connection", (socket) => {
         const { idPartida } = datos;
         const partida = partidas.get(idPartida);
 
-        if (!partida) {
-            socket.emit("error_inicio", { mensaje: "La partida no existe." });
-            return;
-        }
-
-
-        if (partida.estado !== 'esperando') {
-            socket.emit("error_inicio", { mensaje: "La partida ya no está en estado de espera." });
-            return;
-        }
-
-        if (partida.jugadores.length < partida.minJugadores) {
-            socket.emit("error_inicio", { mensaje: `Se necesitan al menos ${partida.minJugadores} jugadores para iniciar.` });
-            return;
-        }
+        if (!validarPartidaExiste(partida, socket, "error_inicio")) return;
+        if (!validarEstadoPartida(partida, 'esperando', socket, "error_inicio")) return;
+        if (!validarJugadoresMinimos(partida, socket, "error_inicio")) return;
 
         const iniciada = partida.iniciar();
         
@@ -360,28 +273,18 @@ io.on("connection", (socket) => {
                     const inicioMs = Date.now();
                     const duracionMs = partida.duracionMaximaSeg * 1000;
 
-                    partida._timerInterval = setInterval(() => {
+                    partida.timerInterval = setInterval(() => {
                         const transcurrido = Date.now() - inicioMs;
                         const restanteSeg = Math.max(0, Math.ceil((duracionMs - transcurrido) / 1000));
                         io.to(idPartida).emit('tick_timer', { segsRestantes: restanteSeg });
-                        if (restanteSeg <= 0) clearInterval(partida._timerInterval);
+                        if (restanteSeg <= 0) clearInterval(partida.timerInterval);
                     }, 1000);
 
                     io.to(idPartida).emit('partida_iniciada', {
                         idPartida: partida.id,
                         estado: partida.estado,
-                        jugadores: partida.jugadores.map(j => ({
-                            id: j.socketId,
-                            nombre: j.nickname,
-                            planetaBase: j.planetaBase ? j.planetaBase.nombre : null,
-                            recursos: j.recursos,
-                            sistemasConquistados: j.getSistemasControlados().length
-                        })),
-                        galaxia: {
-                            nombre: partida.galaxia.nombre,
-                            sistemas: partida.galaxia.sistemas,
-                            rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
-                        }
+                        jugadores: crearInfoJugadoresIniciada(partida),
+                        galaxia: crearInfoGalaxiaIniciada(partida)
                     });
                 }
             }, 1000);
@@ -404,10 +307,7 @@ io.on("connection", (socket) => {
         const { idPartida } = datos;
         const partida = partidas.get(idPartida);
 
-        if (!partida) {
-            socket.emit("construccion_error", { mensaje: "La partida no existe." });
-            return;
-        }
+        if (!validarPartidaExiste(partida, socket, "construccion_error")) return;
 
         const gestor = new GestorConstruccion(partida);
         const resultado = gestor.construir(datos, socket.id);
@@ -420,8 +320,8 @@ io.on("connection", (socket) => {
                 recursosRestantes: resultado.recursosRestantes
             });
 
-            const jugadoresInfo = crearJugadoresInfo(partida.jugadores);
-            enviarActualizacionClientes(io, partida, jugadoresInfo);
+            const jugadoresInfo = crearInfoJugadores(partida.jugadores);
+            enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
         } else {
             socket.emit("construccion_error", {
                 mensaje: resultado.error,
@@ -435,41 +335,22 @@ io.on("connection", (socket) => {
         const { idPartida, idSistemaOrigen, idSistemaDestino, cantidad } = datos;
         const partida = partidas.get(idPartida);
 
+        if (!validarPartidaExiste(partida, socket, "mover_flotas_error")) return;
 
-        if (!partida) {
-            socket.emit("mover_flotas_error", { mensaje: "La partida no existe." });
-            return;
-        }
-
-        const jugador = partida.jugadores.find(j => j.socketId === socket.id);
-        if (!jugador) {
-            socket.emit("mover_flotas_error", { mensaje: "Jugador no encontrado en la partida." });
-            return;
-        }
-
+        const jugador = validarJugadorEnPartida(partida, socket.id, socket, "mover_flotas_error");
+        if (!jugador) return;
 
         const sistemaOrigen = partida.galaxia.sistemas.find(s => s.id === idSistemaOrigen);
         const sistemaDestino = partida.galaxia.sistemas.find(s => s.id === idSistemaDestino);
 
+        if (!validarSistemaExiste(sistemaOrigen, socket, "mover_flotas_error")) return;
+        if (!validarSistemaExiste(sistemaDestino, socket, "mover_flotas_error")) return;
 
-
-        if (!sistemaOrigen || !sistemaDestino) {
-            socket.emit("mover_flotas_error", { mensaje: "Sistema no encontrado." });
-            return;
-        }
-
-        if (sistemaOrigen.propietario !== jugador) {
-            socket.emit("mover_flotas_error", { mensaje: "No eres el propietario del sistema de origen." });
-            return;
-        }
+        if (!validarPropietarioSistema(sistemaOrigen, jugador, socket, "mover_flotas_error")) return;
 
         const flotasDisponibles = sistemaOrigen.obtenerCantidadAstilleros();
-        if (cantidad > flotasDisponibles) {
-            socket.emit("mover_flotas_error", { mensaje: `No tienes suficientes flotas. Disponibles: ${flotasDisponibles}` });
-            return;
-        }
+        if (!validarFlotasSuficientes(flotasDisponibles, cantidad, socket, "mover_flotas_error")) return;
 
-        const GestorMovimiento = require('./clases/Gestores/GestorMovimiento');
         const gestorMovimiento = new GestorMovimiento(partida.galaxia);
 
         const astillerosAMover = sistemaOrigen.astillerosEstacionados.slice(0, cantidad);
@@ -497,14 +378,14 @@ io.on("connection", (socket) => {
                 });
 
                 if (data.conquista) {
-                    const defensor = partida.jugadores.find(j => j.nickname === data.ganador === false && j.nickname !== data.atacante);
-                    partida.jugadores.forEach(j => {
-                        if (j.nickname !== data.atacante) {
-                            const sistemasRestantes = partida.galaxia.sistemas.filter(s => s.propietario === j).length;
+                    const defensor = partida.jugadores.find(jugador => jugador.nickname === data.ganador === false && jugador.nickname !== data.atacante);
+                    partida.jugadores.forEach(jugador => {
+                        if (jugador.nickname !== data.atacante) {
+                            const sistemasRestantes = partida.galaxia.sistemas.filter(sistema => sistema.propietario === jugador).length;
                             if (sistemasRestantes === 0) {
                                 io.to(idPartida).emit("jugador_eliminado", {
                                     idPartida,
-                                    jugador: j.nickname
+                                    jugador: jugador.nickname
                                 });
                             }
                         }
@@ -512,7 +393,6 @@ io.on("connection", (socket) => {
                 }
             }
         });
-
 
         if (resultado.exitoso) {
             socket.emit("mover_flotas_exito", {
@@ -522,8 +402,8 @@ io.on("connection", (socket) => {
                 cantidad
             });
 
-            const jugadoresInfo = crearJugadoresInfo(partida.jugadores);
-            enviarActualizacionClientes(io, partida, jugadoresInfo);
+            const jugadoresInfo = crearInfoJugadores(partida.jugadores);
+            enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
 
             partida.chequearVictoriaPorConquista();
         } else {
@@ -537,7 +417,7 @@ io.on("connection", (socket) => {
         jugadores.delete(socket.id);
 
         for (const [idPartida, partida] of partidas.entries()) {
-            const estabaEnPartida = partida.jugadores.some(j => j.socketId === socket.id);
+            const estabaEnPartida = partida.jugadores.some(jugador => jugador.socketId === socket.id);
             
             if (estabaEnPartida) {
                 eliminarJugadorDePartida(partida, socket.id, io, idPartida);
@@ -545,7 +425,6 @@ io.on("connection", (socket) => {
         }
     });
 });
-
 
 app.get("/", (req, res) => {
     res.json({

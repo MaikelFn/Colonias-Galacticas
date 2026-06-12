@@ -6,14 +6,14 @@ class GestorCombate {
     calcularFuerzaDefensor(sistema) {
         let fuerza = 0;
 
-        const minas = sistema.instalaciones.filter(inst => inst.nombre === 'Mina');
+        const minas = sistema.instalaciones.filter(instalacion => instalacion.nombre === 'Mina');
         fuerza += Math.floor(minas.length / 3);
 
         for (const astillero of sistema.astillerosEstacionados) {
             fuerza += 1;
         }
 
-        const fortalezas = sistema.instalaciones.filter(inst => inst.nombre === 'Fortaleza');
+        const fortalezas = sistema.instalaciones.filter(instalacion => instalacion.nombre === 'Fortaleza');
         for (const fortaleza of fortalezas) {
             fuerza += 2;
         }
@@ -24,7 +24,7 @@ class GestorCombate {
     resolverCombate(sistema, astillerosAtacantes, jugadorAtacante, callbackEvento) {
         const fuerzaAtacante = this.calcularFuerzaAtacante(astillerosAtacantes);
         const fuerzaDefensor = this.calcularFuerzaDefensor(sistema);
-        const minasResiduales = sistema.instalaciones.filter(i => i.nombre === 'Mina').length % 3;
+        const minasResiduales = sistema.instalaciones.filter(instalacion => instalacion.nombre === 'Mina').length % 3;
         const defensorGana = fuerzaDefensor > fuerzaAtacante ||
                              (fuerzaDefensor === fuerzaAtacante && minasResiduales > 0);
 
@@ -61,7 +61,7 @@ class GestorCombate {
 
             this.eliminarAstilleros(astillerosAtacantes);
 
-            sistema.instalaciones = sistema.instalaciones.filter(inst => inst.nombre === 'CentralInvestigacion');
+            sistema.instalaciones = sistema.instalaciones.filter(instalacion => instalacion.nombre === 'CentralInvestigacion');
             sistema.astillerosEstacionados = [];
         }
 
@@ -76,7 +76,7 @@ class GestorCombate {
         sistema.propietario = nuevoPropietario;
         sistema.estado = 'controlado';
 
-        const centrosInvestigacion = sistema.instalaciones.filter(inst => inst.nombre === 'CentralInvestigacion');
+        const centrosInvestigacion = sistema.instalaciones.filter(instalacion => instalacion.nombre === 'CentralInvestigacion');
         sistema.instalaciones = centrosInvestigacion;
 
         const astillerosRestantes = astillerosAtacantes.slice(perdidas);
@@ -101,10 +101,10 @@ class GestorCombate {
         }
 
         // 2do: minas (grupos de 3)
-        while (restantes > 0 && sistema.instalaciones.filter(i => i.nombre === 'Mina').length >= 3) {
+        while (restantes > 0 && sistema.instalaciones.filter(instalacion => instalacion.nombre === 'Mina').length >= 3) {
             let eliminadas = 0;
-            sistema.instalaciones = sistema.instalaciones.filter(inst => {
-                if (inst.nombre === 'Mina' && eliminadas < 3) { eliminadas++; return false; }
+            sistema.instalaciones = sistema.instalaciones.filter(instalacion => {
+                if (instalacion.nombre === 'Mina' && eliminadas < 3) { eliminadas++; return false; }
                 return true;
             });
             restantes--;
@@ -112,7 +112,7 @@ class GestorCombate {
 
         // 3ro: fortalezas
         while (restantes > 0) {
-            const idx = sistema.instalaciones.findIndex(i => i.nombre === 'Fortaleza');
+            const idx = sistema.instalaciones.findIndex(instalacion => instalacion.nombre === 'Fortaleza');
             if (idx === -1) break;
             sistema.instalaciones.splice(idx, 1);
             restantes -= 2;
