@@ -244,6 +244,7 @@ io.on("connection", (socket) => {
             nombre: partida.nombre,
             galaxia: partida.galaxia.nombre,
             maxJugadores: partida.maxJugadores,
+            minJugadores: partida.minJugadores,
             duracion: duracion,
             recursos: partida.dificultadRecursos,
             jugadores: partida.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
@@ -295,6 +296,7 @@ io.on("connection", (socket) => {
             nombre: partida.nombre,
             galaxia: partida.galaxia.nombre,
             maxJugadores: partida.maxJugadores,
+            minJugadores: partida.minJugadores,
             duracion: Math.floor(partida.duracionMaximaSeg / 60),
             recursos: partida.dificultadRecursos,
             jugadores: partida.jugadores.map(j => ({ id: j.socketId, nombre: j.nickname }))
@@ -336,8 +338,8 @@ io.on("connection", (socket) => {
             return;
         }
 
-        if (partida.jugadores.length < 2) {
-            socket.emit("error_inicio", { mensaje: "Se necesitan al menos 2 jugadores para iniciar." });
+        if (partida.jugadores.length < partida.minJugadores) {
+            socket.emit("error_inicio", { mensaje: `Se necesitan al menos ${partida.minJugadores} jugadores para iniciar.` });
             return;
         }
 
@@ -527,7 +529,6 @@ io.on("connection", (socket) => {
         } else {
             socket.emit("mover_flotas_error", {
                 mensaje: "Error al mover flotas",
-                errores: resultado.errores
             });
         }
     });
