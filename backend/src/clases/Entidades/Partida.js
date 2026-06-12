@@ -9,7 +9,7 @@ const EstadoPartida = {
 };
 
 class Partida {
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, onProduccionRecursos, io, onFinPartida) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, onProduccionRecursos, io, onFinPartida, onDestruirPartida) {
         this.id = id;
         this.nombre = nombre;
         this.galaxia = galaxia;
@@ -28,7 +28,8 @@ class Partida {
         this.cuentaRegresivaActiva = false;
         this.onCierrePorTiempo = onCierrePorTiempo;
         this.io = io;
-        this.onFinPartida = onFinPartida
+        this.onFinPartida = onFinPartida;
+        this.onDestruirPartida = onDestruirPartida;
     }
 
     puedeIniciar() {
@@ -112,6 +113,9 @@ class Partida {
         this.calcularPuntajes();
         this.detenerTemporizadores();
         this.emitirFinPartida('tiempo');
+        if (this.onDestruirPartida) {
+            this.onDestruirPartida(this.id);
+        }
     }
 
     finalizarPorConquista(jugadorGanador) {
@@ -121,14 +125,48 @@ class Partida {
         this.calcularPuntajes();
         this.detenerTemporizadores();
         this.emitirFinPartida('conquista', jugadorGanador);
+        if (this.onDestruirPartida) {
+            this.onDestruirPartida(this.id);
+        }
     }
 
     finalizarPorEliminacion() {
+        if (this.jugadores.length === 1) {
+            const jugadorRestante = this.jugadores[0];
+            const tieneSistemas = this.galaxia.sistemas.some(sistema => sistema.propietario === jugadorRestante);
+            
+            if (tieneSistemas) {
+                this.finalizarPorConquista(jugadorRestante);
+            } else {
+                this.finalizarPorAbandono(jugadorRestante);
+            }
+            return;
+        }
+
         const jugadoresActivos = this.jugadores.filter(jugador =>
             this.galaxia.sistemas.some(sistema => sistema.propietario === jugador)
         );
         if (jugadoresActivos.length === 1) {
             this.finalizarPorConquista(jugadoresActivos[0]);
+        }
+    }
+
+    finalizarPorAbandono(jugadorRestante) {
+        if (this.estado !== EstadoPartida.INICIADA) return;
+        this.estado = EstadoPartida.FINALIZADA;
+        this.fechaFin = Date.now();
+        this.detenerTemporizadores();
+        
+        if (!this.io) return;
+
+        this.io.to(this.id).emit('partida_cerrada', {
+            idPartida: this.id,
+            razon: 'Todos los demás jugadores abandonaron la partida',
+            mensaje: 'La partida se cerró porque todos los demás jugadores abandonaron'
+        });
+
+        if (this.onDestruirPartida) {
+            this.onDestruirPartida(this.id);
         }
     }
 

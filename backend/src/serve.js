@@ -17,7 +17,6 @@ function cargarConfiguracion() {
         const contenido = fs.readFileSync(rutaConfig, 'utf8');
         return JSON.parse(contenido);
     } catch (error) {
-        console.error('Error al cargar configuración:', error);
         return null;
     }
 }
@@ -59,10 +58,8 @@ function cargarGalaxias() {
             }
         }
         
-        console.log(`${galaxias.length} galaxias cargadas desde ${galaxiasDir}`);
         return galaxias;
     } catch (error) {
-        console.error('Error al cargar galaxias:', error);
         return [];
     }
 }
@@ -80,19 +77,16 @@ function cargarGalaxiaDesdeArchivo(idGalaxia) {
         galaxia.cargarDesdeJSON(galaxiaData);
         return galaxia;
     } catch (error) {
-        console.error('Error al cargar galaxia desde archivo:', error);
         return null;
     }
 }
 
 io.on("connection", (socket) => {
-    console.log(`Cliente conectado: ${socket.id}`);
 
     socket.on("registrar_jugador", (datos) => {
         const { nombre } = datos;
         const jugador = new Jugador(nombre, socket.id);
         jugadores.set(socket.id, jugador);
-        console.log(`Jugador registrado: ${nombre} (${socket.id})`);
         socket.emit("registrar_exitoso", { id: socket.id, nombre });
     });
 
@@ -130,7 +124,6 @@ io.on("connection", (socket) => {
             const ranking = await obtenerRanking();
             socket.emit("ranking_disponible", ranking);
         } catch (error) {
-            console.error('Error al obtener ranking:', error);
             socket.emit("error_ranking", { mensaje: "Error al obtener el ranking" });
         }
     });
@@ -141,14 +134,12 @@ io.on("connection", (socket) => {
 
         const galaxia = cargarGalaxiaDesdeArchivo(galaxiaId);
         if (!galaxia) {
-            console.log(`Error al crear partida: No se pudo cargar la galaxia ${galaxiaId}`);
             socket.emit("error_crear_partida", { mensaje: "No se pudo cargar la galaxia seleccionada" });
             return;
         }
 
         const jugadorCreador = jugadores.get(socket.id);
         if (!jugadorCreador) {
-            console.log(`Error al crear partida: Jugador no registrado (${socket.id})`);
             socket.emit("error_crear_partida", { mensaje: "Jugador no registrado" });
             return;
         }
@@ -162,11 +153,11 @@ io.on("connection", (socket) => {
             recursos,
             null,
             (partidaCerrada) => {
-                console.log(`Partida cerrada por tiempo de espera: ${partidaCerrada.id}`);
                 io.to(idPartida).emit("partida_cerrada", {
                     idPartida: partidaCerrada.id,
                     razon: "Tiempo de espera agotado. No se alcanzaron los jugadores mínimos."
                 });
+                partidas.delete(idPartida);
             },
             (partida) => {
                 const jugadoresInfo = partida.jugadores.map(j => ({
@@ -193,35 +184,19 @@ io.on("connection", (socket) => {
             async (datosFinales) => {
                 try {
                     await guardarPartidaEnRanking(datosFinales);
-                    console.log(`Ranking guardado: ${datosFinales.idPartida}`);
                 } catch (error) {
-                    console.error('Error al guardar ranking:', error);
                 }
+            },
+            (idPartidaADestruir) => {
+                partidas.delete(idPartidaADestruir);
+                clearInterval(partidas.get(idPartidaADestruir)?._timerInterval);
             }
         );
 
-        console.log(`Tiempo de espera configurado en partida: ${partida.tiempoEsperaSeg} segundos`);
 
         partida.agregarJugador(jugadorCreador);
         partidas.set(idPartida, partida);
 
-        console.log('=== PARTIDA CREADA ===');
-        console.log(`Temporizador de espera iniciado: ${partida.gestorTemporizadores?.temporizadorEspera ? 'SI' : 'NO'}`);
-        console.log(`Tiempo de espera: ${partida.tiempoEsperaSeg} segundos`);
-        console.log(`ID: ${partida.id}`);
-        console.log(`Nombre: ${partida.nombre}`);
-        console.log(`Galaxia: ${partida.galaxia.nombre}`);
-        console.log(`Sistemas: ${partida.galaxia.sistemas.length}`);
-        console.log(`Rutas: ${partida.galaxia.rutas.length}`);
-        console.log(`Max Jugadores: ${partida.maxJugadores}`);
-        console.log(`Duración: ${partida.duracionMaximaSeg} segundos`);
-        console.log(`Dificultad Recursos: ${partida.dificultadRecursos}`);
-        console.log(`Estado: ${partida.estado}`);
-        console.log(`Jugadores: ${partida.jugadores.length}`);
-        partida.jugadores.forEach(j => {
-            console.log(`  - ${j.nickname} (${j.socketId})`);
-        });
-        console.log('=====================');
 
         socket.join(idPartida);
         socket.emit("partida_creada", {
@@ -239,27 +214,22 @@ io.on("connection", (socket) => {
         const { idPartida, nombreJugador } = datos;
         const partida = partidas.get(idPartida);
 
-        console.log(`Intento de unión a partida: ${nombreJugador} a ${idPartida}`);
 
         if (!partida) {
-            console.log(`Error al unirse: La partida ${idPartida} no existe.`);
             socket.emit("error_unirse", { mensaje: "La partida no existe." });
             return;
         }
         if (partida.estado !== 'esperando') {
-            console.log(`Error al unirse: La partida ${idPartida} no está en espera (${partida.estado}).`);
             socket.emit("error_unirse", { mensaje: "La partida ya no está disponible." });
             return;
         }
         if (partida.jugadores.length >= partida.maxJugadores) {
-            console.log(`Error al unirse: La partida ${idPartida} está llena.`);
             socket.emit("error_unirse", { mensaje: "La partida ya está llena." });
             return;
         }
 
         const jugadorUnirse = jugadores.get(socket.id);
         if (!jugadorUnirse) {
-            console.log(`Error al unirse: Jugador no registrado (${socket.id}).`);
             socket.emit("error_unirse", { mensaje: "Jugador no registrado" });
             return;
         }
@@ -267,7 +237,6 @@ io.on("connection", (socket) => {
         partida.agregarJugador(jugadorUnirse);
         socket.join(idPartida);
 
-        console.log(`Exito: ${nombreJugador} se unió a la partida ${idPartida}`);
 
         io.to(idPartida).emit("jugador_unido", {
             idPartida,
@@ -288,7 +257,6 @@ io.on("connection", (socket) => {
 
     socket.on("chat_mensaje", (datos) => {
         const { idPartida, nombreJugador, mensaje, idLocal } = datos;
-        console.log(`[Chat] ${nombreJugador} en ${idPartida}: ${mensaje}`);
         socket.to(idPartida).emit("chat_mensaje", { 
             idPartida, 
             nombreJugador, 
@@ -301,13 +269,11 @@ io.on("connection", (socket) => {
         const { idPartida } = datos;
         const partida = partidas.get(idPartida);
 
-        console.log(`[Salir] Jugador ${socket.id} intenta salir de la sala ${idPartida}`);
 
         if (partida) {
             partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
             socket.leave(idPartida);
             
-            console.log(`[Salir] Jugador ${socket.id} eliminado de ${idPartida}. Jugadores restantes: ${partida.jugadores.length}`);
             
             io.to(idPartida).emit("jugador_salio", { 
                 idPartida, 
@@ -317,48 +283,35 @@ io.on("connection", (socket) => {
             if (partida.jugadores.length === 0) {
                 partidas.delete(idPartida);
                 clearInterval(partida._timerInterval);
-                console.log(`[Partida Destruida] ${idPartida} (vacía tras salida de jugador)`);
+            } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
+                partida.finalizarPorEliminacion();
             }
         }
     });
 
     socket.on("iniciar_partida", (datos) => {
-        console.log(`Evento iniciar_partida recibido:`, datos);
         const { idPartida } = datos;
         const partida = partidas.get(idPartida);
 
         if (!partida) {
-            console.log(`Error: La partida ${idPartida} no existe`);
             socket.emit("error_inicio", { mensaje: "La partida no existe." });
             return;
         }
 
-        console.log(`Partida encontrada: ${partida.id}, estado: ${partida.estado}, jugadores: ${partida.jugadores.length}`);
 
         if (partida.estado !== 'esperando') {
-            console.log(`Error: La partida no está en estado de espera, está: ${partida.estado}`);
             socket.emit("error_inicio", { mensaje: "La partida ya no está en estado de espera." });
             return;
         }
 
         if (partida.jugadores.length < 2) {
-            console.log(`Error: Solo hay ${partida.jugadores.length} jugadores, se necesitan 2`);
             socket.emit("error_inicio", { mensaje: "Se necesitan al menos 2 jugadores para iniciar." });
             return;
         }
 
-        console.log(`Intentando iniciar partida...`);
         const iniciada = partida.iniciar();
         
        if (iniciada) {
-            console.log(`Partida iniciada exitosamente: ${idPartida}`);
-            console.log('=== JUGADORES Y SUS RECURSOS ===');
-            partida.jugadores.forEach(j => {
-                console.log(`Jugador: ${j.nickname} (${j.socketId})`);
-                console.log(`  Planeta Base: ${j.planetaBase ? j.planetaBase.nombre : 'N/A'}`);
-                console.log(`  Recursos: Minerales=${j.recursos.minerales}, Energía=${j.recursos.energia}, Cristales=${j.recursos.cristales}`);
-            });
-            console.log('================================');
 
             let cuenta = 3;
             io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
@@ -400,7 +353,6 @@ io.on("connection", (socket) => {
             }, 1000);
 
         } else {
-            console.log(`Error: No se pudo iniciar la partida`);
             socket.emit("error_inicio", { mensaje: "No se pudo iniciar la partida." });
         }
     });
@@ -420,6 +372,8 @@ io.on("connection", (socket) => {
             if (partida.jugadores.length === 0) {
                 partidas.delete(idPartida);
                 clearInterval(partida._timerInterval);
+            } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
+                partida.finalizarPorEliminacion();
             }
         }
     });
@@ -476,8 +430,6 @@ io.on("connection", (socket) => {
         const { idPartida, idSistemaOrigen, idSistemaDestino, cantidad } = datos;
         const partida = partidas.get(idPartida);
 
-        console.log('=== MOVER FLOTAS ===');
-        console.log('Datos recibidos:', datos);
 
         if (!partida) {
             socket.emit("mover_flotas_error", { mensaje: "La partida no existe." });
@@ -490,18 +442,11 @@ io.on("connection", (socket) => {
             return;
         }
 
-        console.log('Jugador:', jugador.nickname);
 
         const sistemaOrigen = partida.galaxia.sistemas.find(s => s.id === idSistemaOrigen);
         const sistemaDestino = partida.galaxia.sistemas.find(s => s.id === idSistemaDestino);
 
-        console.log('Sistema Origen:', sistemaOrigen?.nombre, 'Astilleros:', sistemaOrigen?.obtenerCantidadAstilleros());
-        console.log('Sistema Destino:', sistemaDestino?.nombre, 'Astilleros:', sistemaDestino?.obtenerCantidadAstilleros());
 
-        console.log('--- ESTADO ANTES DEL MOVIMIENTO ---');
-        partida.galaxia.sistemas.forEach(sistemaPlanetario => {
-            console.log(`  ${sistemaPlanetario.nombre}: ${sistemaPlanetario.obtenerCantidadAstilleros()} astilleros, propietario: ${sistemaPlanetario.propietario?.nickname || 'ninguno'}`);
-        });
 
         if (!sistemaOrigen || !sistemaDestino) {
             socket.emit("mover_flotas_error", { mensaje: "Sistema no encontrado." });
@@ -523,11 +468,9 @@ io.on("connection", (socket) => {
         const gestorMovimiento = new GestorMovimiento(partida.galaxia);
 
         const astillerosAMover = sistemaOrigen.astillerosEstacionados.slice(0, cantidad);
-        console.log('Astilleros a mover:', astillerosAMover.length);
 
         const resultado = gestorMovimiento.moverAstilleros(astillerosAMover, sistemaDestino, (evento, data) => {
             if (evento === 'sistemaConquistado') {
-                console.log('Sistema conquistado:', data.sistema.nombre);
                 io.to(idPartida).emit("planeta_conquistado", {
                     idPartida,
                     conquistadorId: jugador.socketId,
@@ -565,13 +508,8 @@ io.on("connection", (socket) => {
             }
         });
 
-        console.log('--- ESTADO DESPUÉS DEL MOVIMIENTO ---');
-        partida.galaxia.sistemas.forEach(sistemaPlanetario => {
-            console.log(`  ${sistemaPlanetario.nombre}: ${sistemaPlanetario.obtenerCantidadAstilleros()} astilleros, propietario: ${sistemaPlanetario.propietario?.nickname || 'ninguno'}`);
-        });
 
         if (resultado.exitoso) {
-            console.log('Movimiento exitoso');
             socket.emit("mover_flotas_exito", {
                 mensaje: "Flotas movidas exitosamente",
                 origen: sistemaOrigen.nombre,
@@ -601,24 +539,20 @@ io.on("connection", (socket) => {
 
             partida.chequearVictoriaPorConquista();
         } else {
-            console.log('Error en movimiento:', resultado.errores);
             socket.emit("mover_flotas_error", {
                 mensaje: "Error al mover flotas",
                 errores: resultado.errores
             });
         }
-        console.log('====================');
     });
 
     socket.on("disconnect", () => {
-        console.log(`Cliente desconectado: ${socket.id}`);
         jugadores.delete(socket.id);
 
         for (const [idPartida, partida] of partidas.entries()) {
             const estabaEnPartida = partida.jugadores.some(j => j.socketId === socket.id);
             
             if (estabaEnPartida) {
-                console.log(`[Desconexión] Eliminando jugador fantasma ${socket.id} de la partida ${idPartida}`);
                 partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
                 
                 io.to(idPartida).emit("jugador_salio", { 
@@ -629,7 +563,8 @@ io.on("connection", (socket) => {
                 if (partida.jugadores.length === 0) {
                     partidas.delete(idPartida);
                     clearInterval(partida._timerInterval);
-                    console.log(`[Partida Destruida] ${idPartida} (vacía tras desconexión forzada)`);
+                } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
+                    partida.finalizarPorEliminacion();
                 }
             }
         }
