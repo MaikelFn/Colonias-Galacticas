@@ -118,14 +118,15 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
 
   const jugadoresActuales = partidaActual.jugadores
   const maxJugadores = partidaActual.maxJugadores
+  const minJugadores = partidaActual.minJugadores || 2
   const slotsVacios = Array.from({ length: Math.max(0, maxJugadores - jugadoresActuales.length) })
 
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
-    const estaLleno = jugadoresActuales.length >= maxJugadores
-    setLleno(estaLleno)
-  }, [jugadoresActuales.length, maxJugadores])
+    const puedeIniciar = jugadoresActuales.length >= minJugadores
+    setLleno(puedeIniciar)
+  }, [jugadoresActuales.length, minJugadores])
 
   useEffect(() => {
     const unsub = on('jugador_unido', (data) => {
@@ -407,7 +408,7 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
                 <div className="lb-waiting-dots">
                   <span /><span /><span />
                 </div>
-                <span>Esperando {maxJugadores - jugadoresActuales.length} jugador(es) más...</span>
+                <span>Esperando {Math.max(0, minJugadores - jugadoresActuales.length)} jugador(es) más para iniciar...</span>
               </div>
             )}
           </div>
