@@ -227,7 +227,7 @@ class Partida {
         jugador.partida = this;
         if (!this.gestorTemporizadores.temporizadorEspera && this.jugadores.length < this.maxJugadores) {
             this.gestorTemporizadores.iniciarTemporizadorEspera(this.tiempoEsperaSeg, () => {
-                if (this.estado === EstadoPartida.ESPERANDO && this.jugadores.length < this.minJugadores) {
+                if (this.estado === EstadoPartida.ESPERANDO) {
                     this.estado = EstadoPartida.FINALIZADA;
                     this.detenerTemporizadores();
                     if (this.onCierrePorTiempo) {

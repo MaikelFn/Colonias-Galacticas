@@ -935,16 +935,29 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       setResultadoFinal(data)
     }
 
+    function onPartidaCerrada(data) {
+      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
+      addToast(
+        'Partida cerrada',
+        data.mensaje || data.razon || 'La partida ha sido cerrada',
+        'peligro',
+        6000
+      )
+      setTimeout(() => onSalir(), 3000)
+    }
+
     socket.on('combate_resultado',  onCombateResultado)
     socket.on('jugador_eliminado',  onJugadorEliminado)
     socket.on('partida_finalizada', onPartidaFinalizada)
+    socket.on('partida_cerrada',     onPartidaCerrada)
 
     return () => {
       socket.off('combate_resultado',  onCombateResultado)
       socket.off('jugador_eliminado',  onJugadorEliminado)
       socket.off('partida_finalizada', onPartidaFinalizada)
+      socket.off('partida_cerrada',     onPartidaCerrada)
     }
-  }, [nombreJugador, addToast])
+  }, [nombreJugador, addToast, onSalir])
 
   const handleConfirmarSalida = useCallback(() => {
     socket.emit('abandonar_partida', {

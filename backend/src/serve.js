@@ -155,7 +155,8 @@ io.on("connection", (socket) => {
             (partidaCerrada) => {
                 io.to(idPartida).emit("partida_cerrada", {
                     idPartida: partidaCerrada.id,
-                    razon: "Tiempo de espera agotado. No se alcanzaron los jugadores mínimos."
+                    razon: "Tiempo de espera agotado. No se alcanzaron los jugadores mínimos.",
+                    mensaje: "La partida se cerró porque se agotó el tiempo de espera de la sala"
                 });
                 partidas.delete(idPartida);
             },
@@ -229,6 +230,12 @@ io.on("connection", (socket) => {
         }
         if (partida.jugadores.length >= partida.maxJugadores) {
             socket.emit("error_unirse", { mensaje: "La partida ya está llena." });
+            return;
+        }
+
+        const nombreDuplicado = partida.jugadores.some(j => j.nickname === nombreJugador);
+        if (nombreDuplicado) {
+            socket.emit("error_unirse", { mensaje: "Ya existe un jugador con ese nombre en la partida. Por favor, elige otro nombre." });
             return;
         }
 
