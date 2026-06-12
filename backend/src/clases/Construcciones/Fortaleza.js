@@ -1,11 +1,8 @@
 const Construccion = require('./Construccion');
-const Recursos = require('../Entidades/Recursos');
-const config = require('../Configuración/Configuracion');
 
 class Fortaleza extends Construccion {
     constructor() {
-        const costosData = config.get('costosConstrucciones.Fortaleza');
-        const costos = new Recursos(costosData.minerales, costosData.energia, costosData.cristales);
+        const costos = Construccion.obtenerCostosDesdeConfig('Fortaleza');
         super('Fortaleza', costos, 'Defensa avanzada');
     }
 

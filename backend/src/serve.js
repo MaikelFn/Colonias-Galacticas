@@ -213,25 +213,8 @@ io.on("connection", (socket) => {
                 partidas.delete(idPartida);
             },
             (partida) => {
-                const jugadoresInfo = partida.jugadores.map(j => ({
-                    id: j.socketId,
-                    nombre: j.nickname,
-                    recursos: j.recursos,
-                    sistemasConquistados: j.getSistemasControlados().length
-                }));
-
-                partida.jugadores.forEach(jugador => {
-                    if (jugador.socketId) {
-                        io.to(jugador.socketId).emit("actualizar_clientes", {
-                            jugadores: jugadoresInfo,
-                            galaxia: {
-                                nombre: partida.galaxia.nombre,
-                                sistemas: partida.galaxia.sistemas.map(sistema => sistema.toJSON()),
-                                rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
-                            }
-                        });
-                    }
-                });
+                const jugadoresInfo = crearJugadoresInfo(partida.jugadores);
+                enviarActualizacionClientes(io, partida, jugadoresInfo);
             },
             io,
             async (datosFinales) => {
@@ -332,23 +315,9 @@ io.on("connection", (socket) => {
         const { idPartida } = datos;
         const partida = partidas.get(idPartida);
 
-
         if (partida) {
-            partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
             socket.leave(idPartida);
-            
-            
-            io.to(idPartida).emit("jugador_salio", { 
-                idPartida, 
-                jugadorId: socket.id 
-            });
-
-            if (partida.jugadores.length === 0) {
-                partidas.delete(idPartida);
-                clearInterval(partida._timerInterval);
-            } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
-                partida.finalizarPorEliminacion();
-            }
+            eliminarJugadorDePartida(partida, socket.id, io, idPartida);
         }
     });
 
@@ -425,19 +394,7 @@ io.on("connection", (socket) => {
         const partida = partidas.get(idPartida);
         
         if (partida) {
-            partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
-            
-            io.to(idPartida).emit("jugador_salio", { 
-                idPartida, 
-                jugadorId: socket.id 
-            });
-            
-            if (partida.jugadores.length === 0) {
-                partidas.delete(idPartida);
-                clearInterval(partida._timerInterval);
-            } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
-                partida.finalizarPorEliminacion();
-            }
+            eliminarJugadorDePartida(partida, socket.id, io, idPartida);
         }
     });
 
@@ -461,25 +418,8 @@ io.on("connection", (socket) => {
                 recursosRestantes: resultado.recursosRestantes
             });
 
-            const jugadoresInfo = partida.jugadores.map(jugador => ({
-                id: jugador.socketId,
-                nombre: jugador.nickname,
-                recursos: jugador.recursos,
-                sistemasConquistados: jugador.getSistemasControlados().length
-            }));
-
-            partida.jugadores.forEach(jugador => {
-                if (jugador.socketId) {
-                    io.to(jugador.socketId).emit("actualizar_clientes", {
-                        jugadores: jugadoresInfo,
-                        galaxia: {
-                            nombre: partida.galaxia.nombre,
-                            sistemas: partida.galaxia.sistemas.map(s => s.toJSON()),
-                            rutas: partida.galaxia.rutas.map(r => [r.origen.id, r.destino.id])
-                        }
-                    });
-                }
-            });
+            const jugadoresInfo = crearJugadoresInfo(partida.jugadores);
+            enviarActualizacionClientes(io, partida, jugadoresInfo);
         } else {
             socket.emit("construccion_error", {
                 mensaje: resultado.error,
@@ -580,25 +520,8 @@ io.on("connection", (socket) => {
                 cantidad
             });
 
-            const jugadoresInfo = partida.jugadores.map(jugadorActual => ({
-                id: jugadorActual.socketId,
-                nombre: jugadorActual.nickname,
-                recursos: jugadorActual.recursos,
-                sistemasConquistados: jugadorActual.getSistemasControlados().length
-            }));
-
-            partida.jugadores.forEach(jugadorActual => {
-                if (jugadorActual.socketId) {
-                    io.to(jugadorActual.socketId).emit("actualizar_clientes", {
-                        jugadores: jugadoresInfo,
-                        galaxia: {
-                            nombre: partida.galaxia.nombre,
-                            sistemas: partida.galaxia.sistemas.map(sistemaPlanetario => sistemaPlanetario.toJSON()),
-                            rutas: partida.galaxia.rutas.map(ruta => [ruta.origen.id, ruta.destino.id])
-                        }
-                    });
-                }
-            });
+            const jugadoresInfo = crearJugadoresInfo(partida.jugadores);
+            enviarActualizacionClientes(io, partida, jugadoresInfo);
 
             partida.chequearVictoriaPorConquista();
         } else {
@@ -616,19 +539,7 @@ io.on("connection", (socket) => {
             const estabaEnPartida = partida.jugadores.some(j => j.socketId === socket.id);
             
             if (estabaEnPartida) {
-                partida.jugadores = partida.jugadores.filter(j => j.socketId !== socket.id);
-                
-                io.to(idPartida).emit("jugador_salio", { 
-                    idPartida, 
-                    jugadorId: socket.id 
-                });
-
-                if (partida.jugadores.length === 0) {
-                    partidas.delete(idPartida);
-                    clearInterval(partida._timerInterval);
-                } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
-                    partida.finalizarPorEliminacion();
-                }
+                eliminarJugadorDePartida(partida, socket.id, io, idPartida);
             }
         }
     });

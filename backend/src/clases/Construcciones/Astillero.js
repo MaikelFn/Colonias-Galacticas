@@ -1,11 +1,8 @@
 const Construccion = require('./Construccion');
-const Recursos = require('../Entidades/Recursos');
-const config = require('../Configuración/Configuracion');
 
 class Astillero extends Construccion {
     constructor(id, propietario, sistemaOrigen) {
-        const costosData = config.get('costosConstrucciones.Astillero');
-        const costos = new Recursos(costosData.minerales, costosData.energia, costosData.cristales);
+        const costos = Construccion.obtenerCostosDesdeConfig('Astillero');
         super('Astillero', costos, 'Unidad de combate móvil');
         this.id = id;
         this.propietario = propietario;

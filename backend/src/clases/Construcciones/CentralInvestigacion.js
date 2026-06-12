@@ -4,8 +4,7 @@ const config = require('../Configuración/Configuracion');
 
 class CentralInvestigacion extends Construccion {
     constructor() {
-        const costosData = config.get('costosConstrucciones.CentralInvestigacion');
-        const costos = new Recursos(costosData.minerales, costosData.energia, costosData.cristales);
+        const costos = Construccion.obtenerCostosDesdeConfig('CentralInvestigacion');
         super('CentralInvestigacion', costos, 'Produce recursos automáticamente cada ciclo');
     }
 
