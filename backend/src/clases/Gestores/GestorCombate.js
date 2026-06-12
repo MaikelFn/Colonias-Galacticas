@@ -92,10 +92,15 @@ class GestorCombate {
     aplicarDefensaExitosa(sistema, perdidas) {
         let perdidasRestantes = perdidas;
 
+        while (perdidasRestantes > 0 && sistema.astillerosEstacionados.length > 0) {
+            sistema.astillerosEstacionados.pop();
+            perdidasRestantes--;
+        }
+
         const minas = sistema.instalaciones.filter(inst => inst.nombre === 'Mina');
         const defensaMinas = Math.floor(minas.length / 3);
         
-        const perdidasAbsorbidasPorMinas = Math.min(defensaMinas, perdidas);
+        const perdidasAbsorbidasPorMinas = Math.min(defensaMinas, perdidasRestantes);
         perdidasRestantes -= perdidasAbsorbidasPorMinas;
         
         const minasAEliminar = perdidasAbsorbidasPorMinas * 3;
@@ -111,10 +116,6 @@ class GestorCombate {
             if (indiceFortaleza === -1) break;
             sistema.instalaciones.splice(indiceFortaleza, 1);
             perdidasRestantes -= 2;
-        }
-        while (perdidasRestantes > 0 && sistema.astillerosEstacionados.length > 0) {
-            sistema.astillerosEstacionados.pop();
-            perdidasRestantes--;
         }
     }
 
