@@ -188,8 +188,12 @@ io.on("connection", (socket) => {
                 }
             },
             (idPartidaADestruir) => {
+                const partida = partidas.get(idPartidaADestruir);
+                if (partida) {
+                    clearInterval(partida._timerInterval);
+                    partida._timerInterval = null;
+                }
                 partidas.delete(idPartidaADestruir);
-                clearInterval(partidas.get(idPartidaADestruir)?._timerInterval);
             }
         );
 

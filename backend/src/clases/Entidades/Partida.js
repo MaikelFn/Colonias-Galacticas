@@ -133,13 +133,7 @@ class Partida {
     finalizarPorEliminacion() {
         if (this.jugadores.length === 1) {
             const jugadorRestante = this.jugadores[0];
-            const tieneSistemas = this.galaxia.sistemas.some(sistema => sistema.propietario === jugadorRestante);
-            
-            if (tieneSistemas) {
-                this.finalizarPorConquista(jugadorRestante);
-            } else {
-                this.finalizarPorAbandono(jugadorRestante);
-            }
+            this.finalizarPorAbandono(jugadorRestante);
             return;
         }
 
@@ -223,7 +217,7 @@ class Partida {
 
     detenerTemporizadores() {
         this.gestorProduccion.detenerProduccion();
-        this.gestorTemporizadores.detenerTemporizadorEspera();
+        this.gestorTemporizadores.detenerTodos();
     }
 
     agregarJugador(jugador) {
