@@ -10,12 +10,12 @@ class GestorCombate {
         fuerza += Math.floor(minas.length / 3);
 
         for (const astillero of sistema.astillerosEstacionados) {
-            fuerza += astillero.getPoderCombate();
+            fuerza += 1;
         }
 
         const fortalezas = sistema.instalaciones.filter(inst => inst.nombre === 'Fortaleza');
         for (const fortaleza of fortalezas) {
-            fuerza += fortaleza.getPoderDefensa();
+            fuerza += 2;
         }
 
         return fuerza;
@@ -24,7 +24,10 @@ class GestorCombate {
     resolverCombate(sistema, astillerosAtacantes, jugadorAtacante, callbackEvento) {
         const fuerzaAtacante = this.calcularFuerzaAtacante(astillerosAtacantes);
         const fuerzaDefensor = this.calcularFuerzaDefensor(sistema);
-        
+        const minasResiduales = sistema.instalaciones.filter(i => i.nombre === 'Mina').length % 3;
+        const defensorGana = fuerzaDefensor > fuerzaAtacante ||
+                             (fuerzaDefensor === fuerzaAtacante && minasResiduales > 0);
+
         const resultado = {
             atacante: jugadorAtacante.nickname,
             sistema: sistema.nombre,
@@ -41,23 +44,23 @@ class GestorCombate {
             resultado.perdidasAtacante = fuerzaDefensor;
             resultado.perdidasDefensor = fuerzaDefensor;
             resultado.conquista = true;
-            
+
             this.aplicarConquista(sistema, jugadorAtacante, astillerosAtacantes, resultado.perdidasAtacante);
-        } else if (fuerzaDefensor > fuerzaAtacante) {
+        } else if (defensorGana) {
             const defensor = sistema.propietario;
             resultado.ganador = defensor ? defensor.nickname : 'Sistema';
             resultado.perdidasAtacante = astillerosAtacantes.length;
             resultado.perdidasDefensor = astillerosAtacantes.length;
-            
+
             this.aplicarDefensaExitosa(sistema, resultado.perdidasDefensor);
             this.eliminarAstilleros(astillerosAtacantes);
         } else {
             resultado.ganador = 'empate';
             resultado.perdidasAtacante = astillerosAtacantes.length;
             resultado.perdidasDefensor = sistema.astillerosEstacionados.length;
-            
+
             this.eliminarAstilleros(astillerosAtacantes);
-            
+
             sistema.instalaciones = sistema.instalaciones.filter(inst => inst.nombre === 'CentralInvestigacion');
             sistema.astillerosEstacionados = [];
         }
@@ -77,7 +80,6 @@ class GestorCombate {
         sistema.instalaciones = centrosInvestigacion;
 
         const astillerosRestantes = astillerosAtacantes.slice(perdidas);
-
         sistema.astillerosEstacionados = astillerosRestantes;
     }
 
@@ -90,32 +92,30 @@ class GestorCombate {
     }
 
     aplicarDefensaExitosa(sistema, perdidas) {
-        let perdidasRestantes = perdidas;
+        let restantes = perdidas;
 
-        while (perdidasRestantes > 0 && sistema.astillerosEstacionados.length > 0) {
+        // 1ro: astilleros
+        while (restantes > 0 && sistema.astillerosEstacionados.length > 0) {
             sistema.astillerosEstacionados.pop();
-            perdidasRestantes--;
+            restantes--;
         }
 
-        const minas = sistema.instalaciones.filter(inst => inst.nombre === 'Mina');
-        const defensaMinas = Math.floor(minas.length / 3);
-        
-        const perdidasAbsorbidasPorMinas = Math.min(defensaMinas, perdidasRestantes);
-        perdidasRestantes -= perdidasAbsorbidasPorMinas;
-        
-        const minasAEliminar = perdidasAbsorbidasPorMinas * 3;
-        for (let i = 0; i < minasAEliminar && i < minas.length; i++) {
-            const indiceMina = sistema.instalaciones.findIndex(inst => inst.nombre === 'Mina');
-            if (indiceMina !== -1) {
-                sistema.instalaciones.splice(indiceMina, 1);
-            }
+        // 2do: minas (grupos de 3)
+        while (restantes > 0 && sistema.instalaciones.filter(i => i.nombre === 'Mina').length >= 3) {
+            let eliminadas = 0;
+            sistema.instalaciones = sistema.instalaciones.filter(inst => {
+                if (inst.nombre === 'Mina' && eliminadas < 3) { eliminadas++; return false; }
+                return true;
+            });
+            restantes--;
         }
-        
-        while (perdidasRestantes > 0) {
-            const indiceFortaleza = sistema.instalaciones.findIndex(inst => inst.nombre === 'Fortaleza');
-            if (indiceFortaleza === -1) break;
-            sistema.instalaciones.splice(indiceFortaleza, 1);
-            perdidasRestantes -= 2;
+
+        // 3ro: fortalezas
+        while (restantes > 0) {
+            const idx = sistema.instalaciones.findIndex(i => i.nombre === 'Fortaleza');
+            if (idx === -1) break;
+            sistema.instalaciones.splice(idx, 1);
+            restantes -= 2;
         }
     }
 
