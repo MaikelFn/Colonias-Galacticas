@@ -37,6 +37,46 @@ const io = new Server(server, {
 const partidas = new Map();
 const jugadores = new Map();
 
+function crearJugadoresInfo(jugadores) {
+    return jugadores.map(j => ({
+        id: j.socketId,
+        nombre: j.nickname,
+        recursos: j.recursos,
+        sistemasConquistados: j.getSistemasControlados().length
+    }));
+}
+
+function crearGalaxiaInfo(galaxia) {
+    return {
+        nombre: galaxia.nombre,
+        sistemas: galaxia.sistemas.map(s => s.toJSON()),
+        rutas: galaxia.rutas.map(r => [r.origen.id, r.destino.id])
+    };
+}
+
+function enviarActualizacionClientes(io, partida, jugadoresInfo) {
+    partida.jugadores.forEach(jugador => {
+        if (jugador.socketId) {
+            io.to(jugador.socketId).emit("actualizar_clientes", {
+                jugadores: jugadoresInfo,
+                galaxia: crearGalaxiaInfo(partida.galaxia)
+            });
+        }
+    });
+}
+
+function eliminarJugadorDePartida(partida, socketId, io, idPartida) {
+    partida.jugadores = partida.jugadores.filter(j => j.socketId !== socketId);
+    io.to(idPartida).emit("jugador_salio", { idPartida, jugadorId: socketId });
+    
+    if (partida.jugadores.length === 0) {
+        partidas.delete(idPartida);
+        clearInterval(partida._timerInterval);
+    } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
+        partida.finalizarPorEliminacion();
+    }
+}
+
 function cargarGalaxias() {
     const galaxiasDir = path.join(__dirname, 'data', 'Galaxias');
     const galaxias = [];
@@ -49,12 +89,18 @@ function cargarGalaxias() {
                 const rutaArchivo = path.join(galaxiasDir, archivo);
                 const contenido = fs.readFileSync(rutaArchivo, 'utf8');
                 const galaxia = JSON.parse(contenido);
-                galaxias.push({
-                    id: archivo.replace('.json', ''),
-                    nombre: galaxia.nombre,
-                    sistemas: galaxia.sistemas,
-                    rutas: galaxia.rutas
-                });
+                
+                const sistemasCount = galaxia.sistemas ? galaxia.sistemas.length : 0;
+                const rutasCount = galaxia.rutas ? galaxia.rutas.length : 0;
+                
+                if (sistemasCount >= 25 && rutasCount >= 40) {
+                    galaxias.push({
+                        id: archivo.replace('.json', ''),
+                        nombre: galaxia.nombre,
+                        sistemas: galaxia.sistemas,
+                        rutas: galaxia.rutas
+                    });
+                }
             }
         }
         
@@ -131,6 +177,12 @@ io.on("connection", (socket) => {
     socket.on("crear_partida", (datos) => {
         const { nombre, galaxiaId, maxJugadores, duracion, recursos, comandante } = datos;
         const idPartida = `partida_${Date.now()}`;
+
+        const nombreDuplicado = Array.from(partidas.values()).some(p => p.nombre === nombre);
+        if (nombreDuplicado) {
+            socket.emit("error_crear_partida", { mensaje: "Ya existe una partida con ese nombre. Por favor, elige otro nombre." });
+            return;
+        }
 
         const galaxia = cargarGalaxiaDesdeArchivo(galaxiaId);
         if (!galaxia) {
