@@ -40,7 +40,7 @@ function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
   return (
     <div className="gp-modal-overlay">
       <div className="gp-modal">
-        <div className="gp-modal-icon">⚠️</div>
+        <div className="gp-modal-icon gp-modal-icon-text">ATENCIÓN</div>
         <h2 className="gp-modal-titulo">¿Abandonar la partida?</h2>
         <p className="gp-modal-texto">
           Serás retirado del campo de batalla. Tu progreso se perderá y no podrás regresar.
@@ -289,13 +289,16 @@ function SistemaInfoPanel({ sistema, jugadores }) {
 
       <div className="gp-sistema-info-produccion">
         <div className="gp-sistema-info-prod-item">
-          🪨 <span className="txt-minerales">+{prodTurno.minerales}</span>
+          <span className="gp-prod-label txt-minerales">MIN</span>
+          <span className="txt-minerales">+{prodTurno.minerales}</span>
         </div>
         <div className="gp-sistema-info-prod-item">
-          ⚡ <span className="txt-energia">+{prodTurno.energia}</span>
+          <span className="gp-prod-label txt-energia">ENE</span>
+          <span className="txt-energia">+{prodTurno.energia}</span>
         </div>
         <div className="gp-sistema-info-prod-item">
-          💎 <span className="txt-cristales">+{prodTurno.cristales}</span>
+          <span className="gp-prod-label txt-cristales">CRIS</span>
+          <span className="txt-cristales">+{prodTurno.cristales}</span>
         </div>
       </div>
     </div>
@@ -359,9 +362,6 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
   const bottomRef = useRef(null)
   const [texto, setTexto] = useState('')
   const idPartidaRef = useRef(idPartida)
-  const [toastConstruccion, setToastConstruccion] = useState(null)
-  const posicionSistemaRef = useRef({ x: 0, y: 0 })
-  const sistemaSeleccionadoRef = useRef(null)
 
   useEffect(() => { idPartidaRef.current = idPartida }, [idPartida])
 
@@ -432,7 +432,7 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
                 style={esMio ? { opacity: 1 } : {}}
               >
                 {esSistema ? (
-                  <span className="gp-chat-texto">🔔 {mensaje.mensaje}</span>
+                  <span className="gp-chat-texto">◈ {mensaje.mensaje}</span>
                 ) : (
                   <>
                     <span
@@ -551,17 +551,12 @@ const ACCIONES = [
 function ToastConstruccion({ toast }) {
   if (!toast) return null;
   return (
-    <div 
-      className="gp-toast-construccion" 
-      style={{ 
-        position: 'fixed',
-        left: toast.x, 
-        top: toast.y,
-        transform: 'translateX(-50%)',
-        zIndex: 1100
-      }}
-    >
-      {toast.texto}
+    <div className="gp-toast-construccion-wrapper">
+      <div className="gp-toast-construccion">
+        <span className="gp-toast-construccion-prefix">CONSTRUIDO</span>
+        <span className="gp-toast-construccion-sep">·</span>
+        <span className="gp-toast-construccion-texto">{toast.texto}</span>
+      </div>
     </div>
   );
 }
@@ -611,14 +606,29 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, on
 }
 
 // ─── Sistema de Toasts Galácticos ─────────────────────────────────────────────
+const TOAST_ICONS = {
+  info:    '///',
+  exito:   '+++',
+  peligro: '!!!',
+  warn:    '---',
+}
+
 function ToastGalactico({ toasts }) {
   if (!toasts || toasts.length === 0) return null
   return (
     <div className="gp-toast-stack">
       {toasts.map(t => (
-        <div key={t.id} className={`gp-toast gp-toast-${t.tipo}`}>
-          <span className="gp-toast-titulo">{t.titulo}</span>
+        <div
+          key={t.id}
+          className={`gp-toast gp-toast-${t.tipo}`}
+          style={{ '--gp-toast-duration': `${(t.duracion ?? 3500) / 1000}s` }}
+        >
+          <div className="gp-toast-header">
+            <span className="gp-toast-icono">{TOAST_ICONS[t.tipo] ?? '◈'}</span>
+            <span className="gp-toast-titulo">{t.titulo}</span>
+          </div>
           {t.info && <span className="gp-toast-info">{t.info}</span>}
+          <div className="gp-toast-barra" />
         </div>
       ))}
     </div>
@@ -639,7 +649,9 @@ function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
     <div className="gp-modal-overlay">
       <div className="gp-modal gp-modal-fin">
         <div className="gp-modal-fin-header">
-          <div className="gp-modal-fin-icono">{soyGanador ? '🏆' : '💫'}</div>
+          <div className={`gp-modal-fin-icono ${soyGanador ? 'gp-modal-fin-icono-victoria' : 'gp-modal-fin-icono-derrota'}`}>
+            {soyGanador ? 'VICTORIA' : 'FIN'}
+          </div>
           <h2 className="gp-modal-titulo">
             {soyGanador ? '¡VICTORIA GALÁCTICA!' : 'PARTIDA FINALIZADA'}
           </h2>
@@ -707,19 +719,19 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [accionFlotaActual, setAccionFlotaActual] = useState(null)
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null)
   const [modalFlotasVisible, setModalFlotasVisible] = useState(false)
-  const [toastConstruccion, setToastConstruccion] = useState(null)
   const [toasts, setToasts] = useState([])
   const [resultadoFinal, setResultadoFinal] = useState(null)
   const idPartidaRef = useRef(partida?.id)
-  const posicionSistemaRef = useRef({ x: 0, y: 0 })
   const sistemaSeleccionadoRef = useRef(null)
 
   // ─── Helper para agregar toasts ──────────────────────────────────────────────
   const addToast = useCallback((titulo, info, tipo = 'info', duracion = 3500) => {
     const id = Date.now() + Math.random()
-    setToasts(prev => [...prev, { id, titulo, info, tipo }])
+    setToasts(prev => [...prev, { id, titulo, info, tipo, duracion }])
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duracion)
   }, [])
+  const addToastRef = useRef(addToast)
+  useEffect(() => { addToastRef.current = addToast }, [addToast])
   
   useEffect(() => {
     sistemaSeleccionadoRef.current = sistemaSeleccionado
@@ -759,22 +771,19 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     }
 
     const handleMoverFlotasExito = (data) => {
-      console.log('=== MOVER FLOTAS EXITO ===');
-      console.log('Mensaje:', data.mensaje);
-      console.log('Origen:', data.origen);
-      console.log('Destino:', data.destino);
-      console.log('Cantidad:', data.cantidad);
-      console.log('========================');
+      addToastRef.current(
+        'Maniobra completada',
+        data.mensaje || `${data.cantidad ?? ''} flotas movidas de ${data.origen ?? ''} a ${data.destino ?? ''}`.trim(),
+        'exito'
+      )
     }
 
     const handleMoverFlotasError = (data) => {
-      console.log('=== MOVER FLOTAS ERROR ===');
-      console.log('Mensaje:', data.mensaje);
-      console.log('Errores:', data.errores);
-      console.log('=======================');
-      if (window.showAlert) {
-        window.showAlert(data.mensaje)
-      }
+      addToastRef.current(
+        'Maniobra fallida',
+        data.mensaje || 'No se pudo ejecutar el movimiento de flotas.',
+        'peligro'
+      )
     }
 
     socket.on('actualizar_clientes', handleActualizarClientes)
@@ -790,23 +799,20 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
 
   useEffect(() => {
     const handleConstruccionExito = (data) => {
-      const pos = posicionSistemaRef.current
       const sistema = sistemaSeleccionadoRef.current
-      setToastConstruccion({
-        texto: `${data.construccion?.nombre || data.construccion} construida exitosamente en ${sistema?.nombre}`,
-        x: pos.x,
-        y: pos.y
-      })
-      setTimeout(() => setToastConstruccion(null), 2000)
+      addToastRef.current(
+        'Construccion exitosa',
+        `${data.construccion?.nombre || data.construccion} operativa en ${sistema?.nombre ?? 'el sistema'}`,
+        'exito'
+      )
     }
 
     const handleConstruccionError = (data) => {
-      console.log('=== CONSTRUCCIÓN ERROR ===');
-      console.log('Mensaje:', data.mensaje);
-      console.log('========================');
-      if (window.showAlert) {
-        window.showAlert(data.mensaje)
-      }
+      addToastRef.current(
+        'Construccion fallida',
+        data.mensaje || 'No se pudo completar la construccion.',
+        'peligro'
+      )
     }
 
     socket.on('construccion_error', handleConstruccionError)
@@ -1050,7 +1056,6 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
               nombreJugador={nombreJugador}
               onSistemaClick={(sis, posPopup, posToast) => {
                 setSistemaSeleccionado(sis);
-                posicionSistemaRef.current = posToast;
               }}
             />
           </div>
@@ -1083,8 +1088,6 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
               onCancelar={() => setModalFlotasVisible(false)}
             />
           )}
-
-          <ToastConstruccion toast={toastConstruccion} />
 
       </div>
     </div>

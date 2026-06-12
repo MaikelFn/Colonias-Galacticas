@@ -539,6 +539,19 @@
 
 .gp-modal-icon { font-size: 2rem; margin-bottom: 12px; }
 
+.gp-modal-icon-text {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  padding: 5px 12px;
+  border-radius: 3px;
+  display: inline-block;
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.4);
+  background: rgba(251, 146, 60, 0.07);
+  text-shadow: 0 0 12px rgba(251, 146, 60, 0.4);
+}
+
 .gp-modal-titulo {
   font-size: 1rem;
   color: #e2e8f0;
@@ -799,29 +812,75 @@
 }
 
 /* ─── Toast construcción ───────────────────────────────────────────────────── */
-.gp-toast-construccion {
+.gp-toast-construccion-wrapper {
   position: fixed;
+  bottom: 36px;
+  left: 50%;
   transform: translateX(-50%);
-  background: rgba(8, 13, 22, 0.92);
-  border: 1px solid rgba(74, 222, 128, 0.3);
-  border-radius: 6px;
-  padding: 7px 14px;
-  font-family: 'Courier New', monospace;
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
-  color: #4ade80;
+  z-index: 1100;
   pointer-events: none;
-  z-index: 300;
-  white-space: nowrap;
-  animation: gp-toast-fadeup 2s ease-out forwards;
+  animation: gp-construccion-in 2.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-@keyframes gp-toast-fadeup {
-  0%   { opacity: 0; transform: translateX(-50%) translateY(0px); }
-  15%  { opacity: 1; transform: translateX(-50%) translateY(0px); }
-  80%  { opacity: 1; transform: translateX(-50%) translateY(-16px); }
-  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+.gp-toast-construccion {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(6, 10, 20, 0.97);
+  border: 1px solid rgba(74, 222, 128, 0.5);
+  border-bottom: none;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.07em;
+  color: #4ade80;
+  white-space: nowrap;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 28px rgba(74, 222, 128, 0.2),
+    0 8px 32px rgba(0, 0, 0, 0.6);
 }
+
+.gp-toast-construccion::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #4ade80, transparent);
+  border-radius: 6px 6px 0 0;
+}
+
+.gp-toast-construccion-prefix {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  padding: 2px 6px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.gp-toast-construccion-sep {
+  color: rgba(74, 222, 128, 0.35);
+  font-size: 0.9rem;
+}
+
+.gp-toast-construccion-texto {
+  font-weight: 500;
+  color: #a7f3d0;
+}
+
+@keyframes gp-construccion-in {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.97); }
+  12%  { opacity: 1; transform: translateY(0)    scale(1); }
+  75%  { opacity: 1; transform: translateY(0)    scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.98); }
+}
+
 
 /* ─── Panel info sistema seleccionado (sidebar) ────────────────────────────── */
 .gp-frame-sistema-info {
@@ -980,19 +1039,29 @@
 .gp-sistema-info-prod-item {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 2px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.04);
   border-radius: 4px;
-  padding: 4px 2px;
+  padding: 5px 2px;
   font-size: 0.75rem;
 }
 
 .txt-minerales { color: #fb923c; font-weight: 700; }
 .txt-energia   { color: #facc15; font-weight: 700; }
 .txt-cristales { color: #38bdf8; font-weight: 700; }
+
+.gp-prod-label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+  display: block;
+  margin-bottom: 1px;
+}
 
 /* ─── Elementos del Sidebar Ajustados ────────────────────────────────────── */
 .gp-frame-sistema-info {
@@ -1076,43 +1145,98 @@
 /* ─── Toasts Galácticos ───────────────────────────────────────────────────── */
 .gp-toast-stack {
   position: fixed;
-  top: 72px;
-  right: 20px;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
   pointer-events: none;
+  width: max-content;
+  max-width: min(480px, 70vw);
 }
 
 .gp-toast {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 10px 14px;
+  gap: 5px;
+  padding: 13px 18px 14px 16px;
   border-radius: 6px;
-  border-left: 3px solid;
-  background: rgba(10, 15, 28, 0.95);
-  backdrop-filter: blur(8px);
-  min-width: 240px;
-  max-width: 320px;
-  animation: gp-toast-in 0.25s ease;
+  border: 1px solid;
+  border-bottom: none;
+  background: rgba(6, 10, 20, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: 100%;
+  min-width: 280px;
+  animation: gp-toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
 }
 
 @keyframes gp-toast-in {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
-.gp-toast-info    { border-color: #38bdf8; box-shadow: 0 0 12px rgba(56,189,248,0.2); }
-.gp-toast-exito   { border-color: #4ade80; box-shadow: 0 0 12px rgba(74,222,128,0.2); }
-.gp-toast-peligro { border-color: #f87171; box-shadow: 0 0 12px rgba(248,113,113,0.2); }
-.gp-toast-warn    { border-color: #fb923c; box-shadow: 0 0 12px rgba(251,146,60,0.2); }
+.gp-toast-info    {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 24px rgba(56,189,248,0.15), 0 8px 32px rgba(0,0,0,0.5);
+}
+.gp-toast-exito   {
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 24px rgba(74,222,128,0.15), 0 8px 32px rgba(0,0,0,0.5);
+}
+.gp-toast-peligro {
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 24px rgba(248,113,113,0.18), 0 8px 32px rgba(0,0,0,0.5);
+}
+.gp-toast-warn    {
+  border-color: rgba(251, 146, 60, 0.45);
+  box-shadow: 0 0 24px rgba(251,146,60,0.15), 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* Glow line en la parte superior */
+.gp-toast::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  border-radius: 6px 6px 0 0;
+}
+.gp-toast-info::before    { background: linear-gradient(90deg, transparent, #38bdf8, transparent); }
+.gp-toast-exito::before   { background: linear-gradient(90deg, transparent, #4ade80, transparent); }
+.gp-toast-peligro::before { background: linear-gradient(90deg, transparent, #f87171, transparent); }
+.gp-toast-warn::before    { background: linear-gradient(90deg, transparent, #fb923c, transparent); }
+
+.gp-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.gp-toast-icono {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-family: 'Courier New', monospace;
+}
+.gp-toast-info    .gp-toast-icono { color: #38bdf8; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); }
+.gp-toast-exito   .gp-toast-icono { color: #4ade80; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); }
+.gp-toast-peligro .gp-toast-icono { color: #f87171; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+.gp-toast-warn    .gp-toast-icono { color: #fb923c; background: rgba(251,146,60,0.1);  border: 1px solid rgba(251,146,60,0.3);  }
 
 .gp-toast-titulo {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   color: #e2e8f0;
 }
 .gp-toast-info    .gp-toast-titulo { color: #38bdf8; }
@@ -1120,11 +1244,41 @@
 .gp-toast-peligro .gp-toast-titulo { color: #f87171; }
 .gp-toast-warn    .gp-toast-titulo { color: #fb923c; }
 
-.gp-toast-info {
-  font-size: 0.68rem;
+.gp-toast-info-text {
+  font-size: 0.7rem;
   color: #94a3b8;
-  line-height: 1.4;
+  line-height: 1.5;
+  padding-left: 26px;
 }
+
+/* Barra de progreso animada en la base */
+.gp-toast-barra {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  animation: gp-toast-progress var(--gp-toast-duration, 3.5s) linear forwards;
+  border-radius: 0 0 6px 6px;
+}
+.gp-toast-info    .gp-toast-barra { background: #38bdf8; }
+.gp-toast-exito   .gp-toast-barra { background: #4ade80; }
+.gp-toast-peligro .gp-toast-barra { background: #f87171; }
+.gp-toast-warn    .gp-toast-barra { background: #fb923c; }
+
+@keyframes gp-toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* El .gp-toast-info clase también se usa para el texto — renombrar para no colisionar */
+.gp-toast > .gp-toast-info {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  padding-left: 26px;
+}
+
 
 /* ─── Modal Partida Finalizada ────────────────────────────────────────────── */
 .gp-modal-fin {
@@ -1144,8 +1298,28 @@
 }
 
 .gp-modal-fin-icono {
-  font-size: 2.5rem;
-  line-height: 1;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  padding: 6px 14px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.gp-modal-fin-icono-victoria {
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.08);
+  text-shadow: 0 0 16px rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.12);
+}
+
+.gp-modal-fin-icono-derrota {
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(148, 163, 184, 0.05);
 }
 
 .gp-modal-subtitulo {
