@@ -10,7 +10,7 @@
         "recursosIniciales": {
             "bajo": { "minerales": 100, "energia": 50, "cristales": 20 },
             "normal": { "minerales": 300, "energia": 150, "cristales": 50 },
-            "alto": { "minerales": 500, "energia": 250, "cristales": 100 }
+            "alto": { "minerales": 9999, "energia": 9999, "cristales": 9999 }
         }
     },
     "produccionPlanetas": {
