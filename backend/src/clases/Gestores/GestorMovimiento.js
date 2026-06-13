@@ -1,17 +1,47 @@
 const Astillero = require('../Construcciones/Astillero');
 const GestorCombate = require('./GestorCombate');
 
+/**
+ * Gestiona el movimiento de astilleros entre sistemas planetarios.
+ * Valida rutas, resuelve combates y controla la conquista de sistemas.
+ * @class
+ */
 class GestorMovimiento {
+    /**
+     * Inicializa el gestor de movimiento.
+     * @param {Galaxia} galaxia - Galaxia donde se mueven los astilleros.
+     */
     constructor(galaxia) {
+        /**
+         * Galaxia donde se mueven los astilleros.
+         * @type {Galaxia}
+         */
         this.galaxia = galaxia;
+        /**
+         * Gestor de combate para resolver conflictos.
+         * @type {GestorCombate}
+         */
         this.gestorCombate = new GestorCombate();
     }
 
+    /**
+     * Verifica si existe una ruta entre dos sistemas.
+     * @param {SistemaPlanetario} origen - Sistema de origen.
+     * @param {SistemaPlanetario} destino - Sistema de destino.
+     * @returns {boolean} Retorna true si existe una ruta válida.
+     */
     existeRuta(origen, destino) {
         if (origen === destino) return true;
         return this.encontrarCamino(origen, destino).length > 0;
     }
 
+    /**
+     * Encuentra un camino entre dos sistemas usando BFS.
+     * @param {SistemaPlanetario} origen - Sistema de origen.
+     * @param {SistemaPlanetario} destino - Sistema de destino.
+     * @param {Jugador} jugador - Jugador propietario (opcional, para filtrar sistemas).
+     * @returns {SistemaPlanetario[]} Array con el camino de sistemas.
+     */
     encontrarCamino(origen, destino, jugador) {
         if (origen === destino) return [origen];
 
@@ -40,6 +70,12 @@ class GestorMovimiento {
         return [];
     }
 
+    /**
+     * Valida si un astillero puede moverse a un sistema destino.
+     * @param {Astillero} astillero - Astillero a mover.
+     * @param {SistemaPlanetario} sistemaDestino - Sistema destino.
+     * @returns {Object} Objeto con validación y posibles errores.
+     */
     validarMovimiento(astillero, sistemaDestino) {
         const errores = [];
 
@@ -58,6 +94,13 @@ class GestorMovimiento {
         };
     }
 
+    /**
+     * Mueve astilleros a un sistema destino, resolviendo combates si es necesario.
+     * @param {Astillero[]} astilleros - Array de astilleros a mover.
+     * @param {SistemaPlanetario} sistemaDestino - Sistema destino.
+     * @param {Function} callbackEvento - Callback para emitir eventos.
+     * @returns {Object} Resultado del movimiento.
+     */
     moverAstilleros(astilleros, sistemaDestino, callbackEvento) {
         const errores = [];
 

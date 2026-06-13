@@ -3,11 +3,32 @@ const CentralInvestigacion = require('../Construcciones/CentralInvestigacion');
 const Fortaleza = require('../Construcciones/Fortaleza');
 const Astillero = require('../Construcciones/Astillero');
 
+/**
+ * Gestiona la construcción de edificios y unidades en la partida.
+ * Valida recursos, propietario y crea las construcciones correspondientes.
+ * @class
+ */
 class GestorConstruccion {
+    /**
+     * Inicializa el gestor de construcción.
+     * @param {Partida} partida - Partida donde se construye.
+     */
     constructor(partida) {
+        /**
+         * Partida donde se construye.
+         * @type {Partida}
+         */
         this.partida = partida;
     }
 
+    /**
+     * Construye una edificación o unidad en un sistema.
+     * @param {Object} datosConstruccion - Datos de la construcción.
+     * @param {string} datosConstruccion.nombreConstruccion - Nombre del tipo de construcción.
+     * @param {string} datosConstruccion.idSistema - ID del sistema donde se construye.
+     * @param {string} socketId - ID del socket del jugador.
+     * @returns {Object} Resultado de la operación.
+     */
     construir(datosConstruccion, socketId) {
         const { nombreConstruccion, idSistema } = datosConstruccion;
 
@@ -58,6 +79,13 @@ class GestorConstruccion {
         };
     }
 
+    /**
+     * Crea una instancia de construcción según el tipo.
+     * @param {string} nombreConstruccion - Nombre del tipo de construcción.
+     * @param {Jugador} jugador - Jugador propietario.
+     * @param {SistemaPlanetario} sistemaPlanetario - Sistema donde se construye.
+     * @returns {Construccion|null} Instancia de la construcción o null si no es válida.
+     */
     crearConstruccion(nombreConstruccion, jugador, sistemaPlanetario) {
         switch (nombreConstruccion) {
             case 'Mina':
@@ -73,6 +101,12 @@ class GestorConstruccion {
         }
     }
 
+    /**
+     * Verifica si el jugador tiene suficientes recursos para la construcción.
+     * @param {Jugador} jugador - Jugador a verificar.
+     * @param {Construccion} construccion - Construcción a construir.
+     * @returns {boolean} Retorna true si el jugador tiene suficientes recursos.
+     */
     verificarRecursos(jugador, construccion) {
         return jugador.recursos.suficiente(construccion.costo);
     }
