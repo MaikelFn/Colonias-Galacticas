@@ -35,7 +35,9 @@ app.use(express.json());
 const server = http.createServer(app);
 
 const io = new Server(server, {
-    cors: { origin: "*" }
+    cors: { origin: "*" },
+    pingTimeout: 60000,
+    pingInterval: 25000
 });
 
 const partidas = new Map();
@@ -43,8 +45,23 @@ const jugadores = new Map();
 const construccionesEnCurso = new Map();
 
 function eliminarJugadorDePartida(partida, socketId, io, idPartida) {
+    const jugadorEliminado = partida.jugadores.find(jugador => jugador.socketId === socketId);
+
     partida.jugadores = partida.jugadores.filter(jugador => jugador.socketId !== socketId);
     io.to(idPartida).emit("jugador_salio", { idPartida, jugadorId: socketId });
+
+    if (jugadorEliminado && partida.estado === 'iniciada') {
+        const sistemasDelJugador = partida.galaxia.sistemas.filter(sistema => sistema.propietario === jugadorEliminado);
+
+        for (const sistema of sistemasDelJugador) {
+            sistema.propietario = null;
+            sistema.instalaciones = [];
+            sistema.astillerosEstacionados = [];
+        }
+
+        const jugadoresInfo = crearInfoJugadores(partida.jugadores);
+        enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
+    }
 
     if (partida.jugadores.length === 0) {
         partidas.delete(idPartida);
@@ -419,13 +436,15 @@ io.on("connection", (socket) => {
         }
     });
 
-    socket.on("disconnect", () => {
+    socket.on("disconnect", (reason) => {
+        console.log(`Socket desconectado: ${socket.id}, razón: ${reason}`);
         jugadores.delete(socket.id);
 
         for (const [idPartida, partida] of partidas.entries()) {
             const estabaEnPartida = partida.jugadores.some(jugador => jugador.socketId === socket.id);
 
             if (estabaEnPartida) {
+                console.log(`Eliminando jugador ${socket.id} de partida ${idPartida}`);
                 eliminarJugadorDePartida(partida, socket.id, io, idPartida);
             }
         }

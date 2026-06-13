@@ -9,7 +9,7 @@ function validarPartidaExiste(partida, socket, eventoError) {
 }
 
 function validarJugadorEnPartida(partida, socketId, socket, eventoError) {
-    const jugador = partida.jugadores.find(j => j.socketId === socketId);
+    const jugador = partida.jugadores.find(jugador => jugador.socketId === socketId);
     if (!jugador) {
         socket.emit(eventoError, { mensaje: "Jugador no encontrado en la partida." });
         return null;
