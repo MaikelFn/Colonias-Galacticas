@@ -111,7 +111,7 @@ class GestorCombate {
         }
 
         // 3ro: fortalezas
-        while (restantes > 0) {
+        while (restantes >= 2) {
             const idx = sistema.instalaciones.findIndex(instalacion => instalacion.nombre === 'Fortaleza');
             if (idx === -1) break;
             sistema.instalaciones.splice(idx, 1);
