@@ -721,6 +721,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [modalFlotasVisible, setModalFlotasVisible] = useState(false)
   const [toasts, setToasts] = useState([])
   const [resultadoFinal, setResultadoFinal] = useState(null)
+  const [ultimaConstruccion, setUltimaConstruccion] = useState(0)
   const idPartidaRef = useRef(partida?.id)
   const sistemaSeleccionadoRef = useRef(null)
 
@@ -972,6 +973,11 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     if (accion.tipoConstruccion) {
       if (!sistemaSeleccionado) return
       if (sistemaSeleccionado.propietario !== nombreJugador) return
+
+      const ahora = Date.now()
+      if (ahora - ultimaConstruccion < 500) return
+
+      setUltimaConstruccion(ahora)
       socket.emit('construccion', {
         idPartida: idPartidaRef.current,
         nombreConstruccion: accion.tipoConstruccion,
