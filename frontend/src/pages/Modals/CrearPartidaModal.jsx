@@ -13,11 +13,11 @@ export default function CrearPartidaModal({
   setDuracion,
   recursos,
   setRecursos,
-  comandante
+  comandante,
+  addToast
 }) {
   const { emit, on } = useSocket()
   const [enviando, setEnviando] = useState(false)
-  const [error, setError] = useState(null)
   const [galaxiasDisponibles, setGalaxiasDisponibles] = useState([])
   const [cargandoGalaxias, setCargandoGalaxias] = useState(true)
   const [recursosConfig, setRecursosConfig] = useState({})
@@ -52,12 +52,13 @@ export default function CrearPartidaModal({
 
   const handleCrearPartida = () => {
     if (!nombrePartida.trim()) {
-      setError('Ingresa un nombre para la partida')
+      if (addToast) {
+        addToast('Error de validación', 'Ingresa un nombre para la partida', 'peligro')
+      }
       return
     }
 
     setEnviando(true)
-    setError(null)
 
     const galaxiaSeleccionada = galaxiasDisponibles.find(g => g.id === galaxia)
     const nombreGalaxia = galaxiaSeleccionada ? galaxiaSeleccionada.nombre : galaxia
@@ -170,8 +171,6 @@ export default function CrearPartidaModal({
               )}
             </div>
           </div>
-
-          {error && <p className="gc-error" style={{ color: '#ff6b6b', marginTop: '10px' }}>{error}</p>}
         </div>
 
         <div className="gc-actions-row2">

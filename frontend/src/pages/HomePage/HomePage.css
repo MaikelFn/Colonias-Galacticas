@@ -549,3 +549,128 @@
   .gc-card { padding: clamp(20px, 3vw, 24px) clamp(16px, 2.5vw, 20px); }
   .gc-main { gap: clamp(24px, 3vw, 32px); padding: clamp(16px, 2vw, 24px); }
 }
+
+/* ─── Toasts Galácticos ───────────────────────────────────────────────────── */
+.gp-toast-stack {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  width: max-content;
+  max-width: min(480px, 70vw);
+}
+
+.gp-toast {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px 18px 14px 16px;
+  border-radius: 6px;
+  border: 1px solid;
+  border-bottom: none;
+  background: rgba(6, 10, 20, 0.97);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  width: 100%;
+  min-width: 280px;
+  animation: gp-toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+@keyframes gp-toast-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+
+.gp-toast-info    {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 24px rgba(56,189,248,0.15), 0 8px 32px rgba(0,0,0,0.5);
+}
+.gp-toast-exito   {
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 24px rgba(74,222,128,0.15), 0 8px 32px rgba(0,0,0,0.5);
+}
+.gp-toast-peligro {
+  border-color: rgba(248, 113, 113, 0.45);
+  box-shadow: 0 0 24px rgba(248,113,113,0.18), 0 8px 32px rgba(0,0,0,0.5);
+}
+.gp-toast-warn    {
+  border-color: rgba(251, 146, 60, 0.45);
+  box-shadow: 0 0 24px rgba(251,146,60,0.15), 0 8px 32px rgba(0,0,0,0.5);
+}
+
+/* Glow line en la parte superior */
+.gp-toast::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  border-radius: 6px 6px 0 0;
+}
+.gp-toast-info::before    { background: linear-gradient(90deg, transparent, #38bdf8, transparent); }
+.gp-toast-exito::before   { background: linear-gradient(90deg, transparent, #4ade80, transparent); }
+.gp-toast-peligro::before { background: linear-gradient(90deg, transparent, #f87171, transparent); }
+.gp-toast-warn::before    { background: linear-gradient(90deg, transparent, #fb923c, transparent); }
+
+.gp-toast-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.gp-toast-icono {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-family: 'Courier New', monospace;
+}
+.gp-toast-info    .gp-toast-icono { color: #38bdf8; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); }
+.gp-toast-exito   .gp-toast-icono { color: #4ade80; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); }
+.gp-toast-peligro .gp-toast-icono { color: #f87171; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); }
+.gp-toast-warn    .gp-toast-icono { color: #fb923c; background: rgba(251,146,60,0.1);  border: 1px solid rgba(251,146,60,0.3);  }
+
+.gp-toast-titulo {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+}
+.gp-toast-info    .gp-toast-titulo { color: #38bdf8; }
+.gp-toast-exito   .gp-toast-titulo { color: #4ade80; }
+.gp-toast-peligro .gp-toast-titulo { color: #f87171; }
+.gp-toast-warn    .gp-toast-titulo { color: #fb923c; }
+
+.gp-toast-info {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  padding-left: 26px;
+}
+
+/* Barra de progreso animada en la base */
+.gp-toast-barra {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  animation: gp-toast-progress var(--gp-toast-duration, 3.5s) linear forwards;
+  border-radius: 0 0 6px 6px;
+}
+
+@keyframes gp-toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}

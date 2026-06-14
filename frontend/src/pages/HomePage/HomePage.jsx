@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import './HomePage.css'
 import { useSocket } from '../../hooks/useSocket'
 import CrearPartidaModal from '../Modals/CrearPartidaModal'
@@ -14,6 +14,35 @@ const STARS = Array.from({ length: 150 }, (_, i) => ({
   duration: Math.random() * 3 + 2.5,
   brightness: Math.random() * 0.7 + 0.3,
 }))
+
+const TOAST_ICONS = {
+  info:    '///',
+  exito:   '+++',
+  peligro: '!!!',
+  warn:    '---',
+}
+
+function ToastGalactico({ toasts }) {
+  if (!toasts || toasts.length === 0) return null
+  return (
+    <div className="gp-toast-stack">
+      {toasts.map(t => (
+        <div
+          key={t.id}
+          className={`gp-toast gp-toast-${t.tipo}`}
+          style={{ '--gp-toast-duration': `${(t.duracion ?? 3500) / 1000}s` }}
+        >
+          <div className="gp-toast-header">
+            <span className="gp-toast-icono">{TOAST_ICONS[t.tipo] ?? '◈'}</span>
+            <span className="gp-toast-titulo">{t.titulo}</span>
+          </div>
+          {t.info && <span className="gp-toast-info">{t.info}</span>}
+          <div className="gp-toast-barra" />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 function Star({ x, y, size, delay, duration, brightness }) {
   return (
@@ -34,13 +63,24 @@ function Star({ x, y, size, delay, duration, brightness }) {
 
 // onEntrarLobby(partida, nombreJugador) — callback para navegar a sala de espera
 function HomePage({ onEntrarLobby }) {
-  const { emit, on, isConnected } = useSocket()
+  const { emit, on, isConnected } = useSocket({
+    onError: (mensaje) => addToastRef.current('Error de conexión', mensaje, 'peligro')
+  })
 
   const [usuario, setUsuario] = useState('')
   const [mounted, setMounted] = useState(false)
   const [hoveredBtn, setHoveredBtn] = useState(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [activeModal, setActiveModal] = useState(null)
+  const [toasts, setToasts] = useState([])
+
+  const addToast = useCallback((titulo, info, tipo = 'info', duracion = 3500) => {
+    const id = Date.now() + Math.random()
+    setToasts(prev => [...prev, { id, titulo, info, tipo, duracion }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), duracion)
+  }, [])
+  const addToastRef = useRef(addToast)
+  useEffect(() => { addToastRef.current = addToast }, [addToast])
 
   const [nombrePartida, setNombrePartida] = useState('')
   const [galaxia, setGalaxia] = useState('orion')
@@ -69,19 +109,7 @@ function HomePage({ onEntrarLobby }) {
   // Escuchar errores de crear partida
   useEffect(() => {
     const unsub = on('error_crear_partida', (data) => {
-      if (window.showAlert) {
-        window.showAlert(data.mensaje)
-      }
-    })
-    return unsub
-  }, [on])
-
-  // Escuchar errores de unirse a partida
-  useEffect(() => {
-    const unsub = on('error_unirse', (data) => {
-      if (window.showAlert) {
-        window.showAlert(data.mensaje)
-      }
+      addToastRef.current('Error al crear partida', data.mensaje, 'peligro')
     })
     return unsub
   }, [on])
@@ -223,6 +251,7 @@ function HomePage({ onEntrarLobby }) {
           recursos={recursos}
           setRecursos={setRecursos}
           comandante={usuario}
+          addToast={addToast}
         />
       )}
 
@@ -231,12 +260,15 @@ function HomePage({ onEntrarLobby }) {
           onClose={() => setActiveModal(null)}
           comandante={usuario}
           onUnirse={handleUnirsePartida}
+          addToast={addToast}
         />
       )}
 
       {activeModal === 'ranking' && (
         <RankingModal onClose={() => setActiveModal(null)} />
       )}
+
+      <ToastGalactico toasts={toasts} />
     </div>
   )
 }

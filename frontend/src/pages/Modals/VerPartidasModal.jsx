@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSocket } from '../../hooks/useSocket'
 
-export default function VerPartidasModal({ onClose, comandante, onUnirse }) {
+export default function VerPartidasModal({ onClose, comandante, onUnirse, addToast }) {
   const { emit, on } = useSocket()
   const [partidas, setPartidas] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -27,7 +27,9 @@ export default function VerPartidasModal({ onClose, comandante, onUnirse }) {
 
     const unsub3 = on('error_unirse', (error) => {
       setUniendose(null)
-      alert(error.mensaje)
+      if (addToast) {
+        addToast('Error al unirse', error.mensaje, 'peligro')
+      }
     })
 
     return () => { unsub1(); unsub2(); unsub3() }
@@ -35,7 +37,9 @@ export default function VerPartidasModal({ onClose, comandante, onUnirse }) {
 
   const handleUnirse = (partida) => {
     if (!comandante) {
-      alert('Error: Comandante no identificado')
+      if (addToast) {
+        addToast('Error', 'Comandante no identificado', 'peligro')
+      }
       return
     }
 
