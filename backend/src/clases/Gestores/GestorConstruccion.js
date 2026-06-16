@@ -34,27 +34,27 @@ class GestorConstruccion {
 
         const jugador = this.partida.obtenerJugadorPorSocketId(socketId);
         if (!jugador) {
-            return { success: false, error: "Jugador no encontrado en la partida." };
+            return { success: false, error: "Comandante no detectado en este sector." };
         }
 
         const sistemaPlanetario = this.partida.galaxia.obtenerSistemaPorId(idSistema);
         if (!sistemaPlanetario) {
-            return { success: false, error: "Sistema no encontrado." };
+            return { success: false, error: "Sistema estelar no encontrado en las coordenadas especificadas." };
         }
 
         if (sistemaPlanetario.propietario !== jugador) {
-            return { success: false, error: "No eres el propietario de este sistema." };
+            return { success: false, error: "Este sistema está bajo control de otro imperio." };
         }
 
         const nuevaConstruccion = this.crearConstruccion(nombreConstruccion, jugador, sistemaPlanetario);
         if (!nuevaConstruccion) {
-            return { success: false, error: "Tipo de construcción no válido." };
+            return { success: false, error: "Tipo de instalación no reconocido por los ingenieros." };
         }
 
         if (!this.verificarRecursos(jugador, nuevaConstruccion)) {
             return { 
                 success: false, 
-                error: "Recursos insuficientes.",
+                error: "Recursos insuficientes para esta instalación.",
                 costo: nuevaConstruccion.costo.toJSON(),
                 recursosActuales: jugador.recursos.toJSON()
             };
@@ -70,7 +70,7 @@ class GestorConstruccion {
 
         return {
             success: true,
-            mensaje: `${nombreConstruccion} construida exitosamente en ${sistemaPlanetario.nombre}.`,
+            mensaje: `${nombreConstruccion} establecida en ${sistemaPlanetario.nombre}.`,
             construccion: nuevaConstruccion.toJSON(),
             sistema: sistemaPlanetario.id,
             recursosRestantes: jugador.recursos.toJSON(),

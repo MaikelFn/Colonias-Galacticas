@@ -160,7 +160,7 @@ io.on("connection", (socket) => {
             const ranking = await obtenerRanking();
             socket.emit("ranking_disponible", ranking);
         } catch (error) {
-            socket.emit("error_ranking", { mensaje: "Error al obtener el ranking" });
+            socket.emit("error_ranking", { mensaje: "No se pudieron recuperar los registros de comandantes galácticos." });
         }
     });
 
@@ -187,8 +187,8 @@ io.on("connection", (socket) => {
             (partidaCerrada) => {
                 io.to(idPartida).emit("partida_cerrada", {
                     idPartida: partidaCerrada.id,
-                    razon: "Tiempo de espera agotado. No se alcanzaron los jugadores mínimos.",
-                    mensaje: "La partida se cerró porque se agotó el tiempo de espera de la sala"
+                    razon: "Tiempo de espera agotado. No se alcanzaron los comandantes mínimos.",
+                    mensaje: "El sector se cerró por falta de comandantes suficientes."
                 });
                 partidas.delete(idPartida);
             },
@@ -303,7 +303,7 @@ io.on("connection", (socket) => {
                 }
             }, 1000);
         } else {
-            socket.emit("error_inicio", { mensaje: "No se pudo iniciar la partida." });
+            socket.emit("error_inicio", { mensaje: "No se pudo iniciar las hostilidades en el sector." });
         }
     });
 
@@ -321,7 +321,7 @@ io.on("connection", (socket) => {
 
         if (construccionesEnCurso.has(socket.id)) {
             socket.emit("construccion_error", {
-                mensaje: "Ya tienes una construcción en proceso. Espera la confirmación."
+                mensaje: "Ya tienes una construcción en curso. Espera la confirmación de los ingenieros."
             });
             return;
         }
@@ -419,7 +419,7 @@ io.on("connection", (socket) => {
 
         if (resultado.exitoso) {
             socket.emit("mover_flotas_exito", {
-                mensaje: "Flotas movidas exitosamente",
+                mensaje: "Flotas desplegadas exitosamente",
                 origen: sistemaOrigen.nombre,
                 destino: sistemaDestino.nombre,
                 cantidad
@@ -431,7 +431,7 @@ io.on("connection", (socket) => {
             partida.chequearVictoriaPorConquista();
         } else {
             socket.emit("mover_flotas_error", {
-                mensaje: "Error al mover flotas",
+                mensaje: "Error al desplegar flotas al sistema destino.",
             });
         }
     });

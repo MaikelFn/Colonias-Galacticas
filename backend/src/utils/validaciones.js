@@ -2,7 +2,7 @@
 
 function validarPartidaExiste(partida, socket, eventoError) {
     if (!partida) {
-        socket.emit(eventoError, { mensaje: "La partida no existe." });
+        socket.emit(eventoError, { mensaje: "Sector no detectado en los registros galácticos." });
         return false;
     }
     return true;
@@ -11,7 +11,7 @@ function validarPartidaExiste(partida, socket, eventoError) {
 function validarJugadorEnPartida(partida, socketId, socket, eventoError) {
     const jugador = partida.jugadores.find(jugador => jugador.socketId === socketId);
     if (!jugador) {
-        socket.emit(eventoError, { mensaje: "Jugador no encontrado en la partida." });
+        socket.emit(eventoError, { mensaje: "Comandante no detectado en este sector." });
         return null;
     }
     return jugador;
@@ -19,7 +19,7 @@ function validarJugadorEnPartida(partida, socketId, socket, eventoError) {
 
 function validarSistemaExiste(sistema, socket, eventoError) {
     if (!sistema) {
-        socket.emit(eventoError, { mensaje: "Sistema no encontrado." });
+        socket.emit(eventoError, { mensaje: "Sistema estelar no encontrado en las coordenadas especificadas." });
         return false;
     }
     return true;
@@ -27,7 +27,7 @@ function validarSistemaExiste(sistema, socket, eventoError) {
 
 function validarPropietarioSistema(sistema, jugador, socket, eventoError) {
     if (sistema.propietario !== jugador) {
-        socket.emit(eventoError, { mensaje: "No eres el propietario del sistema." });
+        socket.emit(eventoError, { mensaje: "Este sistema está bajo control de otro imperio." });
         return false;
     }
     return true;
@@ -35,7 +35,7 @@ function validarPropietarioSistema(sistema, jugador, socket, eventoError) {
 
 function validarFlotasSuficientes(flotasDisponibles, cantidad, socket, eventoError) {
     if (cantidad > flotasDisponibles) {
-        socket.emit(eventoError, { mensaje: `No tienes suficientes flotas. Disponibles: ${flotasDisponibles}` });
+        socket.emit(eventoError, { mensaje: `Flotas insuficientes para la misión. Disponibles: ${flotasDisponibles}` });
         return false;
     }
     return true;
@@ -44,10 +44,10 @@ function validarFlotasSuficientes(flotasDisponibles, cantidad, socket, eventoErr
 function validarEstadoPartida(partida, estadoEsperado, socket, eventoError) {
     if (partida.estado !== estadoEsperado) {
         const mensajes = {
-            'esperando': 'La partida ya no está disponible.',
-            'iniciada': 'La partida ya está iniciada.'
+            'esperando': 'Este sector ya no acepta nuevas inscripciones.',
+            'iniciada': 'Las hostilidades ya han comenzado en este sector.'
         };
-        socket.emit(eventoError, { mensaje: mensajes[estadoEsperado] || 'Estado de partida inválido.' });
+        socket.emit(eventoError, { mensaje: mensajes[estadoEsperado] || 'Estado del sector desconocido.' });
         return false;
     }
     return true;
@@ -55,7 +55,7 @@ function validarEstadoPartida(partida, estadoEsperado, socket, eventoError) {
 
 function validarPartidaNoLlena(partida, socket, eventoError) {
     if (partida.jugadores.length >= partida.maxJugadores) {
-        socket.emit(eventoError, { mensaje: "La partida ya está llena." });
+        socket.emit(eventoError, { mensaje: "Capacidad máxima del sector alcanzada." });
         return false;
     }
     return true;
@@ -64,7 +64,7 @@ function validarPartidaNoLlena(partida, socket, eventoError) {
 function validarNombreJugadorUnico(partida, nombreJugador, socket, eventoError) {
     const nombreDuplicado = partida.jugadores.some(jugador => jugador.nickname === nombreJugador);
     if (nombreDuplicado) {
-        socket.emit(eventoError, { mensaje: "Ya existe un jugador con ese nombre en la partida." });
+        socket.emit(eventoError, { mensaje: "Un comandante con ese nombre ya opera en este sector." });
         return false;
     }
     return true;
@@ -73,7 +73,7 @@ function validarNombreJugadorUnico(partida, nombreJugador, socket, eventoError) 
 function validarJugadorRegistrado(jugadores, socketId, socket, eventoError) {
     const jugador = jugadores.get(socketId);
     if (!jugador) {
-        socket.emit(eventoError, { mensaje: "Jugador no registrado" });
+        socket.emit(eventoError, { mensaje: "Comandante no registrado en la red galáctica." });
         return null;
     }
     return jugador;
@@ -82,7 +82,7 @@ function validarJugadorRegistrado(jugadores, socketId, socket, eventoError) {
 function validarNombrePartidaUnico(partidas, nombre, socket, eventoError) {
     const nombreDuplicado = Array.from(partidas.values()).some(partida => partida.nombre === nombre);
     if (nombreDuplicado) {
-        socket.emit(eventoError, { mensaje: "Ya existe una partida con ese nombre. Por favor, elige otro nombre." });
+        socket.emit(eventoError, { mensaje: "Un sector con ese nombre ya existe en la galaxia. Elige otro designación." });
         return false;
     }
     return true;
@@ -90,7 +90,7 @@ function validarNombrePartidaUnico(partidas, nombre, socket, eventoError) {
 
 function validarGalaxiaCargada(galaxia, socket, eventoError) {
     if (!galaxia) {
-        socket.emit(eventoError, { mensaje: "No se pudo cargar la galaxia seleccionada" });
+        socket.emit(eventoError, { mensaje: "No se pudieron cargar los datos de la galaxia seleccionada." });
         return false;
     }
     return true;
@@ -98,7 +98,7 @@ function validarGalaxiaCargada(galaxia, socket, eventoError) {
 
 function validarJugadoresMinimos(partida, socket, eventoError) {
     if (partida.jugadores.length < partida.minJugadores) {
-        socket.emit(eventoError, { mensaje: `Se necesitan al menos ${partida.minJugadores} jugadores para iniciar.` });
+        socket.emit(eventoError, { mensaje: `Se requieren al menos ${partida.minJugadores} comandantes para iniciar las hostilidades.` });
         return false;
     }
     return true;

@@ -1367,6 +1367,132 @@
   background: rgba(45, 212, 191, 0.06);
 }
 
+/* ─── Responsive Design ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .gp-layout {
+    grid-template-columns: 280px 1fr 280px;
+  }
+  .gp-sidebar-left, .gp-sidebar-right {
+    min-width: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .gp-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 8px;
+  }
+
+  .gp-sidebar-left {
+    order: 3;
+    grid-row: 3;
+    border-right: none;
+    border-top: 1px solid rgba(45, 212, 191, 0.2);
+    padding: 12px;
+  }
+
+  .gp-frame-mapa {
+    order: 1;
+    grid-row: 1;
+    min-height: 400px;
+  }
+
+  .gp-right-col {
+    order: 2;
+    grid-row: 2;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gp-frame-chat {
+    min-height: 200px;
+  }
+
+  .gp-frame-jugadores {
+    min-height: 150px;
+  }
+
+  .gp-sidebar-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .gp-jugadores-btn, .gp-salir-btn {
+    width: 100%;
+  }
+
+  .gp-menu-construcciones {
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .gp-modal-overlay {
+    padding: 10px;
+  }
+
+  .gp-modal-content {
+    max-width: 95vw;
+    margin: 10px;
+  }
+}
+
+@media (max-width: 520px) {
+  .gp-frame-header {
+    padding: 10px;
+  }
+
+  .gp-frame-title {
+    font-size: 14px;
+  }
+
+  .gp-frame-body {
+    padding: 10px;
+  }
+
+  .gp-sistema-info {
+    font-size: 12px;
+  }
+
+  .gp-jugador-item {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+  .gp-chat-input {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .gp-chat-send-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .gp-construccion-item {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .gp-construccion-nombre {
+    font-size: 12px;
+  }
+
+  .gp-construccion-costos {
+    font-size: 10px;
+  }
+
+  .gp-toast-stack {
+    max-width: 90vw;
+  }
+
+  .gp-toast {
+    min-width: 200px;
+    padding: 10px 12px 11px 10px;
+  }
+}
+
 .gp-modal-fin-pos     { color: #64748b; min-width: 28px; font-weight: 700; }
 .gp-modal-fin-nombre  { flex: 1; color: #e2e8f0; font-weight: 600; }
 .gp-modal-fin-sistemas { color: #94a3b8; min-width: 50px; }

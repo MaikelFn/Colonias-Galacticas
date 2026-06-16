@@ -539,15 +539,48 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── Responsive Design ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .gc-title-line1 { font-size: clamp(24px, 6vw, 48px); }
+  .gc-title-line2 { font-size: clamp(14px, 3vw, 28px); }
+  .gc-card { padding: clamp(18px, 2.5vw, 28px) clamp(16px, 2vw, 24px); }
+}
+
 @media (max-width: 768px) {
+  .gc-root { padding: 10px; }
   .gc-card { gap: clamp(20px, 3vw, 28px); }
   .gc-header { gap: clamp(12px, 2vw, 16px); }
   .gc-modal-grid-2 { grid-template-columns: 1fr; gap: 12px; }
+  .gc-actions-row2 { grid-template-columns: 1fr; }
+  .gc-footer { flex-direction: column; gap: 8px; text-align: center; }
+  .gc-modal-content { max-width: 95vw; margin: 10px; }
+  .gc-modal-wide { max-width: 95vw; }
 }
 
 @media (max-width: 520px) {
   .gc-card { padding: clamp(20px, 3vw, 24px) clamp(16px, 2.5vw, 20px); }
   .gc-main { gap: clamp(24px, 3vw, 32px); padding: clamp(16px, 2vw, 24px); }
+  .gc-title-line1 { font-size: clamp(20px, 5vw, 36px); }
+  .gc-title-line2 { font-size: clamp(12px, 2.5vw, 20px); }
+  .gc-subtitle { font-size: clamp(9px, 1.2vw, 11px); }
+  .gc-btn { padding: clamp(8px, 1.4vw, 11px) clamp(10px, 1.8vw, 14px); font-size: clamp(10px, 1.2vw, 12px); }
+  .gc-input { padding: clamp(8px, 1.2vw, 11px) clamp(8px, 1.2vw, 11px) clamp(8px, 1.2vw, 11px) clamp(10px, 1.8vw, 14px); font-size: clamp(11px, 1.4vw, 13px); }
+  .gc-table { font-size: 11px; }
+  .gc-table th, .gc-table td { padding: 8px 6px; }
+  .gc-modal-title { font-size: 16px; }
+  .gp-toast-stack { max-width: 90vw; }
+  .gp-toast { min-width: 200px; padding: 10px 12px 11px 10px; }
+}
+
+@media (max-width: 380px) {
+  .gc-title-line1 { font-size: clamp(18px, 5vw, 28px); }
+  .gc-title-line2 { font-size: clamp(10px, 2.5vw, 16px); }
+  .gc-actions { gap: clamp(8px, 1.2vw, 10px); }
+  .gc-btn { padding: 8px 12px; font-size: 10px; }
+  .gc-modal-header { padding-bottom: 8px; }
+  .gc-modal-body { gap: 12px; }
+  .gc-table-wrapper { overflow-x: auto; }
+  .gc-table { min-width: 500px; }
 }
 
 /* ─── Toasts Galácticos ───────────────────────────────────────────────────── */

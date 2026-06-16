@@ -318,8 +318,8 @@ class Partida {
 
         this.io.to(this.id).emit('partida_cerrada', {
             idPartida: this.id,
-            razon: 'Todos los demás jugadores abandonaron la partida',
-            mensaje: 'La partida se cerró porque todos los demás jugadores abandonaron'
+            razon: 'Todos los demás comandantes abandonaron el sector',
+            mensaje: 'El sector se cerró porque todos los demás comandantes abandonaron'
         });
 
         if (this.onDestruirPartida) {
