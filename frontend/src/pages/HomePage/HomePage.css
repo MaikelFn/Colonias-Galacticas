@@ -462,9 +462,29 @@
 /* Tablas Galácticas (RF-05 y RF-23) */
 .gc-table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 400px;
   border: 1px solid rgba(52, 211, 153, 0.2);
   border-radius: 8px;
   background: rgba(4, 11, 20, 0.4);
+}
+
+.gc-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.gc-table-wrapper::-webkit-scrollbar-track {
+  background: rgba(4, 11, 20, 0.3);
+}
+
+.gc-table-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(52, 211, 153, 0.3);
+  border-radius: 4px;
+}
+
+.gc-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.5);
 }
 
 .gc-table {
