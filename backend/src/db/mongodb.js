@@ -13,6 +13,10 @@ if (process.env.NODE_ENV === "development") {
     clientPromise = new MongoClient(uri).connect()
 }
 
+/**
+ * Obtiene la instancia de la base de datos MongoDB
+ * @returns {Promise<Db>} Instancia de la base de datos "colonias-galacticas"
+ */
 async function getDb() {
     const client = await clientPromise
     return client.db("colonias-galacticas")

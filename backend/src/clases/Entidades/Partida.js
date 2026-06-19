@@ -26,14 +26,13 @@ class Partida {
      * @param {number} maxJugadores - Máximo número de jugadores permitidos.
      * @param {number} duracionMaximaSeg - Duración máxima de la partida en segundos.
      * @param {string} dificultadRecursos - Dificultad de recursos ('facil', 'normal', 'dificil').
-     * @param {number|null} tiempoEsperaSeg - Tiempo de espera para iniciar la partida en segundos.
      * @param {Function} onCierrePorTiempo - Callback cuando la partida se cierra por tiempo de espera.
      * @param {Function} onProduccionRecursos - Callback cuando se producen recursos.
      * @param {Object} io - Instancia de Socket.IO para comunicación.
      * @param {Function} onFinPartida - Callback cuando finaliza la partida.
      * @param {Function} onDestruirPartida - Callback cuando se destruye la partida.
      */
-    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, tiempoEsperaSeg = null, onCierrePorTiempo, onProduccionRecursos, io, onFinPartida, onDestruirPartida) {
+    constructor(id, nombre, galaxia, maxJugadores, duracionMaximaSeg, dificultadRecursos, onCierrePorTiempo, onProduccionRecursos, io, onFinPartida, onDestruirPartida) {
         /**
          * Identificador único de la partida.
          * @type {string}
@@ -74,7 +73,7 @@ class Partida {
          * Tiempo de espera para iniciar la partida en segundos.
          * @type {number}
          */
-        this.tiempoEsperaSeg = tiempoEsperaSeg !== null ? tiempoEsperaSeg : config.get('juego.tiempoEsperaPartidaSeg');
+        this.tiempoEsperaSeg = config.get('juego.tiempoEsperaPartidaSeg');
 
         /**
          * Mínimo número de jugadores para iniciar.
@@ -184,6 +183,7 @@ class Partida {
         if (this.estado !== EstadoPartida.ESPERANDO) return false;
         this.estado = EstadoPartida.INICIADA;
         this.fechaInicio = Date.now();
+        this.gestorTemporizadores.detenerTemporizadorEspera();
         this.asignarPlanetasBase();
         this.iniciarProduccion();
         if (this.duracionMaximaSeg > 0) {
@@ -430,9 +430,7 @@ class Partida {
                 if (this.estado === EstadoPartida.ESPERANDO) {
                     this.estado = EstadoPartida.FINALIZADA;
                     this.detenerTemporizadores();
-                    if (this.onCierrePorTiempo) {
-                        this.onCierrePorTiempo(this);
-                    }
+                    this.onCierrePorTiempo(this);
                 }
             });
         }

@@ -13,8 +13,12 @@ const { Partida } = require('./clases/Entidades/Partida');
 const GestorConstruccion = require('./clases/Gestores/GestorConstruccion');
 const GestorMovimiento = require('./clases/Gestores/GestorMovimiento');
 const { validarPartidaExiste, validarJugadorEnPartida, validarSistemaExiste, validarPropietarioSistema, validarFlotasSuficientes, validarEstadoPartida, validarPartidaNoLlena, validarNombreJugadorUnico, validarJugadorRegistrado, validarNombrePartidaUnico, validarGalaxiaCargada, validarJugadoresMinimos } = require('./utils/validaciones');
-const { crearInfoJugadores, crearInfoGalaxia, enviarActualizacionClientes, crearInfoPartida, crearInfoJugadoresIniciada, crearInfoGalaxiaIniciada, limpiarTimerPartida } = require('./utils/helpers');
+const { crearInfoJugadores, crearInfoGalaxia, enviarActualizacionClientes, crearInfoPartida, crearInfoJugadoresIniciada, crearInfoGalaxiaIniciada, crearInfoPartidaIniciada, limpiarTimerPartida } = require('./utils/helpers');
 
+/**
+ * Carga la configuración del juego desde el archivo Configuracion.json
+ * @returns {Object|null} Objeto de configuración o null si hay error
+ */
 function cargarConfiguracion() {
     const rutaConfig = path.join(__dirname, 'data', 'Configuracion.json');
     try {
@@ -44,11 +48,17 @@ const partidas = new Map();
 const jugadores = new Map();
 const construccionesEnCurso = new Map();
 
-function eliminarJugadorDePartida(partida, socketId, io, idPartida) {
+/**
+ * Elimina un jugador de una partida y maneja las consecuencias
+ * @param {Object} partida - Objeto Partida
+ * @param {string} socketId - ID del socket del jugador a eliminar
+ * @param {Object} io - Instancia de Socket.IO
+ */
+function eliminarJugadorDePartida(partida, socketId, io) {
     const jugadorEliminado = partida.jugadores.find(jugador => jugador.socketId === socketId);
 
     partida.jugadores = partida.jugadores.filter(jugador => jugador.socketId !== socketId);
-    io.to(idPartida).emit("jugador_salio", { idPartida, jugadorId: socketId });
+    io.to(partida.id).emit("jugador_salio", { idPartida: partida.id, jugadorId: socketId });
 
     if (jugadorEliminado && partida.estado === 'iniciada') {
         const sistemasDelJugador = partida.galaxia.sistemas.filter(sistema => sistema.propietario === jugadorEliminado);
@@ -59,18 +69,21 @@ function eliminarJugadorDePartida(partida, socketId, io, idPartida) {
             sistema.astillerosEstacionados = [];
         }
 
-        const jugadoresInfo = crearInfoJugadores(partida.jugadores);
-        enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
+        enviarActualizacionClientes(io, partida);
     }
 
     if (partida.jugadores.length === 0) {
-        partidas.delete(idPartida);
+        partidas.delete(partida.id);
         limpiarTimerPartida(partida);
     } else if (partida.estado === 'iniciada' && partida.jugadores.length === 1) {
         partida.finalizarPorEliminacion();
     }
 }
 
+/**
+ * Carga todas las galaxias disponibles desde el directorio de datos
+ * @returns {Array} Array de galaxias que cumplen los requisitos mínimos
+ */
 function cargarGalaxias() {
     const galaxiasDir = path.join(__dirname, 'data', 'Galaxias');
     const galaxias = [];
@@ -106,6 +119,11 @@ function cargarGalaxias() {
 
 const galaxiasDisponibles = cargarGalaxias();
 
+/**
+ * Carga una galaxia específica desde su archivo JSON
+ * @param {string} idGalaxia - ID de la galaxia a cargar
+ * @returns {Object|null} Objeto Galaxia o null si hay error
+ */
 function cargarGalaxiaDesdeArchivo(idGalaxia) {
     const galaxiasDir = path.join(__dirname, 'data', 'Galaxias');
     const rutaArchivo = path.join(galaxiasDir, `${idGalaxia}.json`);
@@ -142,16 +160,7 @@ io.on("connection", (socket) => {
         const disponibles = Array.from(partidas.values()).filter(partida =>
             partida.estado === 'esperando' && partida.jugadores.length < partida.maxJugadores
         );
-        const partidasInfo = disponibles.map(partida => ({
-            id: partida.id,
-            nombre: partida.nombre,
-            galaxia: partida.galaxia.nombre,
-            maxJugadores: partida.maxJugadores,
-            duracion: Math.floor(partida.duracionMaximaSeg / 60),
-            recursos: partida.dificultadRecursos,
-            estado: partida.estado,
-            jugadores: partida.jugadores.map(jugador => ({ id: jugador.socketId, nombre: jugador.nickname }))
-        }));
+        const partidasInfo = disponibles.map(partida => crearInfoPartida(partida));
         socket.emit("partidas_disponibles", partidasInfo);
     });
 
@@ -183,7 +192,7 @@ io.on("connection", (socket) => {
             maxJugadores,
             duracion * 60,
             recursos,
-            null,
+            // Callback cuando se cierra la partida por tiempo de espera agotado
             (partidaCerrada) => {
                 io.to(idPartida).emit("partida_cerrada", {
                     idPartida: partidaCerrada.id,
@@ -192,17 +201,19 @@ io.on("connection", (socket) => {
                 });
                 partidas.delete(idPartida);
             },
+            // Callback para enviar actualizaciones a los clientes cuando cambia el estado de la partida
             (partida) => {
-                const jugadoresInfo = crearInfoJugadores(partida.jugadores);
-                enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
+                enviarActualizacionClientes(io, partida);
             },
             io,
+            // Callback para guardar los datos finales de la partida en el ranking
             async (datosFinales) => {
                 try {
                     await guardarPartidaEnRanking(datosFinales);
                 } catch (error) {
                 }
             },
+            // Callback para limpiar y destruir una partida del sistema
             (idPartidaADestruir) => {
                 const partida = partidas.get(idPartidaADestruir);
                 if (partida) {
@@ -259,7 +270,7 @@ io.on("connection", (socket) => {
 
         if (partida) {
             socket.leave(idPartida);
-            eliminarJugadorDePartida(partida, socket.id, io, idPartida);
+            eliminarJugadorDePartida(partida, socket.id, io);
         }
     });
 
@@ -297,8 +308,7 @@ io.on("connection", (socket) => {
                     io.to(idPartida).emit('partida_iniciada', {
                         idPartida: partida.id,
                         estado: partida.estado,
-                        jugadores: crearInfoJugadoresIniciada(partida),
-                        galaxia: crearInfoGalaxiaIniciada(partida)
+                        ...crearInfoPartidaIniciada(partida)
                     });
                 }
             }, 1000);
@@ -312,7 +322,7 @@ io.on("connection", (socket) => {
         const partida = partidas.get(idPartida);
 
         if (partida) {
-            eliminarJugadorDePartida(partida, socket.id, io, idPartida);
+            eliminarJugadorDePartida(partida, socket.id, io);
         }
     });
 
@@ -343,8 +353,7 @@ io.on("connection", (socket) => {
                 recursosRestantes: resultado.recursosRestantes
             });
 
-            const jugadoresInfo = crearInfoJugadores(partida.jugadores);
-            enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
+            enviarActualizacionClientes(io, partida);
         } else {
             socket.emit("construccion_error", {
                 mensaje: resultado.error,
@@ -379,6 +388,7 @@ io.on("connection", (socket) => {
         const astillerosAMover = sistemaOrigen.astillerosEstacionados.slice(0, cantidad);
 
         const resultado = gestorMovimiento.moverAstilleros(astillerosAMover, sistemaDestino, (evento, data) => {
+            // Callback para manejar eventos durante el movimiento de flotas
             if (evento === 'sistemaConquistado') {
                 io.to(idPartida).emit("planeta_conquistado", {
                     idPartida,
@@ -425,8 +435,7 @@ io.on("connection", (socket) => {
                 cantidad
             });
 
-            const jugadoresInfo = crearInfoJugadores(partida.jugadores);
-            enviarActualizacionClientes(io, partida, jugadoresInfo, crearInfoGalaxia);
+            enviarActualizacionClientes(io, partida);
 
             partida.chequearVictoriaPorConquista();
         } else {
@@ -445,7 +454,7 @@ io.on("connection", (socket) => {
 
             if (estabaEnPartida) {
                 console.log(`Eliminando jugador ${socket.id} de partida ${idPartida}`);
-                eliminarJugadorDePartida(partida, socket.id, io, idPartida);
+                eliminarJugadorDePartida(partida, socket.id, io);
             }
         }
     });
