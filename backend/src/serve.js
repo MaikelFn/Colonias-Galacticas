@@ -389,14 +389,6 @@ io.on("connection", (socket) => {
 
         const resultado = gestorMovimiento.moverAstilleros(astillerosAMover, sistemaDestino, (evento, data) => {
             // Callback para manejar eventos durante el movimiento de flotas
-            if (evento === 'sistemaConquistado') {
-                io.to(idPartida).emit("planeta_conquistado", {
-                    idPartida,
-                    conquistadorId: jugador.socketId,
-                    conquistador: jugador.nickname,
-                    sistema: data.sistema
-                });
-            }
             if (evento === 'combateResuelto') {
                 io.to(idPartida).emit("combate_resultado", {
                     idPartida,

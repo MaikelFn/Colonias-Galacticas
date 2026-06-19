@@ -754,23 +754,6 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   }, [])
 
   useEffect(() => {
-    const handleActualizarClientes = (data) => {
-      console.log('=== ACTUALIZANDO CLIENTES ===');
-      console.log('Jugadores:', data.jugadores);
-      if (data.galaxia && data.galaxia.sistemas) {
-        console.log('Sistemas y sus astilleros:');
-        data.galaxia.sistemas.forEach(s => {
-          console.log(`  ${s.nombre}: ${s.astillerosEstacionados} astilleros, propietario: ${s.propietario || 'ninguno'}`);
-        });
-      }
-      console.log('=========================');
-
-      if (data.jugadores) setJugadores(data.jugadores)
-      if (data.galaxia) {
-        setEstadoPartida(prev => ({ ...prev, galaxia: data.galaxia }))
-      }
-    }
-
     const handleMoverFlotasExito = (data) => {
       addToastRef.current(
         'Maniobra completada',
@@ -787,12 +770,10 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       )
     }
 
-    socket.on('actualizar_clientes', handleActualizarClientes)
     socket.on('mover_flotas_exito', handleMoverFlotasExito)
     socket.on('mover_flotas_error', handleMoverFlotasError)
 
     return () => {
-      socket.off('actualizar_clientes', handleActualizarClientes)
       socket.off('mover_flotas_exito', handleMoverFlotasExito)
       socket.off('mover_flotas_error', handleMoverFlotasError)
     }
@@ -827,24 +808,24 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   useEffect(() => {
     function onJugadorUnido(data) {
       if (data.idPartida !== idPartidaRef.current) return
-      setJugadores(prev => {
-        if (prev.find(j => j.id === data.jugador.id)) return prev
-        return [...prev, { ...data.jugador }]
-      })
+      // Solo mostrar mensaje, actualizar_clientes ya actualiza el estado
+      setMensajesSistema(ms => [...ms, {
+        nombreJugador: 'Sistema',
+        mensaje: `${data.jugador.nombre} se ha unido a la partida.`,
+        ts: Date.now(),
+      }])
     }
 
     function onJugadorSalio(data) {
       if (data.idPartida !== idPartidaRef.current) return
-      setJugadores(prev => {
-        const saliente = prev.find(j => j.id === data.jugadorId)
-        const nombre = saliente ? saliente.nombre : 'Un comandante'
-        setMensajesSistema(ms => [...ms, {
-          nombreJugador: 'Sistema',
-          mensaje: `${nombre} ha abandonado la partida.`,
-          ts: Date.now(),
-        }])
-        return prev.filter(j => j.id !== data.jugadorId)
-      })
+      const saliente = jugadores.find(j => j.id === data.jugadorId)
+      const nombre = saliente ? saliente.nombre : 'Un comandante'
+      // Solo mostrar mensaje, actualizar_clientes ya actualiza el estado
+      setMensajesSistema(ms => [...ms, {
+        nombreJugador: 'Sistema',
+        mensaje: `${nombre} ha abandonado la partida.`,
+        ts: Date.now(),
+      }])
     }
 
     function onActualizarClientes(data) {
@@ -862,33 +843,16 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
       setJugadores(lista)
     }
 
-    function onPlanetaConquistado(data) {
-      if (data.idPartida && data.idPartida !== idPartidaRef.current) return
-      const ganadorId = data.conquistadorId
-      const perdedorId = data.anteriorDuenoId
-      setJugadores(prev =>
-        prev.map(j => {
-          if (j.id === ganadorId)
-            return { ...j, sistemasConquistados: j.sistemasConquistados + 1 }
-          if (perdedorId && j.id === perdedorId)
-            return { ...j, sistemasConquistados: Math.max(0, j.sistemasConquistados - 1) }
-          return j
-        })
-      )
-    }
-
     socket.on('jugador_unido',       onJugadorUnido)
     socket.on('jugador_salio',       onJugadorSalio)
     socket.on('actualizar_clientes', onActualizarClientes)
     socket.on('estado_jugadores',    onEstadoJugadores)
-    socket.on('planeta_conquistado', onPlanetaConquistado)
 
     return () => {
       socket.off('jugador_unido',       onJugadorUnido)
       socket.off('jugador_salio',       onJugadorSalio)
       socket.off('actualizar_clientes', onActualizarClientes)
       socket.off('estado_jugadores',    onEstadoJugadores)
-      socket.off('planeta_conquistado', onPlanetaConquistado)
     }
   }, [])
 

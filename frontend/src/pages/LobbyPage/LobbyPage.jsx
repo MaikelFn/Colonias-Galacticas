@@ -130,20 +130,19 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
 
   useEffect(() => {
     const unsub = on('jugador_unido', (data) => {
-      setPartidaActual(prev => {
-        if (prev.jugadores.some(j => j.id === data.jugador.id)) return prev
-        return { ...prev, jugadores: [...prev.jugadores, data.jugador] }
-      })
+      // Solo mostrar mensaje, partida_iniciada ya actualiza el estado
+      setMensajes(prev => [...prev, {
+        nombreJugador: 'Sistema',
+        mensaje: `${data.jugador.nombre} se ha unido a la sala.`,
+        isSystem: true
+      }])
     })
     return unsub
   }, [on])
 
   useEffect(() => {
     const unsub = on('jugador_salio', (data) => {
-      setPartidaActual(prev => ({
-        ...prev,
-        jugadores: prev.jugadores.filter(j => j.id !== data.jugadorId)
-      }))
+      // Solo mostrar mensaje, partida_iniciada ya actualiza el estado
       setMensajes(prev => [...prev, {
         nombreJugador: 'Sistema',
         mensaje: 'Un comandante ha abandonado la sala.',
