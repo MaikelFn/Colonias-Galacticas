@@ -808,7 +808,6 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   useEffect(() => {
     function onJugadorUnido(data) {
       if (data.idPartida !== idPartidaRef.current) return
-      // Solo mostrar mensaje, actualizar_clientes ya actualiza el estado
       setMensajesSistema(ms => [...ms, {
         nombreJugador: 'Sistema',
         mensaje: `${data.jugador.nombre} se ha unido a la partida.`,
@@ -868,15 +867,15 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
           soyAtacante ? 'Ataque exitoso' : 'Sistema perdido',
           soyAtacante
             ? `Conquistaste ${data.sistema} · Bajas: ${data.perdidasAtacante} flotas`
-            : `${data.atacante} tomó ${data.sistema} · Fuerzas enemigas: ${data.fuerzaAtacante}`,
+            : `${data.atacante} tomó ${data.sistema} · Fuerzas enemigas: ${data.fuerzaAtacante} · Bajas: ${data.perdidasDefensor} flotas`,
           soyAtacante ? 'exito' : 'peligro'
         )
       } else {
         addToast(
           soyAtacante ? 'Ataque fallido' : 'Ataque repelido',
           soyAtacante
-            ? `No pudiste tomar ${data.sistema} · Fuerzas: ${data.fuerzaAtacante} vs ${data.fuerzaDefensor}`
-            : `Repeliste el ataque de ${data.atacante} en ${data.sistema}`,
+            ? `No pudiste tomar ${data.sistema} · Fuerzas: ${data.fuerzaAtacante} vs ${data.fuerzaDefensor} · Bajas: ${data.perdidasAtacante} flotas`
+            : `Repeliste el ataque de ${data.atacante} en ${data.sistema} · Bajas enemigas: ${data.perdidasAtacante} flotas`,
           soyAtacante ? 'peligro' : 'exito'
         )
       }

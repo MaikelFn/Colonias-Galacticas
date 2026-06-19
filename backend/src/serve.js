@@ -247,8 +247,7 @@ io.on("connection", (socket) => {
 
         io.to(idPartida).emit("jugador_unido", {
             idPartida,
-            jugador: { id: socket.id, nombre: nombreJugador },
-            totalJugadores: partida.jugadores.length
+            jugador: { id: socket.id, nombre: nombreJugador }
         });
 
         socket.emit("partida_unida", crearInfoPartida(partida));
@@ -348,17 +347,13 @@ io.on("connection", (socket) => {
         if (resultado.success) {
             socket.emit("construccion_exito", {
                 mensaje: resultado.mensaje,
-                construccion: resultado.construccion,
-                sistema: resultado.sistema,
-                recursosRestantes: resultado.recursosRestantes
+                construccion: resultado.construccion
             });
 
             enviarActualizacionClientes(io, partida);
         } else {
             socket.emit("construccion_error", {
-                mensaje: resultado.error,
-                costo: resultado.costo,
-                recursosActuales: resultado.recursosActuales
+                mensaje: resultado.error
             });
         }
 
