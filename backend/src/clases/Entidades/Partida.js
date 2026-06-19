@@ -195,17 +195,54 @@ class Partida {
     }
 
     /**
-     * Asigna planetas base a cada jugador.
+     * Asigna planetas base a cada jugador de forma aleatoria, evitando sistemas adyacentes.
      */
     asignarPlanetasBase() {
         const sistemasLibres = this.galaxia.sistemas.filter(sistema => sistema.propietario === null);
-        for (let indice = 0; indice < this.jugadores.length && indice < sistemasLibres.length; indice++) {
-            const sistema = sistemasLibres[indice];
-            const jugador = this.jugadores[indice];
-            sistema.propietario = jugador;
-            sistema.estado = 'controlado';
-            jugador.planetaBase = sistema;
+        const sistemasAsignados = [];
+        
+        for (const jugador of this.jugadores) {
+            if (sistemasLibres.length === 0) break;
+            
+            let sistemaSeleccionado = null;
+            let intentos = 0;
+            const maxIntentos = 100;
+            
+            // Intentar encontrar un sistema que no sea vecino de los ya asignados
+            while (intentos < maxIntentos && sistemaSeleccionado === null) {
+                const indiceAleatorio = Math.floor(Math.random() * sistemasLibres.length);
+                const sistemaCandidato = sistemasLibres[indiceAleatorio];
+                
+                // Verificar que el candidato no sea vecino de ningún sistema ya asignado
+                const esVecinoDeAsignado = sistemasAsignados.some(sistemaAsignado => {
+                    const vecinos = this.galaxia.obtenerVecinos(sistemaCandidato);
+                    return vecinos.some(vecino => vecino.id === sistemaAsignado.id);
+                });
+                
+                if (!esVecinoDeAsignado) {
+                    sistemaSeleccionado = sistemaCandidato;
+                }
+                
+                intentos++;
+            }
+            
+            // Si no se encontró un sistema no vecino después de los intentos, usar el primero disponible
+            if (sistemaSeleccionado === null) {
+                sistemaSeleccionado = sistemasLibres[0];
+            }
+            
+            // Asignar el sistema al jugador
+            sistemaSeleccionado.propietario = jugador;
+            sistemaSeleccionado.estado = 'controlado';
+            jugador.planetaBase = sistemaSeleccionado;
             jugador.setRecursosIniciales(this.dificultadRecursos);
+            
+            // Agregar a la lista de asignados y remover de libres
+            sistemasAsignados.push(sistemaSeleccionado);
+            const indiceLibre = sistemasLibres.indexOf(sistemaSeleccionado);
+            if (indiceLibre > -1) {
+                sistemasLibres.splice(indiceLibre, 1);
+            }
         }
     }
 
