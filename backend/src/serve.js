@@ -250,6 +250,8 @@ io.on("connection", (socket) => {
             jugador: { id: socket.id, nombre: nombreJugador }
         });
 
+        enviarActualizacionClientes(io, partida);
+
         socket.emit("partida_unida", crearInfoPartida(partida));
     });
 
