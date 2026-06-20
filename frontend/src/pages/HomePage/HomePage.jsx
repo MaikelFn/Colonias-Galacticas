@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import './HomePage.css'
 import { useSocket } from '../../hooks/useSocket'
-import CrearPartidaModal from '../Modals/CrearPartidaModal'
-import VerPartidasModal from '../Modals/VerPartidasModal'
-import RankingModal from '../Modals/RankingModal'
+import CrearPartidaModal from '../../components/Modals/CrearPartidaModal'
+import VerPartidasModal from '../../components/Modals/VerPartidasModal'
+import RankingModal from '../../components/Modals/RankingModal'
 
 const STARS = Array.from({ length: 150 }, (_, i) => ({
   id: i,
