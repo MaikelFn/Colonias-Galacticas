@@ -290,15 +290,11 @@ function SistemaInfoPanel({ sistema, jugadores }) {
 
       <div className="gp-sistema-info-divider" />
 
-      {/* Estructura modificada a 4 filas con alineación extrema (Nombre izq / Número der) */}
+      {/* Estructura modificada a 3 filas con alineación extrema (Nombre izq / Número der) */}
       <div className="gp-sistema-info-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Minas:</span>
           <strong>{contar('Mina')}</strong>
-        </div>
-        <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>Astilleros:</span>
-          <strong>{contar('Astillero')}</strong>
         </div>
         <div className="gp-sistema-info-list-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span>Centrales de Inv.:</span>
@@ -519,7 +515,7 @@ function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
 // RF-17 / RF-19: Enviar flotas a sistema adyacente (conquista o ataque según propietario)
 // RF-15: Construir Mina, Central de Investigación, Astillero, Fortaleza
 // RF-16: Astillero produce flotas (acción de construcción)
-const ACCIONES = [
+const getACCIONES = (costosConstruccion) => [
   {
     id: 'ENVIAR_FLOTAS',
     label: 'Enviar Flotas',
@@ -534,6 +530,7 @@ const ACCIONES = [
     id: 'CONSTR_MINA',
     tipoConstruccion: 'Mina',
     label: 'Construir Mina',
+    costo: costosConstruccion?.Mina || { minerales: 0, energia: 0, cristales: 0 },
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M2 20h20" />
@@ -547,6 +544,7 @@ const ACCIONES = [
     id: 'CONSTR_CENTRAL',
     tipoConstruccion: 'CentralInvestigacion',
     label: 'Central Inv.',
+    costo: costosConstruccion?.CentralInvestigacion || { minerales: 0, energia: 0, cristales: 0 },
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="3" />
@@ -559,6 +557,7 @@ const ACCIONES = [
     id: 'CONSTR_ASTILLERO',
     tipoConstruccion: 'Astillero',
     label: 'Astillero',
+    costo: costosConstruccion?.Astillero || { minerales: 0, energia: 0, cristales: 0 },
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 17l4-8 5 5 3-4 4 7H3z" />
@@ -571,6 +570,7 @@ const ACCIONES = [
     id: 'CONSTR_FORTALEZA',
     tipoConstruccion: 'Fortaleza',
     label: 'Fortaleza',
+    costo: costosConstruccion?.Fortaleza || { minerales: 0, energia: 0, cristales: 0 },
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="1" />
@@ -616,10 +616,12 @@ function ToastConstruccion({ toast }) {
  * @param {Object|null} sistemaSeleccionado - Sistema seleccionado actualmente.
  * @param {string} nombreJugador - Nombre del jugador actual.
  * @param {Function} onAccionClick - Callback al hacer click en una acción.
+ * @param {Object} costosConstruccion - Costos de construcción desde el backend.
  * @returns {JSX.Element} El panel de acciones.
  */
-function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, onAccionClick }) {
-  
+function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, onAccionClick, costosConstruccion }) {
+  const acciones = getACCIONES(costosConstruccion);
+
   const obtenerDeshabilitado = (accionId) => {
     if (!partidaIniciada) return true
 
@@ -639,11 +641,21 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, on
     }
   };
 
+  const formatCosto = (costo) => {
+    if (!costo) return '';
+    const parts = [];
+    if (costo.minerales > 0) parts.push(`${costo.minerales}M`);
+    if (costo.energia > 0) parts.push(`${costo.energia}E`);
+    if (costo.cristales > 0) parts.push(`${costo.cristales}C`);
+    return parts.join(' ');
+  };
+
   return (
     <section className="gp-frame gp-frame-acciones">
       <div className="gp-acciones-grid">
-        {ACCIONES.map((accion) => {
+        {acciones.map((accion) => {
           const isDisabled = obtenerDeshabilitado(accion.id);
+          const costoText = accion.costo ? formatCosto(accion.costo) : '';
           return (
             <button
               key={accion.id}
@@ -654,6 +666,7 @@ function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, on
             >
               <span className="gp-accion-icon">{accion.icon}</span>
               <span className="gp-accion-label">{accion.label}</span>
+              {costoText && <span className="gp-accion-costo">{costoText}</span>}
             </button>
           );
         })}
@@ -805,6 +818,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [toasts, setToasts] = useState([])
   const [resultadoFinal, setResultadoFinal] = useState(null)
   const [ultimaConstruccion, setUltimaConstruccion] = useState(0)
+  const [costosConstruccion, setCostosConstruccion] = useState({})
   const idPartidaRef = useRef(partida?.id)
   const sistemaSeleccionadoRef = useRef(null)
 
@@ -820,6 +834,15 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
   useEffect(() => {
     sistemaSeleccionadoRef.current = sistemaSeleccionado
   }, [sistemaSeleccionado])
+
+  useEffect(() => {
+    socket.emit('obtener_costos_construccion')
+    const handleCostosConstruccion = (data) => {
+      setCostosConstruccion(data)
+    }
+    socket.on('costos_construccion', handleCostosConstruccion)
+    return () => socket.off('costos_construccion', handleCostosConstruccion)
+  }, [])
 
   useEffect(() => {
     const yo = jugadores.find(j => j.nombre === nombreJugador)
@@ -1144,6 +1167,7 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
             sistemaSeleccionado={sistemaSeleccionado}
             nombreJugador={nombreJugador}
             onAccionClick={handleAccionClick}
+            costosConstruccion={costosConstruccion}
           />
 
           <section className="gp-frame gp-frame-chat">

@@ -678,6 +678,14 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+.gp-accion-costo {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: -4px;
+}
+
 .gp-accion-btn:not(:disabled):hover {
   border-color: var(--accion-color);
   background: color-mix(in srgb, var(--accion-color) 12%, transparent);
