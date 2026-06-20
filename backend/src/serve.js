@@ -156,6 +156,10 @@ io.on("connection", (socket) => {
         socket.emit("configuracion_recursos", configuracion?.juego?.recursosIniciales || {});
     });
 
+    socket.on("obtener_costos_construccion", () => {
+        socket.emit("costos_construccion", configuracion?.costosConstrucciones || {});
+    });
+
     socket.on("obtener_partidas", () => {
         const disponibles = Array.from(partidas.values()).filter(partida =>
             partida.estado === 'esperando' && partida.jugadores.length < partida.maxJugadores
