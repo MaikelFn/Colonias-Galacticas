@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react'
 
+/**
+ * Componente que renderiza un campo de estrellas animado con efectos visuales.
+ * Incluye estrellas parpadeantes, estelas de meteoritos y orbes flotantes.
+ * Utiliza Canvas API para renderizado de alto rendimiento.
+ * 
+ * @returns {JSX.Element} Canvas con el campo de estrellas animado.
+ */
 export default function StarfieldCanvas() {
   const canvasRef = useRef(null)
 

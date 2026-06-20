@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import './Alert.css'
 
+/**
+ * Componente que muestra una alerta individual con temporizador automático.
+ * @param {Object} alert - Objeto con los datos de la alerta.
+ * @param {string} alert.mensaje - Mensaje de la alerta.
+ * @param {Function} onClose - Función a ejecutar al cerrar la alerta.
+ * @returns {JSX.Element|null} El componente de alerta o null si no hay alerta.
+ */
 function Alert({ alert, onClose }) {
   if (!alert) return null
 
@@ -20,14 +27,28 @@ function Alert({ alert, onClose }) {
   )
 }
 
+/**
+ * Contenedor global de alertas que gestiona múltiples alertas simultáneas.
+ * Expone una función global window.showAlert para mostrar alertas desde cualquier componente.
+ * 
+ * @returns {JSX.Element} El contenedor de alertas.
+ */
 export default function AlertContainer() {
   const [alerts, setAlerts] = useState([])
 
+  /**
+   * Agrega una nueva alerta al contenedor.
+   * @param {string} mensaje - Mensaje de la alerta a mostrar.
+   */
   const addAlert = (mensaje) => {
     const id = Date.now()
     setAlerts(prev => [...prev, { id, mensaje }])
   }
 
+  /**
+   * Remueve una alerta del contenedor por su ID.
+   * @param {number} id - ID de la alerta a remover.
+   */
   const removeAlert = (id) => {
     setAlerts(prev => prev.filter(alert => alert.id !== id))
   }
