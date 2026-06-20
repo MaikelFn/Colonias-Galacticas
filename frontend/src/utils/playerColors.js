@@ -1,3 +1,7 @@
+/**
+ * Paleta de colores predefinidos para identificar jugadores.
+ * @type {string[]}
+ */
 const PLAYER_COLORS = [
   '#3B82F6', 
   '#EF4444', 
@@ -9,6 +13,14 @@ const PLAYER_COLORS = [
   '#F97316', 
 ]
 
+/**
+ * Obtiene un color para un jugador basado en su índice.
+ * Si el índice está dentro del rango de colores predefinidos, usa ese color.
+ * Si excede el rango, genera un color único usando HSL.
+ * 
+ * @param {number} index - Índice del jugador en la lista.
+ * @returns {string} Color en formato hexadecimal o HSL.
+ */
 export function getPlayerColor(index) {
   if (index < PLAYER_COLORS.length) return PLAYER_COLORS[index]
   const hue = (index * 137.508) % 360

@@ -16,12 +16,28 @@ const PLANET_IMAGES = {
   balanceando: imgBalanceado, 
 };
 
+/**
+ * Obtiene la imagen correspondiente al tipo de planeta.
+ * @param {string} tipo - Tipo de planeta (minero, energetico, cientifico, balanceado).
+ * @returns {string|null} URL de la imagen o null si no existe.
+ */
 function getPlanetImage(tipo) {
   if (!tipo) return null;
   return PLANET_IMAGES[tipo.toLowerCase()] ?? null;
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+/**
+ * Componente que renderiza el mapa galáctico interactivo.
+ * Muestra los sistemas planetarios, rutas entre ellos y permite interacción.
+ * Soporta pan, zoom y selección de sistemas.
+ * 
+ * @param {Array} sistemas - Array de sistemas planetarios.
+ * @param {Array} rutas - Array de rutas entre sistemas [id1, id2].
+ * @param {Array} jugadores - Array de jugadores en la partida.
+ * @param {Function} onSistemaClick - Callback al hacer click en un sistema.
+ * @param {string} nombreJugador - Nombre del jugador actual.
+ * @returns {JSX.Element} El componente del mapa galáctico.
+ */
 export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaClick, nombreJugador }) {
   const [sistemaSeleccionado, setSistemaSeleccionado] = useState(null);
 
@@ -152,6 +168,11 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
     return nodos.map(({ vx, vy, ...resto }) => resto);
   }, [sistemas, rutas]);
 
+  /**
+   * Determina el color de una ruta según el sistema seleccionado y su propietario.
+   * @param {Array} ruta - Array con los IDs de los sistemas conectados [idA, idB].
+   * @returns {Object|null} Objeto con stroke y glow o null si no está conectado al seleccionado.
+   */
   const getRutaColor = (ruta) => {
     if (!sistemaSeleccionado) return null;
 
@@ -173,6 +194,10 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
   };
 
   // ─── Gestores de Eventos para Cámara (Pan & Zoom) ───────────────────────────
+  /**
+   * Inicia el arrastre del mapa (pan).
+   * @param {MouseEvent} e - Evento del mouse.
+   */
   const handleMouseDown = (e) => {
     if (e.button !== 0) return;
     setIsDragging(true);
@@ -180,6 +205,10 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
     dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
   };
 
+  /**
+   * Maneja el movimiento del mouse durante el arrastre del mapa.
+   * @param {MouseEvent} e - Evento del mouse.
+   */
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     
@@ -194,10 +223,17 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
     setPan({ x: newX, y: newY });
   };
 
+  /**
+   * Finaliza el arrastre del mapa.
+   */
   const handleMouseUp = () => {
     setIsDragging(false);
   };
 
+  /**
+   * Maneja el zoom del mapa con la rueda del mouse.
+   * @param {WheelEvent} e - Evento de la rueda del mouse.
+   */
   const handleWheel = (e) => {
     e.preventDefault();
     const zoomFactor = 1.1;
@@ -222,6 +258,11 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
     if (sistemaSeleccionado) setSistemaSeleccionado(null);
   };
 
+  /**
+   * Maneja el click en un sistema planetario.
+   * @param {Object} sis - Datos del sistema seleccionado.
+   * @param {MouseEvent} event - Evento del mouse.
+   */
   const handleClick = (sis, event) => {
     if (hasDraggedRef.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
