@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useSocket } from '../../hooks/useSocket'
 
+/**
+ * Modal que muestra el ranking histórico de partidas.
+ * Muestra información sobre partidas finalizadas, ganadores y estadísticas.
+ * 
+ * @param {Function} onClose - Callback para cerrar el modal.
+ * @returns {JSX.Element} El modal de ranking.
+ */
 export default function RankingModal({ onClose }) {
   const { emit, on } = useSocket()
   const [rankings, setRankings] = useState([])

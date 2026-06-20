@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useSocket } from '../../hooks/useSocket'
 
+/**
+ * Modal que muestra las partidas disponibles para unirse.
+ * Permite ver partidas en tiempo real y unirse a ellas.
+ * 
+ * @param {Function} onClose - Callback para cerrar el modal.
+ * @param {string} comandante - Nombre del comandante que intenta unirse.
+ * @param {Function} onUnirse - Callback cuando se une exitosamente a una partida.
+ * @param {Function} addToast - Función para mostrar notificaciones.
+ * @returns {JSX.Element} El modal de partidas disponibles.
+ */
 export default function VerPartidasModal({ onClose, comandante, onUnirse, addToast }) {
   const { emit, on } = useSocket()
   const [partidas, setPartidas] = useState([])
@@ -35,6 +45,10 @@ export default function VerPartidasModal({ onClose, comandante, onUnirse, addToa
     return () => { unsub1(); unsub2(); unsub3() }
   }, [emit, on, onUnirse, onClose])
 
+  /**
+   * Maneja la acción de unirse a una partida específica.
+   * @param {Object} partida - Datos de la partida a unirse.
+   */
   const handleUnirse = (partida) => {
     if (!comandante) {
       if (addToast) {
