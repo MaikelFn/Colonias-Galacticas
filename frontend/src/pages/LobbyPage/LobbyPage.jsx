@@ -12,6 +12,15 @@ const STARS = Array.from({ length: 120 }, (_, i) => ({
   duration: Math.random() * 4 + 3,
 }))
 
+/**
+ * Componente que renderiza una estrella individual con animación.
+ * @param {number} x - Posición horizontal en porcentaje.
+ * @param {number} y - Posición vertical en porcentaje.
+ * @param {number} size - Tamaño de la estrella en píxeles.
+ * @param {number} delay - Retraso de animación en segundos.
+ * @param {number} duration - Duración de la animación en segundos.
+ * @returns {JSX.Element} El elemento div de la estrella.
+ */
 function Star({ x, y, size, delay, duration }) {
   return (
     <div
@@ -28,7 +37,14 @@ function Star({ x, y, size, delay, duration }) {
   )
 }
 
-// index es la posición del jugador en la lista — determina su color
+/**
+ * Componente que muestra un slot de jugador en la sala de espera.
+ * @param {Object|null} jugador - Datos del jugador o null si el slot está vacío.
+ * @param {number} index - Índice del jugador en la lista (determina el color).
+ * @param {boolean} isCreador - Indica si es el creador de la partida.
+ * @param {boolean} esYo - Indica si es el usuario actual.
+ * @returns {JSX.Element} El componente del slot de jugador.
+ */
 function PlayerSlot({ jugador, index, isCreador, esYo }) {
   const color = jugador ? getPlayerColor(index) : null
 
@@ -65,6 +81,11 @@ function PlayerSlot({ jugador, index, isCreador, esYo }) {
   )
 }
 
+/**
+ * Componente que muestra la cuenta regresiva antes de iniciar la partida.
+ * @param {number} cuenta - Número actual de la cuenta regresiva.
+ * @returns {JSX.Element} El overlay de cuenta regresiva.
+ */
 function CountdownOverlay({ cuenta }) {
   const esAlertaCritica = cuenta === 1;
 
@@ -85,6 +106,11 @@ function CountdownOverlay({ cuenta }) {
   );
 }
 
+/**
+ * Componente que muestra un overlay cuando la partida está cerrada.
+ * @param {string} razon - Razón por la que la partida está cerrada.
+ * @returns {JSX.Element} El overlay de partida cerrada.
+ */
 function ClosedOverlay({ razon }) {
   return (
     <div className="lb-countdown-overlay lb-closed-overlay">
@@ -97,6 +123,16 @@ function ClosedOverlay({ razon }) {
   )
 }
 
+/**
+ * Página de sala de espera (lobby) del juego Colonias Galácticas.
+ * Muestra los jugadores conectados, configuración de la partida y chat.
+ * 
+ * @param {Object} partida - Datos de la partida.
+ * @param {string} nombreJugador - Nombre del jugador actual.
+ * @param {Function} onIniciarJuego - Callback para iniciar el juego.
+ * @param {Function} onSalir - Callback para salir del lobby.
+ * @returns {JSX.Element} La página del lobby.
+ */
 export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSalir }) {
   const { emit, on } = useSocket()
 
@@ -262,15 +298,24 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
   useEffect(() => { onIniciarJuegoRef.current = onIniciarJuego }, [onIniciarJuego])
   useEffect(() => { partidaActualRef.current  = partidaActual  }, [partidaActual])
 
+  /**
+   * Solicita al servidor iniciar la partida.
+   */
   const handleIniciarPartida = useCallback(() => {
     emit('iniciar_partida', { idPartida: partidaActual?.id })
   }, [emit, partidaActual?.id])
 
+  /**
+   * Sale de la sala de espera y vuelve al menú principal.
+   */
   const handleSalirDeLobby = () => {
     emit('salir_sala', { idPartida: partidaActual?.id })
     onSalir()
   }
 
+  /**
+   * Envía un mensaje al chat del lobby.
+   */
   const enviarMensaje = () => {
     const msg = texto.trim()
     if (!msg) return
@@ -292,6 +337,10 @@ export default function LobbyPage({ partida, nombreJugador, onIniciarJuego, onSa
     setTexto('')
   }
 
+  /**
+   * Maneja la tecla Enter para enviar mensajes en el chat.
+   * @param {KeyboardEvent} e - Evento de teclado.
+   */
   const handleChatKey = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()

@@ -1,6 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useSocket } from '../../hooks/useSocket'
 
+/**
+ * Modal para crear una nueva partida de Colonias Galácticas.
+ * Permite configurar nombre, galaxia, máximo de jugadores, duración y recursos iniciales.
+ * 
+ * @param {Function} onClose - Callback para cerrar el modal.
+ * @param {string} nombrePartida - Nombre de la partida.
+ * @param {Function} setNombrePartida - Setter para el nombre de la partida.
+ * @param {string} galaxia - ID de la galaxia seleccionada.
+ * @param {Function} setGalaxia - Setter para la galaxia.
+ * @param {number} maxJugadores - Máximo número de jugadores.
+ * @param {Function} setMaxJugadores - Setter para el máximo de jugadores.
+ * @param {number} duracion - Duración de la partida en minutos.
+ * @param {Function} setDuracion - Setter para la duración.
+ * @param {string} recursos - Nivel de recursos iniciales.
+ * @param {Function} setRecursos - Setter para los recursos.
+ * @param {string} comandante - Nombre del comandante que crea la partida.
+ * @param {Function} addToast - Función para mostrar notificaciones.
+ * @returns {JSX.Element} El modal de creación de partida.
+ */
 export default function CrearPartidaModal({
   onClose,
   nombrePartida,
@@ -50,6 +69,10 @@ export default function CrearPartidaModal({
     return unsub
   }, [emit, on, recursos, setRecursos])
 
+  /**
+   * Maneja la creación de una nueva partida.
+   * Valida los datos y envía la solicitud al servidor.
+   */
   const handleCrearPartida = () => {
     if (!nombrePartida.trim()) {
       if (addToast) {

@@ -22,6 +22,11 @@ const TOAST_ICONS = {
   warn:    '---',
 }
 
+/**
+ * Componente que muestra notificaciones tipo toast con estilo galáctico.
+ * @param {Array} toasts - Array de objetos de notificación.
+ * @returns {JSX.Element|null} El componente de toasts o null si no hay toasts.
+ */
 function ToastGalactico({ toasts }) {
   if (!toasts || toasts.length === 0) return null
   return (
@@ -44,6 +49,16 @@ function ToastGalactico({ toasts }) {
   )
 }
 
+/**
+ * Componente que renderiza una estrella individual con animación.
+ * @param {number} x - Posición horizontal en porcentaje.
+ * @param {number} y - Posición vertical en porcentaje.
+ * @param {number} size - Tamaño de la estrella en píxeles.
+ * @param {number} delay - Retraso de animación en segundos.
+ * @param {number} duration - Duración de la animación en segundos.
+ * @param {number} brightness - Opacidad de la estrella.
+ * @returns {JSX.Element} El elemento div de la estrella.
+ */
 function Star({ x, y, size, delay, duration, brightness }) {
   return (
     <div
@@ -61,7 +76,15 @@ function Star({ x, y, size, delay, duration, brightness }) {
   )
 }
 
-// onEntrarLobby(partida, nombreJugador) — callback para navegar a sala de espera
+/**
+ * Página principal del juego Colonias Galácticas.
+ * Permite al usuario ingresar su nombre, crear partidas, ver partidas disponibles y ver el ranking.
+ * 
+ * @param {Function} onEntrarLobby - Callback para navegar al lobby cuando se une o crea una partida.
+ * @param {Object} onEntrarLobby.partida - Datos de la partida.
+ * @param {string} onEntrarLobby.nombreJugador - Nombre del jugador.
+ * @returns {JSX.Element} La página principal.
+ */
 function HomePage({ onEntrarLobby }) {
   const { emit, on, isConnected } = useSocket({
     onError: (mensaje) => addToastRef.current('Error de conexión', mensaje, 'peligro')
@@ -74,6 +97,13 @@ function HomePage({ onEntrarLobby }) {
   const [activeModal, setActiveModal] = useState(null)
   const [toasts, setToasts] = useState([])
 
+  /**
+   * Agrega una notificación toast al sistema.
+   * @param {string} titulo - Título de la notificación.
+   * @param {string} info - Información adicional de la notificación.
+   * @param {string} tipo - Tipo de notificación ('info', 'exito', 'peligro', 'warn').
+   * @param {number} duracion - Duración en milisegundos antes de eliminar la notificación.
+   */
   const addToast = useCallback((titulo, info, tipo = 'info', duracion = 3500) => {
     const id = Date.now() + Math.random()
     setToasts(prev => [...prev, { id, titulo, info, tipo, duracion }])
@@ -114,6 +144,10 @@ function HomePage({ onEntrarLobby }) {
     return unsub
   }, [on])
 
+  /**
+   * Maneja el movimiento del mouse para efectos visuales en los botones.
+   * @param {MouseEvent} e - Evento del mouse.
+   */
   const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
@@ -123,14 +157,26 @@ function HomePage({ onEntrarLobby }) {
 
   const usuarioValido = usuario.trim().length > 0
 
+  /**
+   * Limpia el nombre de usuario actual.
+   */
   const handleSalir = () => setUsuario('')
 
-  // Cuando el jugador selecciona una partida en VerPartidasModal → ir a lobby
+  /**
+   * Maneja la acción de unirse a una partida existente.
+   * @param {Object} partida - Datos de la partida a unirse.
+   */
   const handleUnirsePartida = (partida) => {
     setActiveModal(null)
     onEntrarLobby(partida, usuario)
   }
 
+  /**
+   * Crea un manejador de eventos para botones con efectos visuales.
+   * @param {string} btnName - Nombre identificador del botón.
+   * @param {Function} callback - Función a ejecutar al hacer click.
+   * @returns {Object} Objeto con manejadores de eventos y estilos.
+   */
   const createButtonHandler = (btnName, callback) => ({
     onMouseEnter: () => setHoveredBtn(btnName),
     onMouseLeave: () => setHoveredBtn(null),
