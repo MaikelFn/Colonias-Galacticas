@@ -360,15 +360,15 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
                     cx={sis.x} cy={sis.y} r={radioActual + 6}
                     fill="none"
                     stroke="white"
-                    strokeWidth="1.5"
-                    strokeDasharray="4 3"
+                    strokeWidth="3"
+                    strokeDasharray="8 5"
                     opacity="0.7"
                   />
                 )}
 
                 {colorDueno && (
                   <circle
-                    cx={sis.x} cy={sis.y} r={radioActual + 4}
+                    cx={sis.x} cy={sis.y} r={radioActual + 8}
                     fill={colorDueno}
                     opacity="0.28"
                   />
@@ -400,7 +400,15 @@ export default function MapaGalactico({ sistemas, rutas, jugadores, onSistemaCli
                   cx={sis.x} cy={sis.y} r={radioActual}
                   fill="none"
                   stroke={colorDueno ?? '#4a5568'}
-                  strokeWidth={esSeleccion ? 2.5 : 1.2}
+                  strokeWidth={
+                    esSeleccion
+                      ? (sis.propietario === nombreJugador ? 5 : 3.5)
+                      : sis.propietario === nombreJugador
+                        ? 4
+                        : sis.propietario
+                          ? 2.5
+                          : 1.2
+                  }
                   style={{ transition: 'all 0.25s' }}
                 />
 
