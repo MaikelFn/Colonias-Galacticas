@@ -5,6 +5,11 @@ import socket from '../../services/socket'
 import { getPlayerColor } from '../../utils/playerColors'
 import './GamePage.css'
 
+/**
+ * Componente que muestra el temporizador de la partida.
+ * @param {boolean} partidaIniciada - Indica si la partida ha iniciado.
+ * @returns {JSX.Element} El componente del temporizador.
+ */
 function Temporizador({ partidaIniciada }) {
   const [segsRestantes, setSegsRestantes] = useState(null)
   useEffect(() => {
@@ -36,6 +41,12 @@ function Temporizador({ partidaIniciada }) {
   )
 }
 
+/**
+ * Modal de confirmación para abandonar la partida.
+ * @param {Function} onConfirmar - Callback para confirmar la salida.
+ * @param {Function} onCancelar - Callback para cancelar la salida.
+ * @returns {JSX.Element} El modal de confirmación.
+ */
 function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
   return (
     <div className="gp-modal-overlay">
@@ -58,7 +69,13 @@ function ModalConfirmarSalida({ onConfirmar, onCancelar }) {
   )
 }
 
-// ─── NUEVO: Modal Flotante de Jugadores (Reutiliza el diseño de tarjetas) ─────
+/**
+ * Modal flotante que muestra el estado de todos los jugadores.
+ * @param {Array} jugadores - Array de jugadores en la partida.
+ * @param {string} miSocketId - ID del socket del jugador actual.
+ * @param {Function} onCerrar - Callback para cerrar el modal.
+ * @returns {JSX.Element} El modal de jugadores.
+ */
 function ModalVerJugadores({ jugadores, miSocketId, onCerrar }) {
   return (
     <div className="gp-modal-overlay">
@@ -127,6 +144,15 @@ function ModalVerJugadores({ jugadores, miSocketId, onCerrar }) {
   )
 }
 
+/**
+ * Modal para seleccionar origen y cantidad de flotas a enviar/mover.
+ * @param {string} accion - Tipo de acción ('ENVIAR_FLOTAS' o 'MOVER_FLOTAS').
+ * @param {Object} sistemaDestino - Sistema de destino.
+ * @param {Array} sistemasJugador - Sistemas controlados por el jugador.
+ * @param {Function} onConfirmar - Callback para confirmar la acción.
+ * @param {Function} onCancelar - Callback para cancelar la acción.
+ * @returns {JSX.Element} El modal de flotas.
+ */
 function ModalFlotas({ accion, sistemaDestino, sistemasJugador, onConfirmar, onCancelar }) {
   const [paso, setPaso] = useState(1)
   const [sistemaOrigen, setSistemaOrigen] = useState(null)
@@ -221,8 +247,12 @@ function ModalFlotas({ accion, sistemaDestino, sistemasJugador, onConfirmar, onC
   )
 }
 
-// ─── Panel de info del sistema seleccionado (en sidebar) ─────────────────────
-// ─── Panel de info del sistema seleccionado (en sidebar) ─────────────────────
+/**
+ * Panel que muestra información detallada del sistema seleccionado.
+ * @param {Object|null} sistema - Datos del sistema seleccionado.
+ * @param {Array} jugadores - Array de jugadores para mapeo de colores.
+ * @returns {JSX.Element} El panel de información del sistema.
+ */
 function SistemaInfoPanel({ sistema, jugadores }) {
   if (!sistema) {
     return (
@@ -305,7 +335,13 @@ function SistemaInfoPanel({ sistema, jugadores }) {
   )
 }
 
-// ─── Tarjeta de jugador con nuevo diseño ──────────────────────────────────────
+/**
+ * Panel que muestra la lista de jugadores con sus recursos.
+ * @param {Array} jugadores - Array de jugadores en la partida.
+ * @param {string} miSocketId - ID del socket del jugador actual.
+ * @param {string} soloNombre - Si se proporciona, solo muestra ese jugador.
+ * @returns {JSX.Element} El panel de jugadores.
+ */
 function JugadoresPanel({ jugadores, miSocketId, soloNombre }) {
   if (!jugadores || jugadores.length === 0) {
     return <div className="gp-empty">Sin jugadores</div>
@@ -357,6 +393,14 @@ function JugadoresPanel({ jugadores, miSocketId, soloNombre }) {
   )
 }
 
+/**
+ * Componente de chat para comunicación entre jugadores.
+ * @param {string} nombreJugador - Nombre del jugador actual.
+ * @param {string} idPartida - ID de la partida.
+ * @param {Array} mensajesSistema - Mensajes del sistema.
+ * @param {Array} jugadores - Array de jugadores para colores.
+ * @returns {JSX.Element} El componente de chat.
+ */
 function ChatFrame({ nombreJugador, idPartida, mensajesSistema, jugadores }) {
   const [mensajes, setMensajes] = useState([])
   const bottomRef = useRef(null)
@@ -548,6 +592,11 @@ const ACCIONES = [
   },
 ]
 
+/**
+ * Toast que muestra notificaciones de construcción exitosa.
+ * @param {Object|null} toast - Datos del toast a mostrar.
+ * @returns {JSX.Element|null} El toast o null si no hay toast.
+ */
 function ToastConstruccion({ toast }) {
   if (!toast) return null;
   return (
@@ -561,6 +610,14 @@ function ToastConstruccion({ toast }) {
   );
 }
 
+/**
+ * Panel con botones de acciones disponibles (construir, enviar flotas, mover flotas).
+ * @param {boolean} partidaIniciada - Indica si la partida ha iniciado.
+ * @param {Object|null} sistemaSeleccionado - Sistema seleccionado actualmente.
+ * @param {string} nombreJugador - Nombre del jugador actual.
+ * @param {Function} onAccionClick - Callback al hacer click en una acción.
+ * @returns {JSX.Element} El panel de acciones.
+ */
 function AccionesPanel({ partidaIniciada, sistemaSeleccionado, nombreJugador, onAccionClick }) {
   
   const obtenerDeshabilitado = (accionId) => {
@@ -613,6 +670,11 @@ const TOAST_ICONS = {
   warn:    '---',
 }
 
+/**
+ * Sistema de notificaciones tipo toast con estilo galáctico.
+ * @param {Array} toasts - Array de notificaciones a mostrar.
+ * @returns {JSX.Element|null} El contenedor de toasts o null si no hay toasts.
+ */
 function ToastGalactico({ toasts }) {
   if (!toasts || toasts.length === 0) return null
   return (
@@ -635,7 +697,13 @@ function ToastGalactico({ toasts }) {
   )
 }
 
-// ─── Modal Partida Finalizada ──────────────────────────────────────────────────
+/**
+ * Modal que muestra el resultado final de la partida.
+ * @param {Object} resultado - Datos del resultado (ganador, razón, ranking).
+ * @param {string} nombreJugador - Nombre del jugador actual.
+ * @param {Function} onSalir - Callback para salir al menú principal.
+ * @returns {JSX.Element} El modal de partida finalizada.
+ */
 function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
   const razonTexto = {
     tiempo: 'Tiempo agotado',
@@ -689,6 +757,13 @@ function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
 }
 
 
+/**
+ * Área que contiene el mapa galáctico interactivo.
+ * @param {Object} estadoPartida - Estado actual de la partida.
+ * @param {Array} jugadores - Array de jugadores.
+ * @param {Function} onSistemaClick - Callback al hacer click en un sistema.
+ * @returns {JSX.Element} El área del mapa.
+ */
 function MapaArea({ estadoPartida, jugadores, onSistemaClick }) {
   const galaxia = estadoPartida?.galaxia
 
@@ -706,7 +781,15 @@ function MapaArea({ estadoPartida, jugadores, onSistemaClick }) {
   )
 }
 
-// ─── GamePage ─────────────────────────────────────────────────────────────────
+/**
+ * Página principal del juego Colonias Galácticas.
+ * Muestra el mapa galáctico, panel de acciones, chat y información de sistemas.
+ * 
+ * @param {Object} partida - Datos de la partida.
+ * @param {string} nombreJugador - Nombre del jugador actual.
+ * @param {Function} onSalir - Callback para salir de la partida.
+ * @returns {JSX.Element} La página del juego.
+ */
 export default function GamePage({ partida, nombreJugador, onSalir }) {
   const [partidaActual]               = useState(partida)
   const [miSocketId, setMiSocketId]   = useState(null)
@@ -923,6 +1006,9 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     }
   }, [nombreJugador, addToast, onSalir])
 
+  /**
+   * Confirma la salida de la partida y notifica al servidor.
+   */
   const handleConfirmarSalida = useCallback(() => {
     socket.emit('abandonar_partida', {
       idPartida: idPartidaRef.current,
@@ -932,6 +1018,10 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     onSalir()
   }, [onSalir, miSocketId])
 
+  /**
+   * Maneja el click en una acción del panel de acciones.
+ * @param {Object} accion - Acción seleccionada.
+ */
   const handleAccionClick = useCallback((accion) => {
     if (accion.tipoConstruccion) {
       if (!sistemaSeleccionado) return
@@ -955,6 +1045,11 @@ export default function GamePage({ partida, nombreJugador, onSalir }) {
     }
   }, [sistemaSeleccionado, nombreJugador])
 
+  /**
+   * Confirma el envío/movimiento de flotas entre sistemas.
+   * @param {Object} sistemaOrigen - Sistema de origen de las flotas.
+   * @param {number} cantidad - Cantidad de flotas a enviar.
+ */
   const handleConfirmarFlotas = useCallback((sistemaOrigen, cantidad) => {
     console.log('=== ENVIANDO FLOTAS ===');
     console.log('Sistema Origen:', sistemaOrigen?.nombre, 'ID:', sistemaOrigen?.id);
