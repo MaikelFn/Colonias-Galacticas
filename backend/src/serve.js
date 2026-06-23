@@ -285,39 +285,35 @@ io.on("connection", (socket) => {
         if (!validarEstadoPartida(partida, 'esperando', socket, "error_inicio")) return;
         if (!validarJugadoresMinimos(partida, socket, "error_inicio")) return;
 
-        const iniciada = partida.iniciar();
+        let cuenta = 3;
+        io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
 
-        if (iniciada) {
-            let cuenta = 3;
+        const intervalo = setInterval(() => {
+            cuenta--;
             io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
 
-            const intervalo = setInterval(() => {
-                cuenta--;
-                io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
+            if (cuenta <= 0) {
+                clearInterval(intervalo);
 
-                if (cuenta <= 0) {
-                    clearInterval(intervalo);
+                partida.iniciar();
 
-                    const inicioMs = Date.now();
-                    const duracionMs = partida.duracionMaximaSeg * 1000;
+                const inicioMs = Date.now();
+                const duracionMs = partida.duracionMaximaSeg * 1000;
 
-                    partida.timerInterval = setInterval(() => {
-                        const transcurrido = Date.now() - inicioMs;
-                        const restanteSeg = Math.max(0, Math.ceil((duracionMs - transcurrido) / 1000));
-                        io.to(idPartida).emit('tick_timer', { segsRestantes: restanteSeg });
-                        if (restanteSeg <= 0) clearInterval(partida.timerInterval);
-                    }, 1000);
+                partida.timerInterval = setInterval(() => {
+                    const transcurrido = Date.now() - inicioMs;
+                    const restanteSeg = Math.max(0, Math.ceil((duracionMs - transcurrido) / 1000));
+                    io.to(idPartida).emit('tick_timer', { segsRestantes: restanteSeg });
+                    if (restanteSeg <= 0) clearInterval(partida.timerInterval);
+                }, 1000);
 
-                    io.to(idPartida).emit('partida_iniciada', {
-                        idPartida: partida.id,
-                        estado: partida.estado,
-                        ...crearInfoPartidaIniciada(partida)
-                    });
-                }
-            }, 1000);
-        } else {
-            socket.emit("error_inicio", { mensaje: "No se pudo iniciar las hostilidades en el sector." });
-        }
+                io.to(idPartida).emit('partida_iniciada', {
+                    idPartida: partida.id,
+                    estado: partida.estado,
+                    ...crearInfoPartidaIniciada(partida)
+                });
+            }
+        }, 1000);
     });
 
     socket.on("abandonar_partida", (datos) => {
