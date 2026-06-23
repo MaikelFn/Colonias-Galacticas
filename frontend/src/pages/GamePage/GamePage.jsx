@@ -791,7 +791,17 @@ function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
                 <span className="gp-modal-fin-nombre">{entry.nombre}</span>
                 <span className="gp-modal-fin-puntaje">{(entry.puntaje ?? 0).toLocaleString()}</span>
                 <span className="gp-modal-fin-sistemas">{entry.sistemasConquistados ?? 0}</span>
-                <span className="gp-modal-fin-recursos">{(entry.recursosAcumulados ?? 0).toLocaleString()}</span>
+                <span className="gp-modal-fin-recursos">
+                  {entry.recursos && typeof entry.recursos === 'object' ? (
+                    <span style={{ fontSize: '0.85em' }}>
+                      M: {entry.recursos.minerales?.toLocaleString() ?? 0}, 
+                      E: {entry.recursos.energia?.toLocaleString() ?? 0}, 
+                      C: {entry.recursos.cristales?.toLocaleString() ?? 0}
+                    </span>
+                  ) : (
+                    '-'
+                  )}
+                </span>
                 <span className="gp-modal-fin-flotas">{entry.flotasEnPie ?? 0}</span>
                 <span className="gp-modal-fin-minas">{entry.minasEnPie ?? 0}</span>
                 <span className="gp-modal-fin-centros">{entry.centrosEnPie ?? 0}</span>

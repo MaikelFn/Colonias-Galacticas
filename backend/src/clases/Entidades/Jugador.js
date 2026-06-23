@@ -112,7 +112,7 @@ class Jugador {
         const sistemas = this.getSistemasControlados();
         return {
             sistemasConquistados: this.contarSistemasConquistados(sistemas),
-            recursosAcumulados: this.recursos.calcularTotal(),
+            recursos: this.recursos.toJSON(),
             flotasEnPie: this.getAstillerosTotales(),
             minasEnPie: this.contarInstalaciones('Mina'),
             centrosEnPie: this.contarInstalaciones('CentralInvestigacion'),

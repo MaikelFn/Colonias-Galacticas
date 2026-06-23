@@ -1409,7 +1409,7 @@
 .gp-modal-fin-header-nombre { flex: 1; }
 .gp-modal-fin-header-puntaje { min-width: 70px; text-align: right; }
 .gp-modal-fin-header-sistemas { min-width: 55px; text-align: right; }
-.gp-modal-fin-header-recursos { min-width: 65px; text-align: right; }
+.gp-modal-fin-header-recursos { min-width: 120px; text-align: right; }
 .gp-modal-fin-header-flotas { min-width: 45px; text-align: right; }
 .gp-modal-fin-header-minas { min-width: 40px; text-align: right; }
 .gp-modal-fin-header-centros { min-width: 45px; text-align: right; }
@@ -1435,7 +1435,7 @@
 .gp-modal-fin-nombre { flex: 1; color: #e2e8f0; font-weight: 600; }
 .gp-modal-fin-sistemas { color: #94a3b8; min-width: 55px; text-align: right; }
 .gp-modal-fin-puntaje { color: #fbbf24; font-weight: 700; min-width: 70px; text-align: right; }
-.gp-modal-fin-recursos { color: #38bdf8; min-width: 65px; text-align: right; }
+.gp-modal-fin-recursos { color: #38bdf8; min-width: 120px; text-align: right; }
 .gp-modal-fin-flotas { color: #a78bfa; min-width: 45px; text-align: right; }
 .gp-modal-fin-minas { color: #fb923c; min-width: 40px; text-align: right; }
 .gp-modal-fin-centros { color: #facc15; min-width: 45px; text-align: right; }
