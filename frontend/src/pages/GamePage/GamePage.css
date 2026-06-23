@@ -1290,8 +1290,8 @@
 
 /* ─── Modal Partida Finalizada ────────────────────────────────────────────── */
 .gp-modal-fin {
-  max-width: 480px;
-  width: 90vw;
+  max-width: 960px;
+  width: 95vw;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1388,42 +1388,57 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  overflow-x: auto;
+}
+
+.gp-modal-fin-tabla::-webkit-scrollbar {
+  height: 6px;
+}
+
+.gp-modal-fin-tabla::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.gp-modal-fin-tabla::-webkit-scrollbar-thumb {
+  background: rgba(45, 212, 191, 0.3);
+  border-radius: 3px;
+}
+
+.gp-modal-fin-encabezado,
+.gp-modal-fin-fila {
+  display: grid;
+  grid-template-columns: 28px 1.5fr 1fr 0.8fr 1.8fr 0.7fr 0.7fr 0.8fr 0.9fr;
+  align-items: center;
+  gap: 0;
+  padding: 10px 16px;
+  border-radius: 4px;
 }
 
 .gp-modal-fin-encabezado {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
   background: rgba(45, 212, 191, 0.08);
   border: 1px solid rgba(45, 212, 191, 0.15);
-  border-radius: 4px;
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #2dd4bf;
 }
 
-.gp-modal-fin-header-pos { min-width: 28px; }
-.gp-modal-fin-header-nombre { flex: 1; }
-.gp-modal-fin-header-puntaje { min-width: 70px; text-align: right; }
-.gp-modal-fin-header-sistemas { min-width: 55px; text-align: right; }
-.gp-modal-fin-header-recursos { min-width: 120px; text-align: right; }
-.gp-modal-fin-header-flotas { min-width: 45px; text-align: right; }
-.gp-modal-fin-header-minas { min-width: 40px; text-align: right; }
-.gp-modal-fin-header-centros { min-width: 45px; text-align: right; }
-.gp-modal-fin-header-fortalezas { min-width: 50px; text-align: right; }
+.gp-modal-fin-header-pos      { text-align: left; }
+.gp-modal-fin-header-nombre   { text-align: left; }
+.gp-modal-fin-header-puntaje  { text-align: right; }
+.gp-modal-fin-header-sistemas { text-align: right; }
+.gp-modal-fin-header-recursos { text-align: right; }
+.gp-modal-fin-header-flotas   { text-align: right; }
+.gp-modal-fin-header-minas    { text-align: right; }
+.gp-modal-fin-header-centros  { text-align: right; }
+.gp-modal-fin-header-fortalezas { text-align: right; }
 
 .gp-modal-fin-fila {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
 }
 
 .gp-modal-fin-fila-yo {
@@ -1431,15 +1446,15 @@
   background: rgba(45, 212, 191, 0.06);
 }
 
-.gp-modal-fin-pos { color: #64748b; min-width: 28px; font-weight: 700; }
-.gp-modal-fin-nombre { flex: 1; color: #e2e8f0; font-weight: 600; }
-.gp-modal-fin-sistemas { color: #94a3b8; min-width: 55px; text-align: right; }
-.gp-modal-fin-puntaje { color: #fbbf24; font-weight: 700; min-width: 70px; text-align: right; }
-.gp-modal-fin-recursos { color: #38bdf8; min-width: 120px; text-align: right; }
-.gp-modal-fin-flotas { color: #a78bfa; min-width: 45px; text-align: right; }
-.gp-modal-fin-minas { color: #fb923c; min-width: 40px; text-align: right; }
-.gp-modal-fin-centros { color: #facc15; min-width: 45px; text-align: right; }
-.gp-modal-fin-fortalezas { color: #f87171; min-width: 50px; text-align: right; }
+.gp-modal-fin-pos        { color: #64748b; font-weight: 700; text-align: left; }
+.gp-modal-fin-nombre     { color: #e2e8f0; font-weight: 600; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px; }
+.gp-modal-fin-puntaje    { color: #fbbf24; font-weight: 700; text-align: right; }
+.gp-modal-fin-sistemas   { color: #94a3b8; text-align: right; }
+.gp-modal-fin-recursos   { color: #38bdf8; text-align: right; font-size: 0.72rem; }
+.gp-modal-fin-flotas     { color: #a78bfa; text-align: right; }
+.gp-modal-fin-minas      { color: #fb923c; text-align: right; }
+.gp-modal-fin-centros    { color: #facc15; text-align: right; }
+.gp-modal-fin-fortalezas { color: #f87171; text-align: right; }
 
 /* ─── Responsive Design ───────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -1497,7 +1512,7 @@
   }
 
   .gp-menu-construcciones {
-    max-width: 90vw;
+    max-width: 95vw;
     max-height: 80vh;
     overflow-y: auto;
   }
@@ -1512,7 +1527,7 @@
   }
 
   .gp-modal-fin {
-    max-width: 90vw;
+    max-width: 95vw;
     padding: 20px;
   }
 
@@ -1521,7 +1536,7 @@
   }
 
   .gp-modal-fin-fila {
-    min-width: 600px;
+    min-width: 720px;
   }
 }
 
@@ -1571,7 +1586,7 @@
   }
 
   .gp-toast-stack {
-    max-width: 90vw;
+    max-width: 95vw;
   }
 
   .gp-toast {
