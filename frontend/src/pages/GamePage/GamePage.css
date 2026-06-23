@@ -1353,27 +1353,93 @@
   margin-bottom: 8px;
 }
 
+/* Información de la partida */
+.gp-modal-fin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.gp-modal-fin-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.gp-modal-fin-info-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gp-modal-fin-info-value {
+  font-size: 0.8rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
 .gp-modal-fin-tabla {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
+.gp-modal-fin-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(45, 212, 191, 0.08);
+  border: 1px solid rgba(45, 212, 191, 0.15);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2dd4bf;
+}
+
+.gp-modal-fin-header-pos { min-width: 28px; }
+.gp-modal-fin-header-nombre { flex: 1; }
+.gp-modal-fin-header-puntaje { min-width: 70px; text-align: right; }
+.gp-modal-fin-header-sistemas { min-width: 55px; text-align: right; }
+.gp-modal-fin-header-recursos { min-width: 65px; text-align: right; }
+.gp-modal-fin-header-flotas { min-width: 45px; text-align: right; }
+.gp-modal-fin-header-minas { min-width: 40px; text-align: right; }
+.gp-modal-fin-header-centros { min-width: 45px; text-align: right; }
+.gp-modal-fin-header-fortalezas { min-width: 50px; text-align: right; }
+
 .gp-modal-fin-fila {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 4px;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .gp-modal-fin-fila-yo {
   border-color: rgba(45, 212, 191, 0.35);
   background: rgba(45, 212, 191, 0.06);
 }
+
+.gp-modal-fin-pos { color: #64748b; min-width: 28px; font-weight: 700; }
+.gp-modal-fin-nombre { flex: 1; color: #e2e8f0; font-weight: 600; }
+.gp-modal-fin-sistemas { color: #94a3b8; min-width: 55px; text-align: right; }
+.gp-modal-fin-puntaje { color: #fbbf24; font-weight: 700; min-width: 70px; text-align: right; }
+.gp-modal-fin-recursos { color: #38bdf8; min-width: 65px; text-align: right; }
+.gp-modal-fin-flotas { color: #a78bfa; min-width: 45px; text-align: right; }
+.gp-modal-fin-minas { color: #fb923c; min-width: 40px; text-align: right; }
+.gp-modal-fin-centros { color: #facc15; min-width: 45px; text-align: right; }
+.gp-modal-fin-fortalezas { color: #f87171; min-width: 50px; text-align: right; }
 
 /* ─── Responsive Design ───────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -1444,6 +1510,19 @@
     max-width: 95vw;
     margin: 10px;
   }
+
+  .gp-modal-fin {
+    max-width: 90vw;
+    padding: 20px;
+  }
+
+  .gp-modal-fin-tabla {
+    overflow-x: auto;
+  }
+
+  .gp-modal-fin-fila {
+    min-width: 600px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1500,8 +1579,3 @@
     padding: 10px 12px 11px 10px;
   }
 }
-
-.gp-modal-fin-pos     { color: #64748b; min-width: 28px; font-weight: 700; }
-.gp-modal-fin-nombre  { flex: 1; color: #e2e8f0; font-weight: 600; }
-.gp-modal-fin-sistemas { color: #94a3b8; min-width: 50px; }
-.gp-modal-fin-puntaje { color: #fbbf24; font-weight: 700; min-width: 80px; text-align: right; }

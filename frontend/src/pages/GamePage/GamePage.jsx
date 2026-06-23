@@ -712,7 +712,7 @@ function ToastGalactico({ toasts }) {
 
 /**
  * Modal que muestra el resultado final de la partida.
- * @param {Object} resultado - Datos del resultado (ganador, razón, ranking).
+ * @param {Object} resultado - Datos del resultado (ganador, razón, ranking, tiempoJuego, galaxia, idPartida).
  * @param {string} nombreJugador - Nombre del jugador actual.
  * @param {Function} onSalir - Callback para salir al menú principal.
  * @returns {JSX.Element} El modal de partida finalizada.
@@ -725,6 +725,14 @@ function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
   }[resultado.razon] ?? 'Partida finalizada'
 
   const soyGanador = resultado.ganador === nombreJugador
+
+  // Formatear tiempo de juego
+  const formatTiempo = (segundos) => {
+    if (!segundos) return '0:00'
+    const minutos = Math.floor(segundos / 60)
+    const segs = segundos % 60
+    return `${minutos}:${segs.toString().padStart(2, '0')}`
+  }
 
   return (
     <div className="gp-modal-overlay">
@@ -744,18 +752,50 @@ function ModalPartidaFinalizada({ resultado, nombreJugador, onSalir }) {
           )}
         </div>
 
+        {/* Información de la partida */}
+        <div className="gp-modal-fin-info">
+          <div className="gp-modal-fin-info-item">
+            <span className="gp-modal-fin-info-label">Tiempo de juego:</span>
+            <span className="gp-modal-fin-info-value">{formatTiempo(resultado.tiempoJuego)}</span>
+          </div>
+          <div className="gp-modal-fin-info-item">
+            <span className="gp-modal-fin-info-label">Galaxia:</span>
+            <span className="gp-modal-fin-info-value">{resultado.galaxia || 'Desconocida'}</span>
+          </div>
+          <div className="gp-modal-fin-info-item">
+            <span className="gp-modal-fin-info-label">ID Partida:</span>
+            <span className="gp-modal-fin-info-value">{resultado.idPartida || 'N/A'}</span>
+          </div>
+        </div>
+
         <div className="gp-modal-fin-ranking">
           <h3 className="gp-modal-fin-ranking-titulo">CLASIFICACIÓN FINAL</h3>
           <div className="gp-modal-fin-tabla">
+            <div className="gp-modal-fin-encabezado">
+              <span className="gp-modal-fin-header-pos">#</span>
+              <span className="gp-modal-fin-header-nombre">Comandante</span>
+              <span className="gp-modal-fin-header-puntaje">Puntaje</span>
+              <span className="gp-modal-fin-header-sistemas">Sistemas</span>
+              <span className="gp-modal-fin-header-recursos">Recursos</span>
+              <span className="gp-modal-fin-header-flotas">Flotas</span>
+              <span className="gp-modal-fin-header-minas">Minas</span>
+              <span className="gp-modal-fin-header-centros">Centros</span>
+              <span className="gp-modal-fin-header-fortalezas">Fortalezas</span>
+            </div>
             {(resultado.ranking || []).map((entry, i) => (
               <div
                 key={entry.nombre}
                 className={`gp-modal-fin-fila ${entry.nombre === nombreJugador ? 'gp-modal-fin-fila-yo' : ''}`}
               >
-                <span className="gp-modal-fin-pos">#{i + 1}</span>
+                <span className="gp-modal-fin-pos">#{entry.posicion ?? (i + 1)}</span>
                 <span className="gp-modal-fin-nombre">{entry.nombre}</span>
-                <span className="gp-modal-fin-sistemas">Planetas: {entry.sistemasConquistados}</span>
-                <span className="gp-modal-fin-puntaje">{(entry.puntaje ?? 0).toLocaleString()} pts</span>
+                <span className="gp-modal-fin-puntaje">{(entry.puntaje ?? 0).toLocaleString()}</span>
+                <span className="gp-modal-fin-sistemas">{entry.sistemasConquistados ?? 0}</span>
+                <span className="gp-modal-fin-recursos">{(entry.recursosAcumulados ?? 0).toLocaleString()}</span>
+                <span className="gp-modal-fin-flotas">{entry.flotasEnPie ?? 0}</span>
+                <span className="gp-modal-fin-minas">{entry.minasEnPie ?? 0}</span>
+                <span className="gp-modal-fin-centros">{entry.centrosEnPie ?? 0}</span>
+                <span className="gp-modal-fin-fortalezas">{entry.fortalezasEnPie ?? 0}</span>
               </div>
             ))}
           </div>
