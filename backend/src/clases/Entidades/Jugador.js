@@ -111,10 +111,9 @@ class Jugador {
     obtenerEstadisticas() {
         const sistemas = this.getSistemasControlados();
         return {
-            nombre: this.nickname,
             sistemasConquistados: this.contarSistemasConquistados(sistemas),
-            recursos: this.recursos.toJSON(),
-            astillerosEnPie: this.getAstillerosTotales(),
+            recursosAcumulados: this.recursos.calcularTotal(),
+            flotasEnPie: this.getAstillerosTotales(),
             minasEnPie: this.contarInstalaciones('Mina'),
             centrosEnPie: this.contarInstalaciones('CentralInvestigacion'),
             fortalezasEnPie: this.contarInstalaciones('Fortaleza')

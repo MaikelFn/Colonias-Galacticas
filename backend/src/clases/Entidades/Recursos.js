@@ -81,6 +81,14 @@ class Recursos {
             cristales: this.cristales
         };
     }
+
+    /**
+     * Calcula el total de recursos acumulados.
+     * @returns {number} Total de recursos (minerales + energía*2 + cristales*3).
+     */
+    calcularTotal() {
+        return this.minerales + (this.energia * 2) + (this.cristales * 3);
+    }
 }
 
 module.exports = Recursos;

@@ -62,9 +62,7 @@ class GestorProduccion {
             }
         }
 
-        if (this.onProduccionRecursos) {
-            this.onProduccionRecursos(this.estadoRef);
-        }
+        this.onProduccionRecursos(this.estadoRef);
     }
 
     /**

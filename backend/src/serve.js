@@ -285,6 +285,11 @@ io.on("connection", (socket) => {
         if (!validarEstadoPartida(partida, 'esperando', socket, "error_inicio")) return;
         if (!validarJugadoresMinimos(partida, socket, "error_inicio")) return;
 
+        if (!partida.puedeIniciar()) {
+            socket.emit("error_inicio", { mensaje: "No se pudo iniciar las hostilidades en el sector." });
+            return;
+        }
+
         let cuenta = 3;
         io.to(idPartida).emit('cuenta_regresiva', { idPartida, cuenta });
 
